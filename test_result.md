@@ -202,15 +202,18 @@ backend:
 
   - task: "Expense management APIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "APIs لإدارة مصروفات الشركة بفئات مختلفة"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار جميع APIs المصروفات بنجاح - إنشاء 5 مصروفات بفئات مختلفة (خامات، رواتب، كهرباء، صيانة، أخرى)، استرجاع جميع المصروفات. جميع العمليات تعمل بشكل مثالي."
 
 frontend:
   - task: "Authentication system"
