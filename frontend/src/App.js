@@ -1,54 +1,723 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import './App.css';
+import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
+// Auth Context
+const AuthContext = createContext();
+
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (username, password) => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      const response = await axios.post(`${API}/auth/login`, null, {
+        params: { username, password }
+      });
+      
+      if (response.data.success) {
+        setUser(response.data.user);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-xl">جاري التحميل...</div>
+    </div>;
+  }
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Login Component
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    const success = await login(username, password);
+    if (!success) {
+      setError('خطأ في اسم المستخدم أو كلمة المرور');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center" dir="rtl">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-blue-600">ماستر سيل</h1>
+          <p className="text-gray-600">نظام إدارة الشركة</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              اسم المستخدم
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              كلمة المرور
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          {error && (
+            <div className="text-red-600 text-sm text-center">{error}</div>
+          )}
+          
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            دخول
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
 
-function App() {
+// Navigation Component
+const Navigation = ({ currentPage, onPageChange }) => {
+  const { user, logout } = useAuth();
+  
+  const adminPages = [
+    { key: 'dashboard', label: 'لوحة التحكم' },
+    { key: 'sales', label: 'المبيعات' },
+    { key: 'inventory', label: 'المخزون' },
+    { key: 'deferred', label: 'الآجل' },
+    { key: 'expenses', label: 'المصروفات' },
+    { key: 'revenue', label: 'الإيرادات' },
+    { key: 'invoices', label: 'الفواتير' },
+    { key: 'work-orders', label: 'أمر شغل' },
+    { key: 'users', label: 'المستخدمين' }
+  ];
+  
+  const userPages = [
+    { key: 'dashboard', label: 'لوحة التحكم' },
+    { key: 'sales', label: 'المبيعات' },
+    { key: 'inventory', label: 'المخزون' },
+    { key: 'deferred', label: 'الآجل' },
+    { key: 'expenses', label: 'المصروفات' },
+    { key: 'work-orders', label: 'أمر شغل' }
+  ];
+  
+  const pages = user?.role === 'admin' ? adminPages : userPages;
+
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+    <nav className="bg-blue-600 text-white" dir="rtl">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4 space-x-reverse">
+            <h1 className="text-xl font-bold">ماستر سيل</h1>
+            <span className="text-sm">الحرفيان شارع السوبر جيت - 01020630677</span>
+          </div>
+          
+          <div className="flex items-center space-x-4 space-x-reverse">
+            <span className="text-sm">أهلاً {user?.username}</span>
+            <button
+              onClick={logout}
+              className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
+            >
+              خروج
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex space-x-4 space-x-reverse border-t border-blue-500 py-2">
+          {pages.map(page => (
+            <button
+              key={page.key}
+              onClick={() => onPageChange(page.key)}
+              className={`px-4 py-2 rounded text-sm transition-colors ${
+                currentPage === page.key 
+                  ? 'bg-blue-800 text-white' 
+                  : 'hover:bg-blue-500'
+              }`}
+            >
+              {page.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// Dashboard Component
+const Dashboard = () => {
+  const [stats, setStats] = useState({
+    total_sales: 0,
+    total_expenses: 0,
+    net_profit: 0,
+    total_unpaid: 0,
+    invoice_count: 0,
+    customer_count: 0
+  });
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${API}/dashboard/stats`);
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">لوحة التحكم</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+          <select className="border border-gray-300 rounded px-3 py-2">
+            <option>يومي</option>
+            <option>أسبوعي</option>
+            <option>شهري</option>
+            <option>سنوي</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 text-center">إجمالي المبيعات</h3>
+          <p className="text-3xl font-bold text-green-600 text-center">
+            ج.م {stats.total_sales.toFixed(2)}
+          </p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 text-center">إجمالي المصروفات</h3>
+          <p className="text-3xl font-bold text-red-600 text-center">
+            ج.م {stats.total_expenses.toFixed(2)}
+          </p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 text-center">صافي الربح</h3>
+          <p className="text-3xl font-bold text-blue-600 text-center">
+            ج.م {stats.net_profit.toFixed(2)}
+          </p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 text-center">المبالغ المستحقة</h3>
+          <p className="text-3xl font-bold text-orange-600 text-center">
+            ج.م {stats.total_unpaid.toFixed(2)}
+          </p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 text-center">عدد الفواتير</h3>
+          <p className="text-3xl font-bold text-purple-600 text-center">
+            {stats.invoice_count}
+          </p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700 text-center">عدد العملاء</h3>
+          <p className="text-3xl font-bold text-blue-600 text-center">
+            {stats.customer_count}
+          </p>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
-export default App;
+// Sales Component
+const Sales = () => {
+  const [customers, setCustomers] = useState([]);
+  const [newCustomer, setNewCustomer] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [currentItem, setCurrentItem] = useState({
+    seal_type: 'RSL',
+    material_type: 'NBR',
+    inner_diameter: '',
+    outer_diameter: '',
+    height: '',
+    quantity: 1,
+    unit_price: ''
+  });
+  const [items, setItems] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('نقدي');
+  const [compatibilityResults, setCompatibilityResults] = useState(null);
+
+  const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
+  const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(`${API}/customers`);
+      setCustomers(response.data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
+  const checkCompatibility = async () => {
+    try {
+      const response = await axios.post(`${API}/compatibility-check`, {
+        seal_type: currentItem.seal_type,
+        inner_diameter: parseFloat(currentItem.inner_diameter),
+        outer_diameter: parseFloat(currentItem.outer_diameter),
+        height: parseFloat(currentItem.height)
+      });
+      setCompatibilityResults(response.data);
+    } catch (error) {
+      console.error('Error checking compatibility:', error);
+    }
+  };
+
+  const addItem = () => {
+    if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height || !currentItem.unit_price) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    const item = {
+      ...currentItem,
+      inner_diameter: parseFloat(currentItem.inner_diameter),
+      outer_diameter: parseFloat(currentItem.outer_diameter),
+      height: parseFloat(currentItem.height),
+      quantity: parseInt(currentItem.quantity),
+      unit_price: parseFloat(currentItem.unit_price),
+      total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity)
+    };
+
+    setItems([...items, item]);
+    setCurrentItem({
+      seal_type: 'RSL',
+      material_type: 'NBR',
+      inner_diameter: '',
+      outer_diameter: '',
+      height: '',
+      quantity: 1,
+      unit_price: ''
+    });
+    setCompatibilityResults(null);
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <h2 className="text-2xl font-bold text-blue-600 mb-6">المبيعات</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Customer Selection */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">اختيار العميل</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <select
+                value={selectedCustomer}
+                onChange={(e) => setSelectedCustomer(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                <option value="">اختر العميل</option>
+                {customers.map(customer => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex space-x-2 space-x-reverse">
+              <input
+                type="text"
+                value={newCustomer}
+                onChange={(e) => setNewCustomer(e.target.value)}
+                placeholder="اسم عميل جديد"
+                className="flex-1 p-2 border border-gray-300 rounded"
+              />
+              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                عميل جديد
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Entry */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">إضافة منتج</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">نوع السيل</label>
+              <select
+                value={currentItem.seal_type}
+                onChange={(e) => setCurrentItem({...currentItem, seal_type: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                {sealTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">نوع الخامة</label>
+              <select
+                value={currentItem.material_type}
+                onChange={(e) => setCurrentItem({...currentItem, material_type: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                {materialTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">القطر الداخلي</label>
+              <input
+                type="number"
+                value={currentItem.inner_diameter}
+                onChange={(e) => setCurrentItem({...currentItem, inner_diameter: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">القطر الخارجي</label>
+              <input
+                type="number"
+                value={currentItem.outer_diameter}
+                onChange={(e) => setCurrentItem({...currentItem, outer_diameter: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">ارتفاع السيل</label>
+              <input
+                type="number"
+                value={currentItem.height}
+                onChange={(e) => setCurrentItem({...currentItem, height: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">عدد السيل</label>
+              <input
+                type="number"
+                value={currentItem.quantity}
+                onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">سعر السيل الواحد</label>
+              <input
+                type="number"
+                step="0.01"
+                value={currentItem.unit_price}
+                onChange={(e) => setCurrentItem({...currentItem, unit_price: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                onClick={checkCompatibility}
+                className="w-full bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600"
+              >
+                فحص التوافق
+              </button>
+            </div>
+          </div>
+          
+          <button
+            onClick={addItem}
+            className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 mt-4"
+          >
+            إضافة للفاتورة
+          </button>
+        </div>
+      </div>
+
+      {/* Compatibility Results */}
+      {compatibilityResults && (
+        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">نتائج فحص التوافق</h3>
+          
+          {compatibilityResults.compatible_materials.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-medium mb-2">الخامات المتوافقة:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {compatibilityResults.compatible_materials.map((material, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 border rounded ${material.low_stock ? 'border-red-300 bg-red-50' : 'border-green-300 bg-green-50'}`}
+                  >
+                    <p><strong>النوع:</strong> {material.material_type}</p>
+                    <p><strong>الكود:</strong> {material.unit_code}</p>
+                    <p><strong>المقاس:</strong> {material.inner_diameter} × {material.outer_diameter} × {material.height}</p>
+                    {material.warning && <p className="text-red-600 text-sm">{material.warning}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {compatibilityResults.compatible_products.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-2">المنتجات الجاهزة:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {compatibilityResults.compatible_products.map((product, index) => (
+                  <div key={index} className="p-3 border border-blue-300 bg-blue-50 rounded">
+                    <p><strong>النوع:</strong> {product.seal_type} - {product.material_type}</p>
+                    <p><strong>المقاس:</strong> {product.inner_diameter} × {product.outer_diameter} × {product.height}</p>
+                    <p><strong>الكمية:</strong> {product.quantity}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Current Items */}
+      {items.length > 0 && (
+        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">الفواتير الأخيرة</h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2">نوع السيل</th>
+                  <th className="border border-gray-300 p-2">نوع الخامة</th>
+                  <th className="border border-gray-300 p-2">المقاس</th>
+                  <th className="border border-gray-300 p-2">الكمية</th>
+                  <th className="border border-gray-300 p-2">السعر</th>
+                  <th className="border border-gray-300 p-2">المجموع</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-gray-300 p-2">{item.seal_type}</td>
+                    <td className="border border-gray-300 p-2">{item.material_type}</td>
+                    <td className="border border-gray-300 p-2">
+                      {item.inner_diameter} × {item.outer_diameter} × {item.height}
+                    </td>
+                    <td className="border border-gray-300 p-2">{item.quantity}</td>
+                    <td className="border border-gray-300 p-2">ج.م {item.unit_price}</td>
+                    <td className="border border-gray-300 p-2">ج.م {item.total_price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 flex justify-between items-center">
+            <div>
+              <label className="block text-sm font-medium mb-1">طريقة الدفع</label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="p-2 border border-gray-300 rounded"
+              >
+                <option value="نقدي">نقدي</option>
+                <option value="آجل">آجل</option>
+                <option value="فودافون كاش محمد الصاوي">فودافون كاش محمد الصاوي</option>
+                <option value="فودافون كاش وائل محمد">فودافون كاش وائل محمد</option>
+                <option value="انستاباي">انستاباي</option>
+              </select>
+            </div>
+            
+            <div className="text-xl font-bold">
+              الإجمالي: ج.م {items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}
+            </div>
+          </div>
+          
+          <button className="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 mt-4 text-lg font-semibold">
+            إنشاء الفاتورة
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Simple placeholder components for other pages
+const Inventory = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">إدارة المخزون</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة إدارة المخزون قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+const Deferred = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">الآجل</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة الآجل قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+const Expenses = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">المصروفات</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة المصروفات قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+const Revenue = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">الإيرادات</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة الإيرادات قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+const Invoices = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">الفواتير</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة الفواتير قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+const WorkOrders = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">أمر شغل</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة أمر شغل قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+const Users = () => (
+  <div className="p-6" dir="rtl">
+    <h2 className="text-2xl font-bold text-blue-600 mb-6">إدارة المستخدمين</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <p>صفحة إدارة المستخدمين قيد التطوير...</p>
+    </div>
+  </div>
+);
+
+// Main App Component
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const { user } = useAuth();
+
+  if (!user) return <Login />;
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard': return <Dashboard />;
+      case 'sales': return <Sales />;
+      case 'inventory': return <Inventory />;
+      case 'deferred': return <Deferred />;
+      case 'expenses': return <Expenses />;
+      case 'revenue': return <Revenue />;
+      case 'invoices': return <Invoices />;
+      case 'work-orders': return <WorkOrders />;
+      case 'users': return <Users />;
+      default: return <Dashboard />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+      <main>
+        {renderPage()}
+      </main>
+    </div>
+  );
+};
+
+// Root App with AuthProvider
+const AppWithAuth = () => (
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+);
+
+export default AppWithAuth;
