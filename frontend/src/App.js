@@ -1338,14 +1338,255 @@ const Deferred = () => {
   );
 };
 
-const Expenses = () => (
-  <div className="p-6" dir="rtl">
-    <h2 className="text-2xl font-bold text-blue-600 mb-6">المصروفات</h2>
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <p>صفحة المصروفات قيد التطوير...</p>
+// Expenses Component
+const Expenses = () => {
+  const [expenses, setExpenses] = useState([]);
+  const [newExpense, setNewExpense] = useState({
+    description: '',
+    amount: '',
+    category: 'خامات'
+  });
+
+  const expenseCategories = ['خامات', 'رواتب', 'كهرباء', 'صيانة', 'أخرى'];
+
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      const response = await axios.get(`${API}/expenses`);
+      setExpenses(response.data);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    }
+  };
+
+  const addExpense = async () => {
+    if (!newExpense.description || !newExpense.amount) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/expenses`, {
+        ...newExpense,
+        amount: parseFloat(newExpense.amount)
+      });
+
+      setNewExpense({
+        description: '',
+        amount: '',
+        category: 'خامات'
+      });
+
+      fetchExpenses();
+      alert('تم إضافة المصروف بنجاح');
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      alert('حدث خطأ في إضافة المصروف');
+    }
+  };
+
+  const deleteExpense = async (expenseId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المصروف؟')) return;
+
+    try {
+      await axios.delete(`${API}/expenses/${expenseId}`);
+      fetchExpenses();
+      alert('تم حذف المصروف بنجاح');
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      alert('حدث خطأ في حذف المصروف');
+    }
+  };
+
+  const getTotalExpenses = () => {
+    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  };
+
+  const getExpensesByCategory = () => {
+    const byCategory = {};
+    expenseCategories.forEach(cat => {
+      byCategory[cat] = expenses
+        .filter(exp => exp.category === cat)
+        .reduce((sum, exp) => sum + exp.amount, 0);
+    });
+    return byCategory;
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">المصروفات</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button 
+            onClick={fetchExpenses}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+          <select className="border border-gray-300 rounded px-3 py-2">
+            <option>يومي</option>
+            <option>أسبوعي</option>
+            <option>شهري</option>
+            <option>سنوي</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Add New Expense */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">إضافة مصروف جديد</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">وصف المصروف</label>
+            <input
+              type="text"
+              value={newExpense.description}
+              onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="مثال: شراء خامات، كهرباء المصنع"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">المبلغ</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newExpense.amount}
+              onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="0.00"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">الفئة</label>
+            <select
+              value={newExpense.category}
+              onChange={(e) => setNewExpense({...newExpense, category: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              {expenseCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        <button
+          onClick={addExpense}
+          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+        >
+          إضافة المصروف
+        </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <div className="bg-red-50 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">إجمالي المصروفات</h3>
+          <p className="text-3xl font-bold text-red-600">
+            ج.م {getTotalExpenses().toFixed(2)}
+          </p>
+        </div>
+        
+        <div className="bg-blue-50 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">عدد المصروفات</h3>
+          <p className="text-3xl font-bold text-blue-600">{expenses.length}</p>
+        </div>
+        
+        <div className="bg-yellow-50 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">متوسط المصروف</h3>
+          <p className="text-3xl font-bold text-yellow-600">
+            ج.م {expenses.length > 0 ? (getTotalExpenses() / expenses.length).toFixed(2) : '0.00'}
+          </p>
+        </div>
+      </div>
+
+      {/* Expenses by Category */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">المصروفات حسب الفئة</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {Object.entries(getExpensesByCategory()).map(([category, amount]) => (
+            <div key={category} className="text-center p-4 border rounded">
+              <h4 className="font-medium text-gray-700">{category}</h4>
+              <p className="text-xl font-bold text-blue-600">ج.م {amount.toFixed(2)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Expenses List */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">المصروفات</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">الوصف</th>
+                <th className="border border-gray-300 p-2">المبلغ</th>
+                <th className="border border-gray-300 p-2">الفئة</th>
+                <th className="border border-gray-300 p-2">التاريخ</th>
+                <th className="border border-gray-300 p-2">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((expense) => (
+                <tr key={expense.id}>
+                  <td className="border border-gray-300 p-2">{expense.description}</td>
+                  <td className="border border-gray-300 p-2">
+                    <span className="font-semibold text-red-600">
+                      ج.م {expense.amount.toFixed(2)}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      expense.category === 'خامات' ? 'bg-blue-100 text-blue-800' :
+                      expense.category === 'رواتب' ? 'bg-green-100 text-green-800' :
+                      expense.category === 'كهرباء' ? 'bg-yellow-100 text-yellow-800' :
+                      expense.category === 'صيانة' ? 'bg-purple-100 text-purple-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {expense.category}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {new Date(expense.date).toLocaleDateString('ar-EG')}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <button 
+                      onClick={() => deleteExpense(expense.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {expenses.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              لا توجد مصروفات مسجلة
+            </div>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Revenue = () => (
   <div className="p-6" dir="rtl">
