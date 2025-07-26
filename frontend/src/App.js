@@ -2067,14 +2067,203 @@ const Invoices = () => {
   );
 };
 
-const WorkOrders = () => (
-  <div className="p-6" dir="rtl">
-    <h2 className="text-2xl font-bold text-blue-600 mb-6">أمر شغل</h2>
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <p>صفحة أمر شغل قيد التطوير...</p>
+// Work Orders Component
+const WorkOrders = () => {
+  const [workOrders, setWorkOrders] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+
+  useEffect(() => {
+    fetchWorkOrders();
+    fetchInvoices();
+  }, []);
+
+  const fetchWorkOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/work-orders`);
+      setWorkOrders(response.data);
+    } catch (error) {
+      console.error('Error fetching work orders:', error);
+    }
+  };
+
+  const fetchInvoices = async () => {
+    try {
+      const response = await axios.get(`${API}/invoices`);
+      setInvoices(response.data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+    }
+  };
+
+  const createWorkOrder = async (invoiceId) => {
+    try {
+      await axios.post(`${API}/work-orders`, null, {
+        params: { invoice_id: invoiceId }
+      });
+      fetchWorkOrders();
+      alert('تم إنشاء أمر الشغل بنجاح');
+    } catch (error) {
+      console.error('Error creating work order:', error);
+      alert('حدث خطأ في إنشاء أمر الشغل');
+    }
+  };
+
+  const getInvoiceDetails = (invoiceId) => {
+    return invoices.find(inv => inv.id === invoiceId);
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">أمر شغل</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button 
+            onClick={fetchWorkOrders}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+          <select className="border border-gray-300 rounded px-3 py-2">
+            <option>يومي</option>
+            <option>أسبوعي</option>
+            <option>شهري</option>
+            <option>سنوي</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Create Work Order from Invoice */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">إنشاء أمر شغل من فاتورة</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {invoices.filter(inv => !workOrders.some(wo => wo.invoice_id === inv.id)).map(invoice => (
+            <div key={invoice.id} className="border rounded-lg p-4">
+              <div className="mb-2">
+                <h4 className="font-semibold">{invoice.invoice_number}</h4>
+                <p className="text-sm text-gray-600">العميل: {invoice.customer_name}</p>
+                <p className="text-sm text-gray-600">
+                  التاريخ: {new Date(invoice.date).toLocaleDateString('ar-EG')}
+                </p>
+                <p className="text-sm font-medium">
+                  المبلغ: ج.م {invoice.total_amount?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              
+              <button
+                onClick={() => createWorkOrder(invoice.id)}
+                className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+              >
+                إنشاء أمر شغل
+              </button>
+            </div>
+          ))}
+        </div>
+        
+        {invoices.filter(inv => !workOrders.some(wo => wo.invoice_id === inv.id)).length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            جميع الفواتير لها أوامر شغل مرتبطة بها
+          </div>
+        )}
+      </div>
+
+      {/* Work Orders List */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">أوامر الشغل</h3>
+        
+        {workOrders.map(workOrder => {
+          const invoice = getInvoiceDetails(workOrder.invoice_id);
+          if (!invoice) return null;
+          
+          return (
+            <div key={workOrder.id} className="border rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h4 className="font-semibold text-lg">أمر شغل #{workOrder.id.slice(-8)}</h4>
+                  <p><strong>رقم الفاتورة:</strong> {invoice.invoice_number}</p>
+                  <p><strong>العميل:</strong> {invoice.customer_name}</p>
+                  <p><strong>تاريخ الإنشاء:</strong> {new Date(workOrder.created_at).toLocaleDateString('ar-EG')}</p>
+                </div>
+                
+                <div>
+                  <p><strong>الحالة:</strong> 
+                    <span className="mr-2 px-2 py-1 rounded text-sm bg-blue-100 text-blue-800">
+                      {workOrder.status}
+                    </span>
+                  </p>
+                  <p><strong>إجمالي الفاتورة:</strong> ج.م {invoice.total_amount?.toFixed(2) || '0.00'}</p>
+                </div>
+              </div>
+              
+              {/* Work Order Items */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-2">نوع السيل</th>
+                      <th className="border border-gray-300 p-2">نوع الخامة</th>
+                      <th className="border border-gray-300 p-2">المقاس</th>
+                      <th className="border border-gray-300 p-2">الكمية</th>
+                      <th className="border border-gray-300 p-2">الخامة المستخدمة</th>
+                      <th className="border border-gray-300 p-2">كود الوحدة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoice.items?.map((item, index) => (
+                      <tr key={index}>
+                        <td className="border border-gray-300 p-2">{item.seal_type}</td>
+                        <td className="border border-gray-300 p-2">{item.material_type}</td>
+                        <td className="border border-gray-300 p-2">
+                          {item.inner_diameter} × {item.outer_diameter} × {item.height}
+                        </td>
+                        <td className="border border-gray-300 p-2">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                            {item.material_type}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          <span className="font-mono text-sm">
+                            {item.material_used || 'غير محدد'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Work Order Actions */}
+              <div className="mt-4 flex space-x-4 space-x-reverse">
+                <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                  طباعة أمر الشغل
+                </button>
+                <button className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+                  تعديل الحالة
+                </button>
+                <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                  حذف
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        
+        {workOrders.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            لا توجد أوامر شغل
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Users = () => (
   <div className="p-6" dir="rtl">
