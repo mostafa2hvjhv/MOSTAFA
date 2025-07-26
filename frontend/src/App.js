@@ -2265,14 +2265,221 @@ const WorkOrders = () => {
   );
 };
 
-const Users = () => (
-  <div className="p-6" dir="rtl">
-    <h2 className="text-2xl font-bold text-blue-600 mb-6">إدارة المستخدمين</h2>
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <p>صفحة إدارة المستخدمين قيد التطوير...</p>
+// Users Management Component  
+const Users = () => {
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({
+    username: '',
+    password: '',
+    role: 'user'
+  });
+
+  useEffect(() => {
+    // Since users are predefined, we'll show them statically
+    setUsers([
+      { id: '1', username: 'Elsawy', role: 'admin', created_at: new Date().toISOString() },
+      { id: '2', username: 'Root', role: 'user', created_at: new Date().toISOString() }
+    ]);
+  }, []);
+
+  const addUser = async () => {
+    if (!newUser.username || !newUser.password) {
+      alert('الرجاء إدخال اسم المستخدم وكلمة المرور');
+      return;
+    }
+
+    // For demo purposes, we'll add to local state
+    // In real implementation, this would call the API
+    const user = {
+      id: Date.now().toString(),
+      username: newUser.username,
+      role: newUser.role,
+      created_at: new Date().toISOString()
+    };
+
+    setUsers([...users, user]);
+    setNewUser({ username: '', password: '', role: 'user' });
+    alert('تم إضافة المستخدم بنجاح');
+  };
+
+  const deleteUser = (userId) => {
+    if (userId === '1' || userId === '2') {
+      alert('لا يمكن حذف المستخدمين الأساسيين');
+      return;
+    }
+
+    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+
+    setUsers(users.filter(user => user.id !== userId));
+    alert('تم حذف المستخدم بنجاح');
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">إدارة المستخدمين</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+        </div>
+      </div>
+
+      {/* Add New User */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">إضافة مستخدم جديد</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">اسم المستخدم</label>
+            <input
+              type="text"
+              value={newUser.username}
+              onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="اسم المستخدم"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">كلمة المرور</label>
+            <input
+              type="password"
+              value={newUser.password}
+              onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="كلمة المرور"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">الصلاحية</label>
+            <select
+              value={newUser.role}
+              onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              <option value="user">مستخدم عادي</option>
+              <option value="admin">مدير</option>
+            </select>
+          </div>
+        </div>
+        
+        <button
+          onClick={addUser}
+          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+        >
+          إضافة المستخدم
+        </button>
+      </div>
+
+      {/* Users Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">المستخدمين</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">اسم المستخدم</th>
+                <th className="border border-gray-300 p-2">الصلاحية</th>
+                <th className="border border-gray-300 p-2">تاريخ الإنشاء</th>
+                <th className="border border-gray-300 p-2">الحالة</th>
+                <th className="border border-gray-300 p-2">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td className="border border-gray-300 p-2 font-semibold">
+                    {user.username}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      user.role === 'admin' 
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {user.role === 'admin' ? 'مدير' : 'مستخدم عادي'}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {new Date(user.created_at).toLocaleDateString('ar-EG')}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <span className="px-2 py-1 rounded text-sm bg-green-100 text-green-800">
+                      نشط
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <div className="flex space-x-2 space-x-reverse">
+                      {(user.id !== '1' && user.id !== '2') && (
+                        <>
+                          <button className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
+                            تعديل
+                          </button>
+                          <button 
+                            onClick={() => deleteUser(user.id)}
+                            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
+                            حذف
+                          </button>
+                        </>
+                      )}
+                      {(user.id === '1' || user.id === '2') && (
+                        <span className="text-sm text-gray-500">مستخدم أساسي</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* User Permissions Info */}
+        <div className="mt-6">
+          <h4 className="text-lg font-semibold mb-3">صلاحيات المستخدمين</h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-red-50 p-4 rounded">
+              <h5 className="font-semibold text-red-800 mb-2">المدير (admin)</h5>
+              <ul className="text-sm text-red-700 space-y-1">
+                <li>• لوحة التحكم</li>
+                <li>• المبيعات</li>
+                <li>• المخزون</li>
+                <li>• الآجل</li>
+                <li>• المصروفات</li>
+                <li>• الإيرادات</li>
+                <li>• الفواتير</li>
+                <li>• أمر شغل</li>
+                <li>• إدارة المستخدمين</li>
+              </ul>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded">
+              <h5 className="font-semibold text-blue-800 mb-2">المستخدم العادي (user)</h5>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• لوحة التحكم</li>
+                <li>• المبيعات</li>
+                <li>• المخزون</li>
+                <li>• الآجل</li>
+                <li>• المصروفات</li>
+                <li>• أمر شغل</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Main App Component
 const App = () => {
