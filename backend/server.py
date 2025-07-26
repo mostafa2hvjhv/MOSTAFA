@@ -341,9 +341,11 @@ async def check_compatibility(check: CompatibilityCheck):
         if "_id" in material:
             del material["_id"]
             
-        # Material must have inner/outer diameter >= seal requirements
-        # And height should be >= seal height + 5mm
-        if (material["inner_diameter"] >= check.inner_diameter and 
+        # Material compatibility logic:
+        # - Inner diameter of material <= seal inner diameter
+        # - Outer diameter of material >= seal outer diameter  
+        # - Height of material >= seal height + 5mm
+        if (material["inner_diameter"] <= check.inner_diameter and 
             material["outer_diameter"] >= check.outer_diameter and
             material["height"] >= (check.height + 5)):
             
