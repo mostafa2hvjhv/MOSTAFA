@@ -387,7 +387,7 @@ async def create_invoice(invoice: InvoiceCreate):
     # Calculate totals
     total_amount = sum(item.total_price for item in invoice.items)
     remaining_amount = total_amount if invoice.payment_method == PaymentMethod.DEFERRED else 0
-    status = InvoiceStatus.UNPAID if invoice.payment_method == PaymentMethod.DEFERRED else InvoiceStatus.PAID
+    status = InvoiceStatus.PENDING  # Always start with PENDING status
     
     invoice_dict = invoice.dict()
     invoice_obj = Invoice(
