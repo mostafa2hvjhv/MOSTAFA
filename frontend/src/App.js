@@ -1588,14 +1588,194 @@ const Expenses = () => {
   );
 };
 
-const Revenue = () => (
-  <div className="p-6" dir="rtl">
-    <h2 className="text-2xl font-bold text-blue-600 mb-6">الإيرادات</h2>
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <p>صفحة الإيرادات قيد التطوير...</p>
+// Revenue Component
+const Revenue = () => {
+  const [revenueData, setRevenueData] = useState({
+    total_revenue: 0,
+    total_expenses: 0,
+    material_cost: 0,
+    profit: 0
+  });
+  const [period, setPeriod] = useState('daily');
+
+  useEffect(() => {
+    fetchRevenueData();
+  }, [period]);
+
+  const fetchRevenueData = async () => {
+    try {
+      const response = await axios.get(`${API}/reports/revenue?period=${period}`);
+      setRevenueData(response.data);
+    } catch (error) {
+      console.error('Error fetching revenue data:', error);
+    }
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">الإيرادات</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button 
+            onClick={fetchRevenueData}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+          <select 
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="border border-gray-300 rounded px-3 py-2">
+            <option value="daily">اليوم</option>
+            <option value="weekly">الأسبوع</option>
+            <option value="monthly">الشهر</option>
+            <option value="yearly">السنة</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Revenue Cards */}
+        <div className="bg-green-50 p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-green-800 text-center mb-2">إجمالي الإيرادات</h3>
+          <p className="text-3xl font-bold text-green-600 text-center">
+            ج.م {revenueData.total_revenue?.toFixed(2) || '0.00'}
+          </p>
+        </div>
+        
+        <div className="bg-red-50 p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-red-800 text-center mb-2">إجمالي المصروفات</h3>
+          <p className="text-3xl font-bold text-red-600 text-center">
+            ج.م {revenueData.total_expenses?.toFixed(2) || '0.00'}
+          </p>
+        </div>
+        
+        <div className="bg-yellow-50 p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-yellow-800 text-center mb-2">تكلفة الخامات</h3>
+          <p className="text-3xl font-bold text-yellow-600 text-center">
+            ج.م {revenueData.material_cost?.toFixed(2) || '0.00'}
+          </p>
+        </div>
+        
+        <div className="bg-blue-50 p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-blue-800 text-center mb-2">صافي الربح</h3>
+          <p className={`text-3xl font-bold text-center ${
+            (revenueData.profit || 0) >= 0 ? 'text-blue-600' : 'text-red-600'
+          }`}>
+            ج.م {revenueData.profit?.toFixed(2) || '0.00'}
+          </p>
+        </div>
+      </div>
+
+      {/* Summary Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md mt-6">
+        <h3 className="text-lg font-semibold mb-4">تقرير الإيرادات - {
+          period === 'daily' ? 'يومي' :
+          period === 'weekly' ? 'أسبوعي' :
+          period === 'monthly' ? 'شهري' : 'سنوي'
+        }</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-3">البيان</th>
+                <th className="border border-gray-300 p-3">المبلغ (ج.م)</th>
+                <th className="border border-gray-300 p-3">النسبة المئوية</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-gray-300 p-3 font-semibold">إجمالي الإيرادات</td>
+                <td className="border border-gray-300 p-3 text-green-600 font-bold">
+                  {revenueData.total_revenue?.toFixed(2) || '0.00'}
+                </td>
+                <td className="border border-gray-300 p-3">100%</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 p-3">تكلفة الخامات</td>
+                <td className="border border-gray-300 p-3 text-yellow-600 font-semibold">
+                  -{revenueData.material_cost?.toFixed(2) || '0.00'}
+                </td>
+                <td className="border border-gray-300 p-3">
+                  {revenueData.total_revenue > 0 
+                    ? ((revenueData.material_cost / revenueData.total_revenue) * 100).toFixed(1) 
+                    : '0.0'}%
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 p-3">مصروفات أخرى</td>
+                <td className="border border-gray-300 p-3 text-red-600 font-semibold">
+                  -{((revenueData.total_expenses || 0) - (revenueData.material_cost || 0)).toFixed(2)}
+                </td>
+                <td className="border border-gray-300 p-3">
+                  {revenueData.total_revenue > 0 
+                    ? (((revenueData.total_expenses - revenueData.material_cost) / revenueData.total_revenue) * 100).toFixed(1) 
+                    : '0.0'}%
+                </td>
+              </tr>
+              <tr className="bg-blue-50">
+                <td className="border border-gray-300 p-3 font-bold">صافي الربح</td>
+                <td className={`border border-gray-300 p-3 font-bold ${
+                  (revenueData.profit || 0) >= 0 ? 'text-blue-600' : 'text-red-600'
+                }`}>
+                  {revenueData.profit?.toFixed(2) || '0.00'}
+                </td>
+                <td className="border border-gray-300 p-3 font-bold">
+                  {revenueData.total_revenue > 0 
+                    ? ((revenueData.profit / revenueData.total_revenue) * 100).toFixed(1) 
+                    : '0.0'}%
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Performance Indicators */}
+      <div className="bg-white p-6 rounded-lg shadow-md mt-6">
+        <h3 className="text-lg font-semibold mb-4">مؤشرات الأداء</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 border rounded">
+            <h4 className="font-medium text-gray-700 mb-2">هامش الربح</h4>
+            <p className={`text-2xl font-bold ${
+              (revenueData.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {revenueData.total_revenue > 0 
+                ? ((revenueData.profit / revenueData.total_revenue) * 100).toFixed(1) 
+                : '0.0'}%
+            </p>
+          </div>
+          
+          <div className="text-center p-4 border rounded">
+            <h4 className="font-medium text-gray-700 mb-2">نسبة تكلفة الخامات</h4>
+            <p className="text-2xl font-bold text-yellow-600">
+              {revenueData.total_revenue > 0 
+                ? ((revenueData.material_cost / revenueData.total_revenue) * 100).toFixed(1) 
+                : '0.0'}%
+            </p>
+          </div>
+          
+          <div className="text-center p-4 border rounded">
+            <h4 className="font-medium text-gray-700 mb-2">نسبة المصروفات الإجمالية</h4>
+            <p className="text-2xl font-bold text-red-600">
+              {revenueData.total_revenue > 0 
+                ? ((revenueData.total_expenses / revenueData.total_revenue) * 100).toFixed(1) 
+                : '0.0'}%
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Invoices = () => (
   <div className="p-6" dir="rtl">
