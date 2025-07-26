@@ -337,6 +337,10 @@ async def check_compatibility(check: CompatibilityCheck):
     
     # Check raw materials
     for material in raw_materials:
+        # Remove MongoDB ObjectId if present
+        if "_id" in material:
+            del material["_id"]
+            
         # Material must have inner/outer diameter >= seal requirements
         # And height should be >= seal height + 5mm
         if (material["inner_diameter"] >= check.inner_diameter and 
@@ -355,6 +359,10 @@ async def check_compatibility(check: CompatibilityCheck):
     
     # Check finished products
     for product in finished_products:
+        # Remove MongoDB ObjectId if present
+        if "_id" in product:
+            del product["_id"]
+            
         if (product["seal_type"] == check.seal_type and
             product["inner_diameter"] == check.inner_diameter and
             product["outer_diameter"] == check.outer_diameter and
