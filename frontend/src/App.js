@@ -223,6 +223,55 @@ const Dashboard = () => {
     }
   };
 
+  const printReport = (reportType) => {
+    let printContent = '';
+    const currentDate = new Date().toLocaleDateString('ar-EG');
+    
+    if (reportType === 'dashboard') {
+      printContent = `
+        <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1>ماستر سيل</h1>
+            <p>الحرفيان شارع السوبر جيت - 01020630677</p>
+            <h2>تقرير لوحة التحكم</h2>
+            <p>التاريخ: ${currentDate}</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>إجمالي المبيعات:</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">ج.م ${stats.total_sales.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>إجمالي المصروفات:</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">ج.م ${stats.total_expenses.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>صافي الربح:</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">ج.م ${stats.net_profit.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>المبالغ المستحقة:</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">ج.م ${stats.total_unpaid.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>عدد الفواتير:</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">${stats.invoice_count}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 10px;"><strong>عدد العملاء:</strong></td>
+              <td style="border: 1px solid #ddd; padding: 10px;">${stats.customer_count}</td>
+            </tr>
+          </table>
+        </div>
+      `;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="mb-6">
