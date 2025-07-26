@@ -748,6 +748,10 @@ const Inventory = () => {
     }
   };
 
+  const printReport = (reportType) => {
+    window.print();
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="mb-6">
