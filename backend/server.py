@@ -283,7 +283,7 @@ async def get_customer(customer_id: str):
     return Customer(**customer)
 
 # Raw materials endpoints
-@api_router.post "/raw-materials", response_model=RawMaterial)
+@api_router.post("/raw-materials", response_model=RawMaterial)
 async def create_raw_material(material: RawMaterialCreate):
     material_dict = material.dict()
     material_obj = RawMaterial(**material_dict)
