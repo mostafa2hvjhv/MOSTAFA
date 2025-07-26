@@ -284,10 +284,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend APIs testing completed successfully"
+    - "Frontend authentication testing"
+    - "Dashboard functionality testing"
+    - "Sales interface comprehensive testing"
+    - "Navigation between all pages"
+    - "User role permissions testing"
+    - "Arabic interface and RTL support"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "sequential"
 
 agent_communication:
   - agent: "main"
