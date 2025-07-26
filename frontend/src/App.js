@@ -1055,14 +1055,288 @@ const Inventory = () => {
   );
 };
 
-const Deferred = () => (
-  <div className="p-6" dir="rtl">
-    <h2 className="text-2xl font-bold text-blue-600 mb-6">الآجل</h2>
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <p>صفحة الآجل قيد التطوير...</p>
+// Deferred Payments Component
+const Deferred = () => {
+  const [unpaidInvoices, setUnpaidInvoices] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('نقدي');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  useEffect(() => {
+    fetchUnpaidInvoices();
+    fetchCustomers();
+  }, []);
+
+  const fetchUnpaidInvoices = async () => {
+    try {
+      const response = await axios.get(`${API}/invoices`);
+      const invoices = response.data.filter(invoice => 
+        invoice.status === 'غير مدفوعة' || invoice.status === 'مدفوعة جزئياً'
+      );
+      setUnpaidInvoices(invoices);
+    } catch (error) {
+      console.error('Error fetching unpaid invoices:', error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(`${API}/customers`);
+      setCustomers(response.data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
+  const getCustomerName = (customerId) => {
+    const customer = customers.find(c => c.id === customerId);
+    return customer ? customer.name : 'عميل غير محدد';
+  };
+
+  const makePayment = async () => {
+    if (!selectedInvoice || !paymentAmount) {
+      alert('الرجاء اختيار الفاتورة وإدخال المبلغ');
+      return;
+    }
+
+    if (parseFloat(paymentAmount) > selectedInvoice.remaining_amount) {
+      alert('المبلغ المدخل أكبر من المبلغ المستحق');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/payments`, {
+        invoice_id: selectedInvoice.id,
+        amount: parseFloat(paymentAmount),
+        payment_method: paymentMethod,
+        notes: paymentNotes
+      });
+
+      setPaymentAmount('');
+      setPaymentNotes('');
+      setSelectedInvoice(null);
+      fetchUnpaidInvoices();
+      alert('تم تسجيل الدفعة بنجاح');
+    } catch (error) {
+      console.error('Error making payment:', error);
+      alert('حدث خطأ في تسجيل الدفعة');
+    }
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">الآجل - متابعة المدفوعات</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button 
+            onClick={fetchUnpaidInvoices}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+          <select className="border border-gray-300 rounded px-3 py-2">
+            <option>يومي</option>
+            <option>أسبوعي</option>
+            <option>شهري</option>
+            <option>سنوي</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Payment Form */}
+      {selectedInvoice && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h3 className="text-lg font-semibold mb-4">تسجيل دفعة</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">رقم الفاتورة</label>
+              <input
+                type="text"
+                value={selectedInvoice.invoice_number}
+                disabled
+                className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">العميل</label>
+              <input
+                type="text"
+                value={selectedInvoice.customer_name}
+                disabled
+                className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">المبلغ المستحق</label>
+              <input
+                type="text"
+                value={`ج.م ${selectedInvoice.remaining_amount?.toFixed(2) || '0.00'}`}
+                disabled
+                className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">مبلغ الدفعة</label>
+              <input
+                type="number"
+                step="0.01"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+                placeholder="0.00"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">طريقة الدفع</label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                <option value="نقدي">نقدي</option>
+                <option value="فودافون كاش محمد الصاوي">فودافون كاش محمد الصاوي</option>
+                <option value="فودافون كاش وائل محمد">فودافون كاش وائل محمد</option>
+                <option value="انستاباي">انستاباي</option>
+              </select>
+            </div>
+            
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">ملاحظات</label>
+              <input
+                type="text"
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+                placeholder="ملاحظات إضافية (اختياري)"
+              />
+            </div>
+          </div>
+          
+          <div className="flex space-x-4 space-x-reverse">
+            <button
+              onClick={makePayment}
+              className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+            >
+              تسجيل الدفعة
+            </button>
+            <button
+              onClick={() => setSelectedInvoice(null)}
+              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unpaid Invoices */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">الفواتير غير المسددة</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">رقم الفاتورة</th>
+                <th className="border border-gray-300 p-2">العميل</th>
+                <th className="border border-gray-300 p-2">التاريخ</th>
+                <th className="border border-gray-300 p-2">الإجمالي</th>
+                <th className="border border-gray-300 p-2">المدفوع</th>
+                <th className="border border-gray-300 p-2">المستحق</th>
+                <th className="border border-gray-300 p-2">الحالة</th>
+                <th className="border border-gray-300 p-2">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unpaidInvoices.map((invoice) => (
+                <tr key={invoice.id}>
+                  <td className="border border-gray-300 p-2">{invoice.invoice_number}</td>
+                  <td className="border border-gray-300 p-2">{invoice.customer_name}</td>
+                  <td className="border border-gray-300 p-2">
+                    {new Date(invoice.date).toLocaleDateString('ar-EG')}
+                  </td>
+                  <td className="border border-gray-300 p-2">ج.م {invoice.total_amount?.toFixed(2) || '0.00'}</td>
+                  <td className="border border-gray-300 p-2">ج.م {invoice.paid_amount?.toFixed(2) || '0.00'}</td>
+                  <td className="border border-gray-300 p-2">
+                    <span className="font-bold text-red-600">
+                      ج.م {invoice.remaining_amount?.toFixed(2) || '0.00'}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      invoice.status === 'غير مدفوعة' ? 'bg-red-100 text-red-800' :
+                      invoice.status === 'مدفوعة جزئياً' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {invoice.status}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <div className="flex space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => setSelectedInvoice(invoice)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                      >
+                        عرض الدفعات
+                      </button>
+                      <button
+                        onClick={() => setSelectedInvoice(invoice)}
+                        className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                      >
+                        دفع
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {unpaidInvoices.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              لا توجد فواتير غير مسددة
+            </div>
+          )}
+        </div>
+
+        {/* Summary */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-red-50 p-4 rounded">
+            <h4 className="font-semibold text-red-800">إجمالي المبالغ المستحقة</h4>
+            <p className="text-2xl font-bold text-red-600">
+              ج.م {unpaidInvoices.reduce((sum, inv) => sum + (inv.remaining_amount || 0), 0).toFixed(2)}
+            </p>
+          </div>
+          
+          <div className="bg-yellow-50 p-4 rounded">
+            <h4 className="font-semibold text-yellow-800">عدد الفواتير المعلقة</h4>
+            <p className="text-2xl font-bold text-yellow-600">{unpaidInvoices.length}</p>
+          </div>
+          
+          <div className="bg-blue-50 p-4 rounded">
+            <h4 className="font-semibold text-blue-800">إجمالي المبلغ الأصلي</h4>
+            <p className="text-2xl font-bold text-blue-600">
+              ج.م {unpaidInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Expenses = () => (
   <div className="p-6" dir="rtl">
