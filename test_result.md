@@ -172,15 +172,18 @@ backend:
 
   - task: "Invoice management APIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "APIs شاملة لإدارة الفواتير مع تحديث المخزون التلقائي"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار جميع APIs الفواتير بنجاح - إنشاء 3 فواتير بطرق دفع مختلفة (نقدي، آجل، فودافون كاش)، استرجاع جميع الفواتير، استرجاع فاتورة محددة. تحديث المخزون التلقائي يعمل بشكل صحيح."
 
   - task: "Payment tracking APIs"
     implemented: true
