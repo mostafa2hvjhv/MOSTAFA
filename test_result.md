@@ -142,15 +142,18 @@ backend:
 
   - task: "Raw materials inventory APIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "تم بناء APIs لإدارة المواد الخام مع المقاسات والخامات المختلفة"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار جميع APIs المواد الخام بنجاح - إنشاء 5 أنواع مختلفة من الخامات (NBR, BUR, BT, VT, BOOM) بمقاسات متنوعة، استرجاع جميع المواد. تحديث المخزون يعمل بشكل صحيح عند إنشاء الفواتير."
 
   - task: "Compatibility check API"
     implemented: true
