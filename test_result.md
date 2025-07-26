@@ -127,15 +127,18 @@ backend:
 
   - task: "Customer management APIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "تم بناء APIs لإدارة العملاء - يحتاج اختبار"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار جميع APIs العملاء بنجاح - إنشاء 4 عملاء بأسماء عربية، استرجاع جميع العملاء، استرجاع عميل محدد. جميع العمليات تعمل بشكل مثالي."
 
   - task: "Raw materials inventory APIs"
     implemented: true
