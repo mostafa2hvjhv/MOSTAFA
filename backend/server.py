@@ -72,6 +72,7 @@ class InvoiceStatus(str, Enum):
     PARTIAL = "مدفوعة جزئياً"
     PENDING = "انتظار"
     COMPLETED = "تم التنفيذ"
+    MANUFACTURED = "تم التصنيع"
 
 class UserRole(str, Enum):
     ADMIN = "admin"
