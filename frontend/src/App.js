@@ -1777,14 +1777,295 @@ const Revenue = () => {
   );
 };
 
-const Invoices = () => (
-  <div className="p-6" dir="rtl">
-    <h2 className="text-2xl font-bold text-blue-600 mb-6">الفواتير</h2>
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <p>صفحة الفواتير قيد التطوير...</p>
+// Invoices Component
+const Invoices = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [filterStatus, setFilterStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchInvoices();
+    fetchCustomers();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const response = await axios.get(`${API}/invoices`);
+      setInvoices(response.data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(`${API}/customers`);
+      setCustomers(response.data);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
+  const deleteInvoice = async (invoiceId) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) return;
+
+    try {
+      await axios.delete(`${API}/invoices/${invoiceId}`);
+      fetchInvoices();
+      alert('تم حذف الفاتورة بنجاح');
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      alert('حدث خطأ في حذف الفاتورة');
+    }
+  };
+
+  const updateInvoiceStatus = async (invoiceId, newStatus) => {
+    try {
+      await axios.put(`${API}/invoices/${invoiceId}/status`, newStatus, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      fetchInvoices();
+      alert('تم تحديث حالة الفاتورة');
+    } catch (error) {
+      console.error('Error updating invoice status:', error);
+      alert('حدث خطأ في تحديث حالة الفاتورة');
+    }
+  };
+
+  const printInvoice = (invoice) => {
+    const printContent = `
+      <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1>ماستر سيل</h1>
+          <p>الحرفيان شارع السوبر جيت - 01020630677</p>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <strong>رقم الفاتورة:</strong> ${invoice.invoice_number}<br>
+          <strong>العميل:</strong> ${invoice.customer_name}<br>
+          <strong>التاريخ:</strong> ${new Date(invoice.date).toLocaleDateString('ar-EG')}<br>
+          <strong>طريقة الدفع:</strong> ${invoice.payment_method}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #f0f0f0;">
+              <th style="border: 1px solid #ddd; padding: 8px;">المنتج</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">الكمية</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">السعر</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">المجموع</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoice.items.map(item => `
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">
+                  ${item.seal_type} - ${item.material_type}<br>
+                  ${item.inner_diameter} × ${item.outer_diameter} × ${item.height}
+                </td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${item.unit_price}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${item.total_price}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="text-align: left;">
+          <strong>الإجمالي: ج.م ${invoice.total_amount}</strong>
+        </div>
+      </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesStatus = filterStatus === '' || invoice.status === filterStatus;
+    const matchesSearch = searchTerm === '' || 
+      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">الفواتير</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            حذف الكل
+          </button>
+          <button 
+            onClick={fetchInvoices}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إعادة تحميل
+          </button>
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            طباعة تقرير
+          </button>
+          <select className="border border-gray-300 rounded px-3 py-2">
+            <option>يومي</option>
+            <option>أسبوعي</option>
+            <option>شهري</option>
+            <option>سنوي</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">البحث</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="رقم الفاتورة أو اسم العميل"
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">فلترة حسب الحالة</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              <option value="">جميع الحالات</option>
+              <option value="مدفوعة">مدفوعة</option>
+              <option value="غير مدفوعة">غير مدفوعة</option>
+              <option value="مدفوعة جزئياً">مدفوعة جزئياً</option>
+              <option value="انتظار">انتظار</option>
+              <option value="تم التنفيذ">تم التنفيذ</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={() => { setSearchTerm(''); setFilterStatus(''); }}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              مسح الفلاتر
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-blue-50 p-4 rounded-lg text-center">
+          <h3 className="font-semibold text-blue-800">إجمالي الفواتير</h3>
+          <p className="text-2xl font-bold text-blue-600">{invoices.length}</p>
+        </div>
+        
+        <div className="bg-green-50 p-4 rounded-lg text-center">
+          <h3 className="font-semibold text-green-800">المدفوعة</h3>
+          <p className="text-2xl font-bold text-green-600">
+            {invoices.filter(inv => inv.status === 'مدفوعة').length}
+          </p>
+        </div>
+        
+        <div className="bg-red-50 p-4 rounded-lg text-center">
+          <h3 className="font-semibold text-red-800">غير المدفوعة</h3>
+          <p className="text-2xl font-bold text-red-600">
+            {invoices.filter(inv => inv.status === 'غير مدفوعة').length}
+          </p>
+        </div>
+        
+        <div className="bg-yellow-50 p-4 rounded-lg text-center">
+          <h3 className="font-semibold text-yellow-800">الإجمالي</h3>
+          <p className="text-2xl font-bold text-yellow-600">
+            ج.م {invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      {/* Invoices Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">جميع الفواتير</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">رقم الفاتورة</th>
+                <th className="border border-gray-300 p-2">العميل</th>
+                <th className="border border-gray-300 p-2">التاريخ</th>
+                <th className="border border-gray-300 p-2">طريقة الدفع</th>
+                <th className="border border-gray-300 p-2">الإجمالي</th>
+                <th className="border border-gray-300 p-2">الحالة</th>
+                <th className="border border-gray-300 p-2">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInvoices.map((invoice) => (
+                <tr key={invoice.id}>
+                  <td className="border border-gray-300 p-2 font-semibold">
+                    {invoice.invoice_number}
+                  </td>
+                  <td className="border border-gray-300 p-2">{invoice.customer_name}</td>
+                  <td className="border border-gray-300 p-2">
+                    {new Date(invoice.date).toLocaleDateString('ar-EG')}
+                  </td>
+                  <td className="border border-gray-300 p-2">{invoice.payment_method}</td>
+                  <td className="border border-gray-300 p-2 font-semibold">
+                    ج.م {invoice.total_amount?.toFixed(2) || '0.00'}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <span className={`px-2 py-1 rounded text-sm cursor-pointer ${
+                      invoice.status === 'مدفوعة' ? 'bg-green-100 text-green-800' :
+                      invoice.status === 'غير مدفوعة' ? 'bg-red-100 text-red-800' :
+                      invoice.status === 'مدفوعة جزئياً' ? 'bg-yellow-100 text-yellow-800' :
+                      invoice.status === 'انتظار' ? 'bg-blue-100 text-blue-800' :
+                      'bg-purple-100 text-purple-800'
+                    }`}>
+                      {invoice.status}
+                    </span>
+                    {invoice.status === 'انتظار' && (
+                      <button
+                        onClick={() => updateInvoiceStatus(invoice.id, 'تم التنفيذ')}
+                        className="mr-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                      >
+                        تم
+                      </button>
+                    )}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <div className="flex space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => printInvoice(invoice)}
+                        className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                      >
+                        طباعة
+                      </button>
+                      <button
+                        onClick={() => deleteInvoice(invoice.id)}
+                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {filteredInvoices.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              لا توجد فواتير تطابق معايير البحث
+            </div>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const WorkOrders = () => (
   <div className="p-6" dir="rtl">
