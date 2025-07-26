@@ -227,6 +227,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "نظام تسجيل دخول باللغة العربية مع Context للمصادقة يعمل بشكل مثالي"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار نظام المصادقة بنجاح - تسجيل دخول المدير (Elsawy/100100) والمستخدم العادي (Root/master) يعمل بشكل مثالي. رسائل الخطأ تظهر عند إدخال بيانات خاطئة. الواجهة العربية وRTL مطبقة بشكل صحيح."
 
   - task: "Navigation and layout"
     implemented: true
