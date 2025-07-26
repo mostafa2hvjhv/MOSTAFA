@@ -187,15 +187,18 @@ backend:
 
   - task: "Payment tracking APIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "نظام لتتبع المدفوعات والدفع الجزئي والآجل"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار جميع APIs المدفوعات بنجاح - إنشاء دفعات جزئية بطرق مختلفة (نقدي، فودافون كاش)، استرجاع جميع المدفوعات. تحديث حالة الفواتير يعمل بشكل صحيح."
 
   - task: "Expense management APIs"
     implemented: true
