@@ -223,6 +223,22 @@ const Dashboard = () => {
     }
   };
 
+  const clearAllData = () => {
+    if (!confirm('هل أنت متأكد من حذف جميع البيانات؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    // Reset dashboard stats
+    setStats({
+      total_sales: 0,
+      total_expenses: 0,
+      net_profit: 0,
+      total_unpaid: 0,
+      invoice_count: 0,
+      customer_count: 0
+    });
+    
+    alert('تم حذف جميع البيانات');
+  };
+
   const printReport = (reportType) => {
     let printContent = '';
     const currentDate = new Date().toLocaleDateString('ar-EG');
