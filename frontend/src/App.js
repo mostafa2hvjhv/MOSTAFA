@@ -2165,7 +2165,9 @@ const Invoices = () => {
         <h2 className="text-2xl font-bold text-blue-600 mb-4">الفواتير</h2>
         
         <div className="flex space-x-4 space-x-reverse mb-4">
-          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+          <button 
+            onClick={clearAllInvoices}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
             حذف الكل
           </button>
           <button 
