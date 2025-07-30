@@ -1645,6 +1645,17 @@ const Expenses = () => {
     return byCategory;
   };
 
+  const clearAllExpenses = async () => {
+    if (!confirm('هل أنت متأكد من حذف جميع المصروفات؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    try {
+      setExpenses([]);
+      alert('تم حذف جميع المصروفات');
+    } catch (error) {
+      alert('حدث خطأ في حذف البيانات');
+    }
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="mb-6">
