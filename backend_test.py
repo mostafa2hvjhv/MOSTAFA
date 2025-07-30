@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://c9965939-3094-45ff-8084-6de7d8e64a48.preview.emergentagent.com/api"
+BACKEND_URL = "https://8e377b14-d41b-4b7b-943e-e8967dfb230e.preview.emergentagent.com/api"
 
 class MasterSealAPITester:
     def __init__(self):
