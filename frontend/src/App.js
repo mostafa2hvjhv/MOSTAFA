@@ -2511,12 +2511,43 @@ const Users = () => {
     password: '',
     role: 'user'
   });
+  const [companyInfo, setCompanyInfo] = useState({
+    name: 'ماستر سيل',
+    address: 'الحرفيان شارع السوبر جيت',
+    phone: '01020630677'
+  });
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [selectedUserPermissions, setSelectedUserPermissions] = useState(null);
+
+  const allPermissions = [
+    { key: 'dashboard', label: 'لوحة التحكم' },
+    { key: 'sales', label: 'المبيعات' },
+    { key: 'inventory', label: 'المخزون' },
+    { key: 'deferred', label: 'الآجل' },
+    { key: 'expenses', label: 'المصروفات' },
+    { key: 'revenue', label: 'الإيرادات' },
+    { key: 'invoices', label: 'الفواتير' },
+    { key: 'work-orders', label: 'أمر شغل' },
+    { key: 'users', label: 'إدارة المستخدمين' }
+  ];
 
   useEffect(() => {
     // Since users are predefined, we'll show them statically
     setUsers([
-      { id: '1', username: 'Elsawy', role: 'admin', created_at: new Date().toISOString() },
-      { id: '2', username: 'Root', role: 'user', created_at: new Date().toISOString() }
+      { 
+        id: '1', 
+        username: 'Elsawy', 
+        role: 'admin', 
+        created_at: new Date().toISOString(),
+        permissions: allPermissions.map(p => p.key)
+      },
+      { 
+        id: '2', 
+        username: 'Root', 
+        role: 'user', 
+        created_at: new Date().toISOString(),
+        permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders']
+      }
     ]);
   }, []);
 
@@ -2532,11 +2563,16 @@ const Users = () => {
       return;
     }
 
-    // For demo purposes, we'll add to local state
+    // Default permissions based on role
+    const defaultPermissions = newUser.role === 'admin' 
+      ? allPermissions.map(p => p.key)
+      : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders'];
+
     const user = {
       id: Date.now().toString(),
       username: newUser.username,
       role: newUser.role,
+      permissions: defaultPermissions,
       created_at: new Date().toISOString()
     };
 
@@ -2597,9 +2633,40 @@ const Users = () => {
   const resetPassword = (userId) => {
     const newPassword = prompt('أدخل كلمة المرور الجديدة:');
     if (newPassword && newPassword.trim()) {
-      // In real implementation, this would call the API
       alert(`تم تحديث كلمة المرور للمستخدم بنجاح`);
     }
+  };
+
+  const openPermissions = (user) => {
+    setSelectedUserPermissions({
+      ...user,
+      tempPermissions: [...(user.permissions || [])]
+    });
+  };
+
+  const togglePermission = (permissionKey) => {
+    setSelectedUserPermissions(prev => {
+      const newPermissions = prev.tempPermissions.includes(permissionKey)
+        ? prev.tempPermissions.filter(p => p !== permissionKey)
+        : [...prev.tempPermissions, permissionKey];
+      
+      return { ...prev, tempPermissions: newPermissions };
+    });
+  };
+
+  const savePermissions = () => {
+    setUsers(users.map(user => 
+      user.id === selectedUserPermissions.id 
+        ? { ...user, permissions: selectedUserPermissions.tempPermissions }
+        : user
+    ));
+    setSelectedUserPermissions(null);
+    alert('تم تحديث الصلاحيات بنجاح');
+  };
+
+  const saveCompanyInfo = () => {
+    setEditingCompany(false);
+    alert('تم تحديث بيانات الشركة بنجاح');
   };
 
   return (
@@ -2619,6 +2686,84 @@ const Users = () => {
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
             طباعة تقرير
           </button>
+        </div>
+      </div>
+
+      {/* Company Information */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">بيانات الشركة</h3>
+        
+        {editingCompany ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">اسم الشركة</label>
+              <input
+                type="text"
+                value={companyInfo.name}
+                onChange={(e) => setCompanyInfo({...companyInfo, name: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">العنوان</label>
+              <input
+                type="text"
+                value={companyInfo.address}
+                onChange={(e) => setCompanyInfo({...companyInfo, address: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">التليفون</label>
+              <input
+                type="text"
+                value={companyInfo.phone}
+                onChange={(e) => setCompanyInfo({...companyInfo, phone: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">اسم الشركة</label>
+              <p className="p-2 bg-gray-100 rounded">{companyInfo.name}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">العنوان</label>
+              <p className="p-2 bg-gray-100 rounded">{companyInfo.address}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">التليفون</label>
+              <p className="p-2 bg-gray-100 rounded">{companyInfo.phone}</p>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex space-x-4 space-x-reverse">
+          {editingCompany ? (
+            <>
+              <button
+                onClick={saveCompanyInfo}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                حفظ
+              </button>
+              <button
+                onClick={() => setEditingCompany(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setEditingCompany(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              تعديل بيانات الشركة
+            </button>
+          )}
         </div>
       </div>
 
@@ -2680,6 +2825,7 @@ const Users = () => {
               <tr className="bg-gray-100">
                 <th className="border border-gray-300 p-2">اسم المستخدم</th>
                 <th className="border border-gray-300 p-2">الصلاحية</th>
+                <th className="border border-gray-300 p-2">عدد الصلاحيات</th>
                 <th className="border border-gray-300 p-2">تاريخ الإنشاء</th>
                 <th className="border border-gray-300 p-2">الحالة</th>
                 <th className="border border-gray-300 p-2">الإجراءات</th>
@@ -2721,6 +2867,11 @@ const Users = () => {
                     )}
                   </td>
                   <td className="border border-gray-300 p-2">
+                    <span className="bg-gray-100 px-2 py-1 rounded text-sm">
+                      {user.permissions?.length || 0} صلاحية
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 p-2">
                     {new Date(user.created_at).toLocaleDateString('ar-EG')}
                   </td>
                   <td className="border border-gray-300 p-2">
@@ -2751,9 +2902,14 @@ const Users = () => {
                             تعديل
                           </button>
                           <button 
+                            onClick={() => openPermissions(user)}
+                            className="bg-purple-500 text-white px-2 py-1 rounded text-sm hover:bg-purple-600 mb-1">
+                            الصلاحيات
+                          </button>
+                          <button 
                             onClick={() => resetPassword(user.id)}
                             className="bg-yellow-500 text-white px-2 py-1 rounded text-sm hover:bg-yellow-600 mb-1">
-                            تغيير كلمة المرور
+                            كلمة المرور
                           </button>
                           {(user.id !== '1' && user.id !== '2') && (
                             <button 
@@ -2771,41 +2927,47 @@ const Users = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* User Permissions Info */}
-        <div className="mt-6">
-          <h4 className="text-lg font-semibold mb-3">صلاحيات المستخدمين</h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-red-50 p-4 rounded">
-              <h5 className="font-semibold text-red-800 mb-2">المدير (admin)</h5>
-              <ul className="text-sm text-red-700 space-y-1">
-                <li>• لوحة التحكم</li>
-                <li>• المبيعات</li>
-                <li>• المخزون</li>
-                <li>• الآجل</li>
-                <li>• المصروفات</li>
-                <li>• الإيرادات</li>
-                <li>• الفواتير</li>
-                <li>• أمر شغل</li>
-                <li>• إدارة المستخدمين</li>
-              </ul>
+      {/* Permissions Modal */}
+      {selectedUserPermissions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">
+              صلاحيات المستخدم: {selectedUserPermissions.username}
+            </h3>
+            
+            <div className="space-y-2 mb-4">
+              {allPermissions.map(permission => (
+                <label key={permission.key} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedUserPermissions.tempPermissions.includes(permission.key)}
+                    onChange={() => togglePermission(permission.key)}
+                    className="ml-2"
+                  />
+                  <span>{permission.label}</span>
+                </label>
+              ))}
             </div>
             
-            <div className="bg-blue-50 p-4 rounded">
-              <h5 className="font-semibold text-blue-800 mb-2">المستخدم العادي (user)</h5>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• لوحة التحكم</li>
-                <li>• المبيعات</li>
-                <li>• المخزون</li>
-                <li>• الآجل</li>
-                <li>• المصروفات</li>
-                <li>• أمر شغل</li>
-              </ul>
+            <div className="flex space-x-4 space-x-reverse">
+              <button
+                onClick={savePermissions}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                حفظ
+              </button>
+              <button
+                onClick={() => setSelectedUserPermissions(null)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
