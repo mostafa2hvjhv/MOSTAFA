@@ -524,6 +524,28 @@ async def create_work_order(invoice_id: str):
     await db.work_orders.insert_one(work_order.dict())
     return work_order
 
+@api_router.post("/work-orders/multiple")
+async def create_work_order_multiple(work_order_data: dict):
+    """Create work order from multiple invoices"""
+    try:
+        # Create work order with multiple invoices
+        work_order = {
+            "id": str(uuid.uuid4()),
+            "title": work_order_data.get("title", ""),
+            "description": work_order_data.get("description", ""),
+            "priority": work_order_data.get("priority", "عادي"),
+            "invoices": work_order_data.get("invoices", []),
+            "total_amount": work_order_data.get("total_amount", 0),
+            "total_items": work_order_data.get("total_items", 0),
+            "status": "جديد",
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.work_orders.insert_one(work_order)
+        return work_order
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/work-orders", response_model=List[WorkOrder])
 async def get_work_orders():
     orders = await db.work_orders.find().sort("created_at", -1).to_list(1000)
