@@ -2069,7 +2069,8 @@ const Invoices = () => {
 
   const updateInvoiceStatus = async (invoiceId, newStatus) => {
     try {
-      await axios.put(`${API}/invoices/${invoiceId}/status`, newStatus, {
+      await axios.put(`${API}/invoices/${invoiceId}/status`, 
+        JSON.stringify(newStatus), {
         headers: { 'Content-Type': 'application/json' }
       });
       fetchInvoices();
