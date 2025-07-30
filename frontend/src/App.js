@@ -407,7 +407,8 @@ const Sales = () => {
       height: parseFloat(currentItem.height),
       quantity: parseInt(currentItem.quantity),
       unit_price: parseFloat(currentItem.unit_price),
-      total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity)
+      total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
+      material_used: selectedMaterial ? selectedMaterial.unit_code : null
     };
 
     setItems([...items, item]);
@@ -421,6 +422,116 @@ const Sales = () => {
       unit_price: ''
     });
     setCompatibilityResults(null);
+    setSelectedMaterial(null);
+  };
+
+  const createInvoice = async () => {
+    if (!selectedCustomer && !newCustomer) {
+      alert('الرجاء اختيار العميل أو إدخال اسم عميل جديد');
+      return;
+    }
+
+    if (items.length === 0) {
+      alert('الرجاء إضافة منتجات للفاتورة');
+      return;
+    }
+
+    try {
+      let customerId = selectedCustomer;
+      let customerName = '';
+
+      // إنشاء عميل جديد إذا لزم الأمر
+      if (!selectedCustomer && newCustomer) {
+        const customerResponse = await axios.post(`${API}/customers`, {
+          name: newCustomer,
+          phone: '',
+          address: ''
+        });
+        customerId = customerResponse.data.id;
+        customerName = newCustomer;
+        
+        // تحديث قائمة العملاء
+        fetchCustomers();
+      } else {
+        const customer = customers.find(c => c.id === customerId);
+        customerName = customer ? customer.name : '';
+      }
+
+      // إنشاء الفاتورة
+      const invoiceData = {
+        customer_id: customerId,
+        customer_name: customerName,
+        items: items,
+        payment_method: paymentMethod,
+        notes: ''
+      };
+
+      const response = await axios.post(`${API}/invoices`, invoiceData);
+      
+      if (response.data) {
+        alert('تم إنشاء الفاتورة بنجاح');
+        
+        // مسح البيانات
+        setItems([]);
+        setSelectedCustomer('');
+        setNewCustomer('');
+        setPaymentMethod('نقدي');
+        
+        // طباعة الفاتورة
+        printInvoice(response.data);
+      }
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      alert('حدث خطأ في إنشاء الفاتورة');
+    }
+  };
+
+  const printInvoice = (invoice) => {
+    const printContent = `
+      <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1>ماستر سيل</h1>
+          <p>الحرفيان شارع السوبر جيت - 01020630677</p>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <strong>رقم الفاتورة:</strong> ${invoice.invoice_number}<br>
+          <strong>العميل:</strong> ${invoice.customer_name}<br>
+          <strong>التاريخ:</strong> ${new Date(invoice.date).toLocaleDateString('ar-EG')}<br>
+          <strong>طريقة الدفع:</strong> ${invoice.payment_method}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #f0f0f0;">
+              <th style="border: 1px solid #ddd; padding: 8px;">المنتج</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">الكمية</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">السعر</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">المجموع</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoice.items.map(item => `
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">
+                  ${item.seal_type} - ${item.material_type}<br>
+                  ${item.inner_diameter} × ${item.outer_diameter} × ${item.height}
+                </td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${item.unit_price}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${item.total_price}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="text-align: left;">
+          <strong>الإجمالي: ج.م ${invoice.total_amount}</strong>
+        </div>
+      </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
