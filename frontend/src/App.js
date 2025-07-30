@@ -687,12 +687,23 @@ const Sales = () => {
                 {compatibilityResults.compatible_materials.map((material, index) => (
                   <div
                     key={index}
-                    className={`p-3 border rounded ${material.low_stock ? 'border-red-300 bg-red-50' : 'border-green-300 bg-green-50'}`}
+                    className={`p-3 border rounded cursor-pointer transition-colors ${
+                      selectedMaterial?.unit_code === material.unit_code 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : material.low_stock 
+                          ? 'border-red-300 bg-red-50 hover:bg-red-100' 
+                          : 'border-green-300 bg-green-50 hover:bg-green-100'
+                    }`}
+                    onClick={() => setSelectedMaterial(material)}
                   >
                     <p><strong>النوع:</strong> {material.material_type}</p>
                     <p><strong>الكود:</strong> {material.unit_code}</p>
                     <p><strong>المقاس:</strong> {material.inner_diameter} × {material.outer_diameter} × {material.height}</p>
+                    <p><strong>عدد القطع:</strong> {material.pieces_count}</p>
                     {material.warning && <p className="text-red-600 text-sm">{material.warning}</p>}
+                    {selectedMaterial?.unit_code === material.unit_code && (
+                      <p className="text-blue-600 font-semibold text-sm mt-2">✓ محدد للاستخدام</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -704,13 +715,29 @@ const Sales = () => {
               <h4 className="font-medium mb-2">المنتجات الجاهزة:</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {compatibilityResults.compatible_products.map((product, index) => (
-                  <div key={index} className="p-3 border border-blue-300 bg-blue-50 rounded">
+                  <div 
+                    key={index} 
+                    className="p-3 border border-blue-300 bg-blue-50 rounded cursor-pointer hover:bg-blue-100"
+                    onClick={() => setSelectedMaterial({
+                      unit_code: `FINISHED-${product.id}`,
+                      material_type: product.material_type,
+                      seal_type: product.seal_type
+                    })}
+                  >
                     <p><strong>النوع:</strong> {product.seal_type} - {product.material_type}</p>
                     <p><strong>المقاس:</strong> {product.inner_diameter} × {product.outer_diameter} × {product.height}</p>
                     <p><strong>الكمية:</strong> {product.quantity}</p>
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {selectedMaterial && (
+            <div className="mt-4 p-3 bg-blue-100 rounded">
+              <p className="font-semibold text-blue-800">
+                تم اختيار الخامة: {selectedMaterial.unit_code} ({selectedMaterial.material_type})
+              </p>
             </div>
           )}
         </div>
