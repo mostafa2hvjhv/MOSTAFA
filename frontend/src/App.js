@@ -2340,6 +2340,12 @@ const Users = () => {
     password: '',
     role: 'user'
   });
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    username: '',
+    password: '',
+    role: 'user'
+  });
 
   useEffect(() => {
     // Since users are predefined, we'll show them statically
@@ -2355,8 +2361,13 @@ const Users = () => {
       return;
     }
 
+    // Check if username already exists
+    if (users.some(user => user.username === newUser.username)) {
+      alert('اسم المستخدم موجود بالفعل');
+      return;
+    }
+
     // For demo purposes, we'll add to local state
-    // In real implementation, this would call the API
     const user = {
       id: Date.now().toString(),
       username: newUser.username,
@@ -2369,6 +2380,43 @@ const Users = () => {
     alert('تم إضافة المستخدم بنجاح');
   };
 
+  const startEdit = (user) => {
+    setEditingUser(user.id);
+    setEditForm({
+      username: user.username,
+      password: '',
+      role: user.role
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingUser(null);
+    setEditForm({ username: '', password: '', role: 'user' });
+  };
+
+  const saveEdit = () => {
+    if (!editForm.username) {
+      alert('الرجاء إدخال اسم المستخدم');
+      return;
+    }
+
+    // Check if username already exists (excluding current user)
+    if (users.some(user => user.username === editForm.username && user.id !== editingUser)) {
+      alert('اسم المستخدم موجود بالفعل');
+      return;
+    }
+
+    setUsers(users.map(user => 
+      user.id === editingUser 
+        ? { ...user, username: editForm.username, role: editForm.role }
+        : user
+    ));
+
+    setEditingUser(null);
+    setEditForm({ username: '', password: '', role: 'user' });
+    alert('تم تحديث المستخدم بنجاح');
+  };
+
   const deleteUser = (userId) => {
     if (userId === '1' || userId === '2') {
       alert('لا يمكن حذف المستخدمين الأساسيين');
@@ -2379,6 +2427,14 @@ const Users = () => {
 
     setUsers(users.filter(user => user.id !== userId));
     alert('تم حذف المستخدم بنجاح');
+  };
+
+  const resetPassword = (userId) => {
+    const newPassword = prompt('أدخل كلمة المرور الجديدة:');
+    if (newPassword && newPassword.trim()) {
+      // In real implementation, this would call the API
+      alert(`تم تحديث كلمة المرور للمستخدم بنجاح`);
+    }
   };
 
   return (
@@ -2467,17 +2523,37 @@ const Users = () => {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td className="border border-gray-300 p-2 font-semibold">
-                    {user.username}
+                  <td className="border border-gray-300 p-2">
+                    {editingUser === user.id ? (
+                      <input
+                        type="text"
+                        value={editForm.username}
+                        onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                        className="w-full p-1 border border-gray-300 rounded"
+                      />
+                    ) : (
+                      <span className="font-semibold">{user.username}</span>
+                    )}
                   </td>
                   <td className="border border-gray-300 p-2">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      user.role === 'admin' 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {user.role === 'admin' ? 'مدير' : 'مستخدم عادي'}
-                    </span>
+                    {editingUser === user.id ? (
+                      <select
+                        value={editForm.role}
+                        onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                        className="w-full p-1 border border-gray-300 rounded"
+                      >
+                        <option value="user">مستخدم عادي</option>
+                        <option value="admin">مدير</option>
+                      </select>
+                    ) : (
+                      <span className={`px-2 py-1 rounded text-sm ${
+                        user.role === 'admin' 
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {user.role === 'admin' ? 'مدير' : 'مستخدم عادي'}
+                      </span>
+                    )}
                   </td>
                   <td className="border border-gray-300 p-2">
                     {new Date(user.created_at).toLocaleDateString('ar-EG')}
@@ -2488,21 +2564,40 @@ const Users = () => {
                     </span>
                   </td>
                   <td className="border border-gray-300 p-2">
-                    <div className="flex space-x-2 space-x-reverse">
-                      {(user.id !== '1' && user.id !== '2') && (
+                    <div className="flex space-x-2 space-x-reverse flex-wrap">
+                      {editingUser === user.id ? (
                         <>
-                          <button className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
+                          <button 
+                            onClick={saveEdit}
+                            className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600 mb-1">
+                            حفظ
+                          </button>
+                          <button 
+                            onClick={cancelEdit}
+                            className="bg-gray-500 text-white px-2 py-1 rounded text-sm hover:bg-gray-600 mb-1">
+                            إلغاء
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => startEdit(user)}
+                            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mb-1">
                             تعديل
                           </button>
                           <button 
-                            onClick={() => deleteUser(user.id)}
-                            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
-                            حذف
+                            onClick={() => resetPassword(user.id)}
+                            className="bg-yellow-500 text-white px-2 py-1 rounded text-sm hover:bg-yellow-600 mb-1">
+                            تغيير كلمة المرور
                           </button>
+                          {(user.id !== '1' && user.id !== '2') && (
+                            <button 
+                              onClick={() => deleteUser(user.id)}
+                              className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 mb-1">
+                              حذف
+                            </button>
+                          )}
                         </>
-                      )}
-                      {(user.id === '1' || user.id === '2') && (
-                        <span className="text-sm text-gray-500">مستخدم أساسي</span>
                       )}
                     </div>
                   </td>
