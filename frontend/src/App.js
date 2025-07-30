@@ -2648,9 +2648,14 @@ const WorkOrders = () => {
                             </span>
                           </td>
                           <td className="border border-gray-300 p-2">
-                            <span className="font-mono text-sm">
-                              {item.material_used || 'غير محدد'}
-                            </span>
+                            <div className="font-mono text-sm">
+                              <div>{item.material_used || 'غير محدد'}</div>
+                              {item.material_used && (
+                                <div className="text-xs text-gray-600">
+                                  {item.inner_diameter} × {item.outer_diameter} × {item.height}
+                                </div>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       )) || []
