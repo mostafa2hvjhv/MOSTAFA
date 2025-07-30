@@ -2139,6 +2139,18 @@ const Invoices = () => {
       alert('حدث خطأ في حذف البيانات');
     }
   };
+  const clearAllInvoices = async () => {
+    if (!confirm('هل أنت متأكد من حذف جميع الفواتير؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    try {
+      setInvoices([]);
+      alert('تم حذف جميع الفواتير');
+    } catch (error) {
+      alert('حدث خطأ في حذف البيانات');
+    }
+  };
+
+  const filteredInvoices = invoices.filter(invoice => {
     const matchesStatus = filterStatus === '' || invoice.status === filterStatus;
     const matchesSearch = searchTerm === '' || 
       invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
