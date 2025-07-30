@@ -2280,6 +2280,12 @@ const Invoices = () => {
 const WorkOrders = () => {
   const [workOrders, setWorkOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+  const [newWorkOrder, setNewWorkOrder] = useState({
+    title: '',
+    description: '',
+    priority: 'عادي'
+  });
 
   useEffect(() => {
     fetchWorkOrders();
@@ -2304,13 +2310,54 @@ const WorkOrders = () => {
     }
   };
 
-  const createWorkOrder = async (invoiceId) => {
+  const toggleInvoiceSelection = (invoiceId) => {
+    setSelectedInvoices(prev => 
+      prev.includes(invoiceId) 
+        ? prev.filter(id => id !== invoiceId)
+        : [...prev, invoiceId]
+    );
+  };
+
+  const createWorkOrderFromMultipleInvoices = async () => {
+    if (selectedInvoices.length === 0) {
+      alert('الرجاء اختيار فاتورة واحدة على الأقل');
+      return;
+    }
+
+    if (!newWorkOrder.title.trim()) {
+      alert('الرجاء إدخال عنوان أمر الشغل');
+      return;
+    }
+
     try {
-      await axios.post(`${API}/work-orders`, null, {
-        params: { invoice_id: invoiceId }
-      });
-      fetchWorkOrders();
-      alert('تم إنشاء أمر الشغل بنجاح');
+      // Get selected invoices data
+      const selectedInvoicesData = invoices.filter(inv => selectedInvoices.includes(inv.id));
+      
+      // Create work order with multiple invoices
+      const workOrderData = {
+        title: newWorkOrder.title,
+        description: newWorkOrder.description,
+        priority: newWorkOrder.priority,
+        invoices: selectedInvoicesData,
+        total_amount: selectedInvoicesData.reduce((sum, inv) => sum + (inv.total_amount || 0), 0),
+        total_items: selectedInvoicesData.reduce((sum, inv) => sum + (inv.items?.length || 0), 0)
+      };
+
+      const response = await axios.post(`${API}/work-orders/multiple`, workOrderData);
+      
+      if (response.data) {
+        alert('تم إنشاء أمر الشغل بنجاح');
+        
+        // Reset form
+        setSelectedInvoices([]);
+        setNewWorkOrder({
+          title: '',
+          description: '',
+          priority: 'عادي'
+        });
+        
+        fetchWorkOrders();
+      }
     } catch (error) {
       console.error('Error creating work order:', error);
       alert('حدث خطأ في إنشاء أمر الشغل');
@@ -2319,6 +2366,13 @@ const WorkOrders = () => {
 
   const getInvoiceDetails = (invoiceId) => {
     return invoices.find(inv => inv.id === invoiceId);
+  };
+
+  const getAvailableInvoices = () => {
+    // Show invoices that are "تم التنفيذ" or "انتظار"
+    return invoices.filter(invoice => 
+      invoice.status === 'تم التنفيذ' || invoice.status === 'انتظار'
+    );
   };
 
   return (
@@ -2331,7 +2385,7 @@ const WorkOrders = () => {
             حذف الكل
           </button>
           <button 
-            onClick={fetchWorkOrders}
+            onClick={() => { fetchWorkOrders(); fetchInvoices(); }}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             إعادة تحميل
           </button>
@@ -2349,39 +2403,129 @@ const WorkOrders = () => {
         </div>
       </div>
 
-      {/* Create Work Order from Invoice */}
+      {/* Create Work Order from Multiple Invoices */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h3 className="text-lg font-semibold mb-4">إنشاء أمر شغل من فاتورة</h3>
+        <h3 className="text-lg font-semibold mb-4">إنشاء أمر شغل جديد</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {invoices.filter(inv => !workOrders.some(wo => wo.invoice_id === inv.id)).map(invoice => (
-            <div key={invoice.id} className="border rounded-lg p-4">
-              <div className="mb-2">
-                <h4 className="font-semibold">{invoice.invoice_number}</h4>
-                <p className="text-sm text-gray-600">العميل: {invoice.customer_name}</p>
-                <p className="text-sm text-gray-600">
-                  التاريخ: {new Date(invoice.date).toLocaleDateString('ar-EG')}
-                </p>
-                <p className="text-sm font-medium">
-                  المبلغ: ج.م {invoice.total_amount?.toFixed(2) || '0.00'}
-                </p>
+        {/* Work Order Details */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">عنوان أمر الشغل *</label>
+            <input
+              type="text"
+              value={newWorkOrder.title}
+              onChange={(e) => setNewWorkOrder({...newWorkOrder, title: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="مثال: أمر شغل رقم 1 - يناير 2025"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">الأولوية</label>
+            <select
+              value={newWorkOrder.priority}
+              onChange={(e) => setNewWorkOrder({...newWorkOrder, priority: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              <option value="عادي">عادي</option>
+              <option value="مهم">مهم</option>
+              <option value="طارئ">طارئ</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">الفواتير المختارة</label>
+            <div className="p-2 bg-gray-100 rounded">
+              {selectedInvoices.length} فاتورة محددة
+            </div>
+          </div>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">وصف أمر الشغل</label>
+          <textarea
+            value={newWorkOrder.description}
+            onChange={(e) => setNewWorkOrder({...newWorkOrder, description: e.target.value})}
+            className="w-full p-2 border border-gray-300 rounded h-20"
+            placeholder="وصف إضافي (اختياري)"
+          />
+        </div>
+        
+        <h4 className="font-medium mb-2">اختيار الفواتير:</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 max-h-60 overflow-y-auto border rounded p-4">
+          {getAvailableInvoices().map(invoice => (
+            <div 
+              key={invoice.id} 
+              className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                selectedInvoices.includes(invoice.id) 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 hover:bg-gray-50'
+              }`}
+              onClick={() => toggleInvoiceSelection(invoice.id)}
+            >
+              <div className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  checked={selectedInvoices.includes(invoice.id)}
+                  onChange={() => {}}
+                  className="ml-2"
+                />
+                <h5 className="font-semibold">{invoice.invoice_number}</h5>
               </div>
-              
-              <button
-                onClick={() => createWorkOrder(invoice.id)}
-                className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-              >
-                إنشاء أمر شغل
-              </button>
+              <p className="text-sm text-gray-600">العميل: {invoice.customer_name}</p>
+              <p className="text-sm text-gray-600">
+                التاريخ: {new Date(invoice.date).toLocaleDateString('ar-EG')}
+              </p>
+              <p className="text-sm font-medium">
+                المبلغ: ج.م {invoice.total_amount?.toFixed(2) || '0.00'}
+              </p>
+              <p className="text-sm">
+                المنتجات: {invoice.items?.length || 0} صنف
+              </p>
+              <span className={`inline-block px-2 py-1 rounded text-xs mt-1 ${
+                invoice.status === 'تم التنفيذ' 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                {invoice.status}
+              </span>
             </div>
           ))}
         </div>
         
-        {invoices.filter(inv => !workOrders.some(wo => wo.invoice_id === inv.id)).length === 0 && (
+        {getAvailableInvoices().length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            جميع الفواتير لها أوامر شغل مرتبطة بها
+            لا توجد فواتير متاحة لإنشاء أمر شغل
           </div>
         )}
+        
+        {selectedInvoices.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-100 rounded">
+            <h5 className="font-semibold text-blue-800">ملخص أمر الشغل:</h5>
+            <p className="text-blue-700">
+              إجمالي الفواتير: {selectedInvoices.length} فاتورة
+            </p>
+            <p className="text-blue-700">
+              إجمالي المبلغ: ج.م {invoices
+                .filter(inv => selectedInvoices.includes(inv.id))
+                .reduce((sum, inv) => sum + (inv.total_amount || 0), 0)
+                .toFixed(2)}
+            </p>
+            <p className="text-blue-700">
+              إجمالي المنتجات: {invoices
+                .filter(inv => selectedInvoices.includes(inv.id))
+                .reduce((sum, inv) => sum + (inv.items?.length || 0), 0)} صنف
+            </p>
+          </div>
+        )}
+        
+        <button
+          onClick={createWorkOrderFromMultipleInvoices}
+          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+          disabled={selectedInvoices.length === 0}
+        >
+          إنشاء أمر الشغل ({selectedInvoices.length} فاتورة)
+        </button>
       </div>
 
       {/* Work Orders List */}
@@ -2389,34 +2533,67 @@ const WorkOrders = () => {
         <h3 className="text-lg font-semibold mb-4">أوامر الشغل</h3>
         
         {workOrders.map(workOrder => {
-          const invoice = getInvoiceDetails(workOrder.invoice_id);
-          if (!invoice) return null;
+          // Handle both single invoice and multiple invoices work orders
+          const workOrderInvoices = workOrder.invoices || (workOrder.invoice_id ? [getInvoiceDetails(workOrder.invoice_id)] : []);
           
           return (
             <div key={workOrder.id} className="border rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <h4 className="font-semibold text-lg">أمر شغل #{workOrder.id.slice(-8)}</h4>
-                  <p><strong>رقم الفاتورة:</strong> {invoice.invoice_number}</p>
-                  <p><strong>العميل:</strong> {invoice.customer_name}</p>
+                  <h4 className="font-semibold text-lg">
+                    {workOrder.title || `أمر شغل #${workOrder.id.slice(-8)}`}
+                  </h4>
+                  <p><strong>الأولوية:</strong> 
+                    <span className={`mr-2 px-2 py-1 rounded text-sm ${
+                      workOrder.priority === 'طارئ' ? 'bg-red-100 text-red-800' :
+                      workOrder.priority === 'مهم' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {workOrder.priority || 'عادي'}
+                    </span>
+                  </p>
                   <p><strong>تاريخ الإنشاء:</strong> {new Date(workOrder.created_at).toLocaleDateString('ar-EG')}</p>
+                  <p><strong>عدد الفواتير:</strong> {workOrderInvoices.filter(inv => inv).length}</p>
                 </div>
                 
                 <div>
                   <p><strong>الحالة:</strong> 
                     <span className="mr-2 px-2 py-1 rounded text-sm bg-blue-100 text-blue-800">
-                      {workOrder.status}
+                      {workOrder.status || 'جديد'}
                     </span>
                   </p>
-                  <p><strong>إجمالي الفاتورة:</strong> ج.م {invoice.total_amount?.toFixed(2) || '0.00'}</p>
+                  <p><strong>إجمالي المبلغ:</strong> 
+                    ج.م {workOrder.total_amount?.toFixed(2) || 
+                    workOrderInvoices.reduce((sum, inv) => sum + (inv?.total_amount || 0), 0).toFixed(2)}
+                  </p>
+                  {workOrder.description && (
+                    <p><strong>الوصف:</strong> {workOrder.description}</p>
+                  )}
                 </div>
               </div>
               
-              {/* Work Order Items */}
-              <div className="overflow-x-auto">
+              {/* Work Order Invoices */}
+              <div className="mb-4">
+                <h5 className="font-medium mb-2">الفواتير المدرجة:</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {workOrderInvoices.filter(invoice => invoice).map((invoice, index) => (
+                    <div key={index} className="bg-gray-50 p-3 rounded border">
+                      <p><strong>رقم الفاتورة:</strong> {invoice.invoice_number}</p>
+                      <p><strong>العميل:</strong> {invoice.customer_name}</p>
+                      <p><strong>المبلغ:</strong> ج.م {invoice.total_amount?.toFixed(2) || '0.00'}</p>
+                      <p><strong>المنتجات:</strong> {invoice.items?.length || 0} صنف</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Work Order Items Details */}
+              <div className="overflow-x-auto mb-4">
+                <h5 className="font-medium mb-2">تفاصيل المنتجات:</h5>
                 <table className="w-full border-collapse border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-2">رقم الفاتورة</th>
                       <th className="border border-gray-300 p-2">نوع السيل</th>
                       <th className="border border-gray-300 p-2">نوع الخامة</th>
                       <th className="border border-gray-300 p-2">المقاس</th>
@@ -2426,32 +2603,35 @@ const WorkOrders = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {invoice.items?.map((item, index) => (
-                      <tr key={index}>
-                        <td className="border border-gray-300 p-2">{item.seal_type}</td>
-                        <td className="border border-gray-300 p-2">{item.material_type}</td>
-                        <td className="border border-gray-300 p-2">
-                          {item.inner_diameter} × {item.outer_diameter} × {item.height}
-                        </td>
-                        <td className="border border-gray-300 p-2">{item.quantity}</td>
-                        <td className="border border-gray-300 p-2">
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-                            {item.material_type}
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          <span className="font-mono text-sm">
-                            {item.material_used || 'غير محدد'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {workOrderInvoices.filter(invoice => invoice).map(invoice => 
+                      invoice.items?.map((item, itemIndex) => (
+                        <tr key={`${invoice.id}-${itemIndex}`}>
+                          <td className="border border-gray-300 p-2">{invoice.invoice_number}</td>
+                          <td className="border border-gray-300 p-2">{item.seal_type}</td>
+                          <td className="border border-gray-300 p-2">{item.material_type}</td>
+                          <td className="border border-gray-300 p-2">
+                            {item.inner_diameter} × {item.outer_diameter} × {item.height}
+                          </td>
+                          <td className="border border-gray-300 p-2">{item.quantity}</td>
+                          <td className="border border-gray-300 p-2">
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                              {item.material_type}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-2">
+                            <span className="font-mono text-sm">
+                              {item.material_used || 'غير محدد'}
+                            </span>
+                          </td>
+                        </tr>
+                      )) || []
+                    )}
                   </tbody>
                 </table>
               </div>
               
               {/* Work Order Actions */}
-              <div className="mt-4 flex space-x-4 space-x-reverse">
+              <div className="flex space-x-4 space-x-reverse">
                 <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                   طباعة أمر الشغل
                 </button>
