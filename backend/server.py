@@ -283,6 +283,13 @@ async def get_customer(customer_id: str):
         raise HTTPException(status_code=404, detail="العميل غير موجود")
     return Customer(**customer)
 
+@api_router.delete("/customers/{customer_id}")
+async def delete_customer(customer_id: str):
+    result = await db.customers.delete_one({"id": customer_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="العميل غير موجود")
+    return {"message": "تم حذف العميل بنجاح"}
+
 # Raw materials endpoints
 @api_router.post("/raw-materials", response_model=RawMaterial)
 async def create_raw_material(material: RawMaterialCreate):
