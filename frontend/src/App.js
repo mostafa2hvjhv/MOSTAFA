@@ -549,11 +549,11 @@ const Sales = () => {
   };
 
   const clearAllInvoices = async () => {
-    if (!confirm('هل أنت متأكد من حذف جميع الفواتير؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    if (!confirm('هل أنت متأكد من حذف جميع العناصر؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
     try {
-      setInvoices([]);
-      alert('تم حذف جميع الفواتير');
+      setItems([]);
+      alert('تم حذف جميع العناصر');
     } catch (error) {
       alert('حدث خطأ في حذف البيانات');
     }
