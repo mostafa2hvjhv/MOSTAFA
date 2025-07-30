@@ -362,6 +362,7 @@ const Sales = () => {
   const [items, setItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('نقدي');
   const [compatibilityResults, setCompatibilityResults] = useState(null);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
 
   const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
   const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
