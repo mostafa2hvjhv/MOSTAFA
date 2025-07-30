@@ -2229,26 +2229,12 @@ const Invoices = () => {
                       invoice.status === 'غير مدفوعة' ? 'bg-red-100 text-red-800' :
                       invoice.status === 'مدفوعة جزئياً' ? 'bg-yellow-100 text-yellow-800' :
                       invoice.status === 'انتظار' ? 'bg-blue-100 text-blue-800' :
-                      'bg-purple-100 text-purple-800'
+                      invoice.status === 'تم التنفيذ' ? 'bg-green-100 text-green-800' :
+                      invoice.status === 'تم التصنيع' ? 'bg-purple-100 text-purple-800' :
+                      'bg-gray-100 text-gray-800'
                     }`}>
                       {invoice.status}
                     </span>
-                    {invoice.status === 'انتظار' && (
-                      <>
-                        <button
-                          onClick={() => updateInvoiceStatus(invoice.id, 'تم التنفيذ')}
-                          className="mr-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                        >
-                          تم التنفيذ
-                        </button>
-                        <button
-                          onClick={() => updateInvoiceStatus(invoice.id, 'تم التصنيع')}
-                          className="mr-2 text-xs bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
-                        >
-                          تم التصنيع
-                        </button>
-                      </>
-                    )}
                   </td>
                   <td className="border border-gray-300 p-2">
                     <div className="flex space-x-2 space-x-reverse">
