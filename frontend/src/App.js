@@ -959,6 +959,19 @@ const Inventory = () => {
     window.print();
   };
 
+  const clearAllInventory = async () => {
+    if (!confirm('هل أنت متأكد من حذف جميع بيانات المخزون؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    try {
+      // In a real implementation, this would call APIs to delete all data
+      setRawMaterials([]);
+      setFinishedProducts([]);
+      alert('تم حذف جميع بيانات المخزون');
+    } catch (error) {
+      alert('حدث خطأ في حذف البيانات');
+    }
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="mb-6">
