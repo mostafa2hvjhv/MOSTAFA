@@ -561,10 +561,68 @@ async def create_work_order_multiple(work_order_data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/work-orders", response_model=List[WorkOrder])
+@api_router.get("/work-orders")
 async def get_work_orders():
-    orders = await db.work_orders.find().sort("created_at", -1).to_list(1000)
-    return [WorkOrder(**order) for order in orders]
+    try:
+        orders = await db.work_orders.find().sort("created_at", -1).to_list(1000)
+        
+        # Clean up MongoDB ObjectIds
+        for order in orders:
+            if "_id" in order:
+                del order["_id"]
+                
+        return orders
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/work-orders/{work_order_id}/add-invoice")
+async def add_invoice_to_work_order(work_order_id: str, invoice_id: str):
+    """Add an invoice to an existing work order"""
+    try:
+        # Get the work order
+        work_order = await db.work_orders.find_one({"id": work_order_id})
+        if not work_order:
+            raise HTTPException(status_code=404, detail="أمر الشغل غير موجود")
+            
+        # Get the invoice
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+            
+        # Clean invoice data
+        if "_id" in invoice:
+            del invoice["_id"]
+            
+        # Update work order with new invoice
+        current_invoices = work_order.get("invoices", [])
+        
+        # Check if invoice already exists in work order
+        if any(inv.get("id") == invoice_id for inv in current_invoices):
+            raise HTTPException(status_code=400, detail="الفاتورة موجودة بالفعل في أمر الشغل")
+            
+        current_invoices.append(invoice)
+        
+        # Update totals
+        new_total_amount = work_order.get("total_amount", 0) + invoice.get("total_amount", 0)
+        new_total_items = work_order.get("total_items", 0) + len(invoice.get("items", []))
+        
+        # Update in database
+        result = await db.work_orders.update_one(
+            {"id": work_order_id},
+            {"$set": {
+                "invoices": current_invoices,
+                "total_amount": new_total_amount,
+                "total_items": new_total_items
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="فشل في تحديث أمر الشغل")
+            
+        return {"message": "تم إضافة الفاتورة إلى أمر الشغل بنجاح"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Include the router in the main app
 app.include_router(api_router)
