@@ -430,8 +430,15 @@ async def delete_invoice(invoice_id: str):
     return {"message": "تم حذف الفاتورة بنجاح"}
 
 @api_router.put("/invoices/{invoice_id}/status")
-async def update_invoice_status(invoice_id: str, status: str):
+async def update_invoice_status(invoice_id: str, request: dict):
     try:
+        # Extract status from request body
+        if isinstance(request, dict) and 'status' in request:
+            status = request['status']
+        else:
+            # Try parsing as direct string value
+            status = request if isinstance(request, str) else str(request)
+            
         result = await db.invoices.update_one(
             {"id": invoice_id},
             {"$set": {"status": status}}
