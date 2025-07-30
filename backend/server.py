@@ -430,14 +430,17 @@ async def delete_invoice(invoice_id: str):
     return {"message": "تم حذف الفاتورة بنجاح"}
 
 @api_router.put("/invoices/{invoice_id}/status")
-async def update_invoice_status(invoice_id: str, status: InvoiceStatus):
-    result = await db.invoices.update_one(
-        {"id": invoice_id},
-        {"$set": {"status": status}}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
-    return {"message": "تم تحديث حالة الفاتورة"}
+async def update_invoice_status(invoice_id: str, status: str):
+    try:
+        result = await db.invoices.update_one(
+            {"id": invoice_id},
+            {"$set": {"status": status}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+        return {"message": "تم تحديث حالة الفاتورة", "status": status}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Payment endpoints
 @api_router.post("/payments", response_model=Payment)
