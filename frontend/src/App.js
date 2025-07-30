@@ -548,6 +548,17 @@ const Sales = () => {
     printWindow.print();
   };
 
+  const clearAllInvoices = async () => {
+    if (!confirm('هل أنت متأكد من حذف جميع الفواتير؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    try {
+      setInvoices([]);
+      alert('تم حذف جميع الفواتير');
+    } catch (error) {
+      alert('حدث خطأ في حذف البيانات');
+    }
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <h2 className="text-2xl font-bold text-blue-600 mb-6">المبيعات</h2>
