@@ -488,6 +488,13 @@ async def get_payments():
     payments = await db.payments.find().sort("date", -1).to_list(1000)
     return [Payment(**payment) for payment in payments]
 
+@api_router.delete("/payments/{payment_id}")
+async def delete_payment(payment_id: str):
+    result = await db.payments.delete_one({"id": payment_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الدفعة غير موجودة")
+    return {"message": "تم حذف الدفعة بنجاح"}
+
 # Expense endpoints
 @api_router.post("/expenses", response_model=Expense)
 async def create_expense(expense: ExpenseCreate):
