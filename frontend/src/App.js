@@ -2092,12 +2092,20 @@ const Invoices = () => {
                       {invoice.status}
                     </span>
                     {invoice.status === 'انتظار' && (
-                      <button
-                        onClick={() => updateInvoiceStatus(invoice.id, 'تم التنفيذ')}
-                        className="mr-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                      >
-                        تم
-                      </button>
+                      <>
+                        <button
+                          onClick={() => updateInvoiceStatus(invoice.id, 'تم التنفيذ')}
+                          className="mr-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                        >
+                          تم التنفيذ
+                        </button>
+                        <button
+                          onClick={() => updateInvoiceStatus(invoice.id, 'تم التصنيع')}
+                          className="mr-2 text-xs bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
+                        >
+                          تم التصنيع
+                        </button>
+                      </>
                     )}
                   </td>
                   <td className="border border-gray-300 p-2">
