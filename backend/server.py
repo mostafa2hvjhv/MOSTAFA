@@ -589,6 +589,13 @@ async def get_work_orders():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.delete("/work-orders/{work_order_id}")
+async def delete_work_order(work_order_id: str):
+    result = await db.work_orders.delete_one({"id": work_order_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="أمر الشغل غير موجود")
+    return {"message": "تم حذف أمر الشغل بنجاح"}
+
 @api_router.put("/work-orders/{work_order_id}/add-invoice")
 async def add_invoice_to_work_order(work_order_id: str, invoice_id: str):
     """Add an invoice to an existing work order"""
