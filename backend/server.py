@@ -542,6 +542,11 @@ async def create_work_order_multiple(work_order_data: dict):
         }
         
         await db.work_orders.insert_one(work_order)
+        
+        # Remove MongoDB ObjectId for return
+        if "_id" in work_order:
+            del work_order["_id"]
+            
         return work_order
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
