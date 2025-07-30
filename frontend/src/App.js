@@ -2264,6 +2264,21 @@ const Invoices = () => {
                       >
                         حذف
                       </button>
+                      {invoice.status === 'انتظار' ? (
+                        <button
+                          onClick={() => updateInvoiceStatus(invoice.id, 'تم التنفيذ')}
+                          className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600"
+                        >
+                          تم التنفيذ
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => updateInvoiceStatus(invoice.id, 'انتظار')}
+                          className="bg-orange-500 text-white px-2 py-1 rounded text-sm hover:bg-orange-600"
+                        >
+                          انتظار
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
