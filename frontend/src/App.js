@@ -2353,6 +2353,9 @@ const WorkOrders = () => {
     description: '',
     priority: 'عادي'
   });
+  const [showAddToExisting, setShowAddToExisting] = useState(false);
+  const [selectedWorkOrderId, setSelectedWorkOrderId] = useState('');
+  const [selectedInvoiceForAdd, setSelectedInvoiceForAdd] = useState('');
 
   useEffect(() => {
     fetchWorkOrders();
@@ -2365,6 +2368,7 @@ const WorkOrders = () => {
       setWorkOrders(response.data);
     } catch (error) {
       console.error('Error fetching work orders:', error);
+      setWorkOrders([]); // Set empty array on error
     }
   };
 
@@ -2400,14 +2404,21 @@ const WorkOrders = () => {
       // Get selected invoices data
       const selectedInvoicesData = invoices.filter(inv => selectedInvoices.includes(inv.id));
       
+      // Clean invoices data (remove MongoDB ObjectIds)
+      const cleanInvoices = selectedInvoicesData.map(inv => {
+        const cleanInv = { ...inv };
+        if (cleanInv._id) delete cleanInv._id;
+        return cleanInv;
+      });
+      
       // Create work order with multiple invoices
       const workOrderData = {
         title: newWorkOrder.title,
         description: newWorkOrder.description,
         priority: newWorkOrder.priority,
-        invoices: selectedInvoicesData,
-        total_amount: selectedInvoicesData.reduce((sum, inv) => sum + (inv.total_amount || 0), 0),
-        total_items: selectedInvoicesData.reduce((sum, inv) => sum + (inv.items?.length || 0), 0)
+        invoices: cleanInvoices,
+        total_amount: cleanInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0),
+        total_items: cleanInvoices.reduce((sum, inv) => sum + (inv.items?.length || 0), 0)
       };
 
       const response = await axios.post(`${API}/work-orders/multiple`, workOrderData);
@@ -2423,11 +2434,40 @@ const WorkOrders = () => {
           priority: 'عادي'
         });
         
-        fetchWorkOrders();
+        // Refresh work orders list
+        await fetchWorkOrders();
       }
     } catch (error) {
       console.error('Error creating work order:', error);
-      alert('حدث خطأ في إنشاء أمر الشغل');
+      alert('حدث خطأ في إنشاء أمر الشغل: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const addInvoiceToExistingWorkOrder = async () => {
+    if (!selectedWorkOrderId || !selectedInvoiceForAdd) {
+      alert('الرجاء اختيار أمر الشغل والفاتورة');
+      return;
+    }
+
+    try {
+      const response = await axios.put(`${API}/work-orders/${selectedWorkOrderId}/add-invoice`, null, {
+        params: { invoice_id: selectedInvoiceForAdd }
+      });
+      
+      if (response.data) {
+        alert('تم إضافة الفاتورة إلى أمر الشغل بنجاح');
+        
+        // Reset form
+        setSelectedWorkOrderId('');
+        setSelectedInvoiceForAdd('');
+        setShowAddToExisting(false);
+        
+        // Refresh work orders list
+        await fetchWorkOrders();
+      }
+    } catch (error) {
+      console.error('Error adding invoice to work order:', error);
+      alert('حدث خطأ في إضافة الفاتورة: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -2442,13 +2482,40 @@ const WorkOrders = () => {
     );
   };
 
+  const getAvailableInvoicesForAdd = () => {
+    // Get invoices not already in the selected work order
+    if (!selectedWorkOrderId) return getAvailableInvoices();
+    
+    const selectedWorkOrder = workOrders.find(wo => wo.id === selectedWorkOrderId);
+    if (!selectedWorkOrder) return getAvailableInvoices();
+    
+    const usedInvoiceIds = selectedWorkOrder.invoices?.map(inv => inv.id) || [];
+    
+    return getAvailableInvoices().filter(invoice => 
+      !usedInvoiceIds.includes(invoice.id)
+    );
+  };
+
+  const clearAllWorkOrders = async () => {
+    if (!confirm('هل أنت متأكد من حذف جميع أوامر الشغل؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    try {
+      setWorkOrders([]);
+      alert('تم حذف جميع أوامر الشغل');
+    } catch (error) {
+      alert('حدث خطأ في حذف البيانات');
+    }
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-blue-600 mb-4">أمر شغل</h2>
         
         <div className="flex space-x-4 space-x-reverse mb-4">
-          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+          <button 
+            onClick={clearAllWorkOrders}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
             حذف الكل
           </button>
           <button 
@@ -2461,6 +2528,11 @@ const WorkOrders = () => {
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
             طباعة تقرير
           </button>
+          <button 
+            onClick={() => setShowAddToExisting(!showAddToExisting)}
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+            {showAddToExisting ? 'إخفاء' : 'إضافة فاتورة لأمر موجود'}
+          </button>
           <select className="border border-gray-300 rounded px-3 py-2">
             <option>يومي</option>
             <option>أسبوعي</option>
@@ -2469,6 +2541,70 @@ const WorkOrders = () => {
           </select>
         </div>
       </div>
+
+      {/* Add Invoice to Existing Work Order */}
+      {showAddToExisting && (
+        <div className="bg-yellow-50 p-6 rounded-lg shadow-md mb-6 border border-yellow-200">
+          <h3 className="text-lg font-semibold mb-4 text-yellow-800">إضافة فاتورة إلى أمر شغل موجود</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">اختيار أمر الشغل</label>
+              <select
+                value={selectedWorkOrderId}
+                onChange={(e) => setSelectedWorkOrderId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                <option value="">اختر أمر الشغل</option>
+                {workOrders.map(workOrder => (
+                  <option key={workOrder.id} value={workOrder.id}>
+                    {workOrder.title || `أمر شغل #${workOrder.id.slice(-8)}`} 
+                    ({workOrder.invoices?.length || 0} فاتورة)
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">اختيار الفاتورة</label>
+              <select
+                value={selectedInvoiceForAdd}
+                onChange={(e) => setSelectedInvoiceForAdd(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+                disabled={!selectedWorkOrderId}
+              >
+                <option value="">اختر الفاتورة</option>
+                {getAvailableInvoicesForAdd().map(invoice => (
+                  <option key={invoice.id} value={invoice.id}>
+                    {invoice.invoice_number} - {invoice.customer_name} 
+                    (ج.م {invoice.total_amount?.toFixed(2) || '0.00'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex space-x-4 space-x-reverse">
+            <button
+              onClick={addInvoiceToExistingWorkOrder}
+              className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+              disabled={!selectedWorkOrderId || !selectedInvoiceForAdd}
+            >
+              إضافة الفاتورة
+            </button>
+            <button
+              onClick={() => {
+                setShowAddToExisting(false);
+                setSelectedWorkOrderId('');
+                setSelectedInvoiceForAdd('');
+              }}
+              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Create Work Order from Multiple Invoices */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -2597,7 +2733,7 @@ const WorkOrders = () => {
 
       {/* Work Orders List */}
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4">أوامر الشغل</h3>
+        <h3 className="text-lg font-semibold mb-4">أوامر الشغل ({workOrders.length})</h3>
         
         {workOrders.map(workOrder => {
           // Handle both single invoice and multiple invoices work orders
@@ -2709,6 +2845,14 @@ const WorkOrders = () => {
                 </button>
                 <button className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
                   تعديل الحالة
+                </button>
+                <button 
+                  onClick={() => {
+                    setSelectedWorkOrderId(workOrder.id);
+                    setShowAddToExisting(true);
+                  }}
+                  className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                  إضافة فاتورة
                 </button>
                 <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                   حذف
