@@ -798,7 +798,10 @@ const Sales = () => {
             </div>
           </div>
           
-          <button className="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 mt-4 text-lg font-semibold">
+          <button
+            onClick={createInvoice}
+            className="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 mt-4 text-lg font-semibold"
+          >
             إنشاء الفاتورة
           </button>
         </div>
