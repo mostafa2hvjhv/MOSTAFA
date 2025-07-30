@@ -2393,7 +2393,9 @@ const Users = () => {
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             إعادة تحميل
           </button>
-          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          <button 
+            onClick={() => window.print()}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
             طباعة تقرير
           </button>
         </div>
