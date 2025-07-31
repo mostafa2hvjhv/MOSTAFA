@@ -1020,7 +1020,8 @@ async def get_account_balances():
             'فودافون كاش محمد الصاوي': 'vodafone_elsawy',
             'فودافون كاش وائل محمد': 'vodafone_wael',
             'آجل': 'deferred',
-            'انستاباي': 'instapay'
+            'انستاباي': 'instapay',
+            'يد الصاوي': 'yad_elsawy'
         }
         
         for invoice in invoices:
