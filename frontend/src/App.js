@@ -4309,10 +4309,32 @@ const Users = () => {
     }
   };
 
-  const resetPassword = (userId) => {
+  const resetPassword = async (userId) => {
     const newPassword = prompt('أدخل كلمة المرور الجديدة:');
     if (newPassword && newPassword.trim()) {
-      alert(`تم تحديث كلمة المرور للمستخدم بنجاح`);
+      try {
+        // Find the user to get their current data
+        const user = users.find(u => u.id === userId);
+        if (!user) {
+          alert('المستخدم غير موجود');
+          return;
+        }
+
+        // Update password in backend
+        const updatedUser = {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          permissions: user.permissions,
+          password: newPassword.trim()
+        };
+        
+        await axios.put(`${API}/users/${userId}`, updatedUser);
+        alert('تم تحديث كلمة المرور بنجاح');
+      } catch (error) {
+        console.error('Error updating password:', error);
+        alert('حدث خطأ في تحديث كلمة المرور');
+      }
     }
   };
 
