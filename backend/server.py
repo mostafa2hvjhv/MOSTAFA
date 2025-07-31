@@ -501,15 +501,31 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     invoice_count = await db.invoices.count_documents({})
     invoice_number = f"INV-{invoice_count + 1:06d}"
     
-    # Calculate totals
-    total_amount = sum(item.total_price for item in invoice.items)
-    remaining_amount = total_amount if invoice.payment_method == PaymentMethod.DEFERRED else 0
+    # Calculate totals with discount
+    subtotal = sum(item.total_price for item in invoice.items)
+    
+    # Handle discount calculation
+    discount_amount = 0.0
+    if hasattr(invoice, 'discount') and invoice.discount is not None:
+        discount_amount = invoice.discount
+    elif hasattr(invoice, 'discount_value') and invoice.discount_value is not None:
+        # Calculate discount based on type
+        if hasattr(invoice, 'discount_type') and invoice.discount_type == 'percentage':
+            discount_amount = (subtotal * invoice.discount_value) / 100
+        else:
+            discount_amount = invoice.discount_value
+    
+    total_after_discount = subtotal - discount_amount
+    remaining_amount = total_after_discount if invoice.payment_method == PaymentMethod.DEFERRED else 0
     status = InvoiceStatus.PENDING  # Always start with PENDING status
     
     invoice_dict = invoice.dict()
     invoice_obj = Invoice(
         invoice_number=invoice_number,
-        total_amount=total_amount,
+        subtotal=subtotal,
+        discount=discount_amount,
+        total_after_discount=total_after_discount,
+        total_amount=total_after_discount,  # للتوافق مع الكود الموجود
         remaining_amount=remaining_amount,
         status=status,
         **invoice_dict
@@ -561,7 +577,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
         current_invoices = daily_work_order.get("invoices", [])
         current_invoices.append(invoice_for_work_order)
         
-        new_total_amount = daily_work_order.get("total_amount", 0) + total_amount
+        new_total_amount = daily_work_order.get("total_amount", 0) + total_after_discount
         new_total_items = daily_work_order.get("total_items", 0) + len(invoice.items)
         
         await db.work_orders.update_one(
