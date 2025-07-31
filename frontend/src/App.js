@@ -3050,6 +3050,508 @@ const WorkOrders = () => {
   );
 };
 
+// Treasury Management Component
+const Treasury = () => {
+  const [accounts, setAccounts] = useState([
+    { id: 'cash', name: 'نقدي', balance: 0, transactions: [] },
+    { id: 'vodafone_elsawy', name: 'فودافون كاش محمد الصاوي', balance: 0, transactions: [] },
+    { id: 'vodafone_wael', name: 'فودافون كاش وائل محمد', balance: 0, transactions: [] },
+    { id: 'deferred', name: 'آجل', balance: 0, transactions: [] },
+    { id: 'instapay', name: 'انستاباي', balance: 0, transactions: [] }
+  ]);
+  
+  const [selectedAccount, setSelectedAccount] = useState('cash');
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferData, setTransferData] = useState({
+    from: 'cash',
+    to: 'vodafone_elsawy',
+    amount: '',
+    notes: ''
+  });
+  
+  const [manualTransaction, setManualTransaction] = useState({
+    account: 'cash',
+    type: 'income', // income or expense
+    amount: '',
+    description: '',
+    notes: ''
+  });
+  
+  const [showManualForm, setShowManualForm] = useState(false);
+
+  useEffect(() => {
+    fetchTreasuryData();
+  }, []);
+
+  const fetchTreasuryData = async () => {
+    try {
+      // Fetch all invoices to calculate automatic transactions
+      const invoicesResponse = await axios.get(`${API}/invoices`);
+      const expensesResponse = await axios.get(`${API}/expenses`);
+      
+      const invoices = invoicesResponse.data;
+      const expenses = expensesResponse.data;
+      
+      // Calculate balances from invoices and expenses
+      const updatedAccounts = accounts.map(account => {
+        let balance = 0;
+        let transactions = [];
+        
+        // Add invoice transactions
+        invoices.forEach(invoice => {
+          const paymentMethodMap = {
+            'نقدي': 'cash',
+            'فودافون كاش محمد الصاوي': 'vodafone_elsawy', 
+            'فودافون كاش وائل محمد': 'vodafone_wael',
+            'آجل': 'deferred',
+            'انستاباي': 'instapay'
+          };
+          
+          if (paymentMethodMap[invoice.payment_method] === account.id) {
+            const amount = invoice.total_amount || 0;
+            balance += amount;
+            transactions.push({
+              id: `inv-${invoice.id}`,
+              type: 'income',
+              amount: amount,
+              description: `فاتورة رقم ${invoice.invoice_number}`,
+              date: invoice.date,
+              reference: `العميل: ${invoice.customer_name}`
+            });
+          }
+        });
+        
+        // Add expense transactions (only from cash account)
+        if (account.id === 'cash') {
+          expenses.forEach(expense => {
+            balance -= expense.amount || 0;
+            transactions.push({
+              id: `exp-${expense.id}`,
+              type: 'expense',
+              amount: expense.amount || 0,
+              description: expense.description || 'مصروف',
+              date: expense.date,
+              category: expense.category
+            });
+          });
+        }
+        
+        return {
+          ...account,
+          balance: balance,
+          transactions: transactions.sort((a, b) => new Date(b.date) - new Date(a.date))
+        };
+      });
+      
+      setAccounts(updatedAccounts);
+    } catch (error) {
+      console.error('Error fetching treasury data:', error);
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!transferData.amount || parseFloat(transferData.amount) <= 0) {
+      alert('الرجاء إدخال مبلغ صحيح');
+      return;
+    }
+    
+    const amount = parseFloat(transferData.amount);
+    const fromAccount = accounts.find(acc => acc.id === transferData.from);
+    
+    if (fromAccount.balance < amount) {
+      alert('الرصيد غير كافي');
+      return;
+    }
+    
+    try {
+      const updatedAccounts = accounts.map(account => {
+        if (account.id === transferData.from) {
+          return {
+            ...account,
+            balance: account.balance - amount,
+            transactions: [
+              {
+                id: `transfer-${Date.now()}-out`,
+                type: 'transfer_out',
+                amount: amount,
+                description: `تحويل إلى ${accounts.find(acc => acc.id === transferData.to)?.name}`,
+                date: new Date().toISOString(),
+                reference: transferData.notes || 'تحويل داخلي'
+              },
+              ...account.transactions
+            ]
+          };
+        } else if (account.id === transferData.to) {
+          return {
+            ...account,
+            balance: account.balance + amount,
+            transactions: [
+              {
+                id: `transfer-${Date.now()}-in`,
+                type: 'transfer_in',
+                amount: amount,
+                description: `تحويل من ${accounts.find(acc => acc.id === transferData.from)?.name}`,
+                date: new Date().toISOString(),
+                reference: transferData.notes || 'تحويل داخلي'
+              },
+              ...account.transactions
+            ]
+          };
+        }
+        return account;
+      });
+      
+      setAccounts(updatedAccounts);
+      setShowTransferModal(false);
+      setTransferData({ from: 'cash', to: 'vodafone_elsawy', amount: '', notes: '' });
+      alert('تم التحويل بنجاح');
+    } catch (error) {
+      console.error('Error processing transfer:', error);
+      alert('حدث خطأ في التحويل');
+    }
+  };
+
+  const handleManualTransaction = async () => {
+    if (!manualTransaction.amount || parseFloat(manualTransaction.amount) <= 0) {
+      alert('الرجاء إدخال مبلغ صحيح');
+      return;
+    }
+    
+    const amount = parseFloat(manualTransaction.amount);
+    
+    try {
+      const updatedAccounts = accounts.map(account => {
+        if (account.id === manualTransaction.account) {
+          const newBalance = manualTransaction.type === 'income' 
+            ? account.balance + amount 
+            : account.balance - amount;
+            
+          return {
+            ...account,
+            balance: newBalance,
+            transactions: [
+              {
+                id: `manual-${Date.now()}`,
+                type: manualTransaction.type,
+                amount: amount,
+                description: manualTransaction.description,
+                date: new Date().toISOString(),
+                reference: manualTransaction.notes || 'إدخال يدوي'
+              },
+              ...account.transactions
+            ]
+          };
+        }
+        return account;
+      });
+      
+      setAccounts(updatedAccounts);
+      setShowManualForm(false);
+      setManualTransaction({
+        account: 'cash',
+        type: 'income',
+        amount: '',
+        description: '',
+        notes: ''
+      });
+      alert('تم إضافة العملية بنجاح');
+    } catch (error) {
+      console.error('Error processing manual transaction:', error);
+      alert('حدث خطأ في إضافة العملية');
+    }
+  };
+
+  const selectedAccountData = accounts.find(acc => acc.id === selectedAccount);
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-600 mb-4">الخزينة - إدارة الأموال</h2>
+        
+        <div className="flex space-x-4 space-x-reverse mb-4">
+          <button 
+            onClick={() => setShowTransferModal(true)}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            تحويل أموال
+          </button>
+          <button 
+            onClick={() => setShowManualForm(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            إضافة عملية يدوية
+          </button>
+          <button 
+            onClick={fetchTreasuryData}
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+            إعادة تحميل
+          </button>
+          <button 
+            onClick={() => window.print()}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+            طباعة تقرير
+          </button>
+        </div>
+      </div>
+
+      {/* Accounts Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {accounts.map(account => (
+          <div 
+            key={account.id}
+            className={`p-4 rounded-lg shadow cursor-pointer transition-colors ${
+              selectedAccount === account.id 
+                ? 'bg-blue-100 border-2 border-blue-500' 
+                : 'bg-white hover:bg-gray-50'
+            }`}
+            onClick={() => setSelectedAccount(account.id)}
+          >
+            <h3 className="font-semibold text-gray-800 mb-2">{account.name}</h3>
+            <p className={`text-2xl font-bold ${
+              account.balance >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              ج.م {account.balance.toFixed(2)}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {account.transactions.length} عملية
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Account Details */}
+      {selectedAccountData && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">
+            تفاصيل حساب: {selectedAccountData.name}
+          </h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2">التاريخ</th>
+                  <th className="border border-gray-300 p-2">النوع</th>
+                  <th className="border border-gray-300 p-2">الوصف</th>
+                  <th className="border border-gray-300 p-2">المبلغ</th>
+                  <th className="border border-gray-300 p-2">المرجع</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedAccountData.transactions.map((transaction, index) => (
+                  <tr key={transaction.id || index}>
+                    <td className="border border-gray-300 p-2">
+                      {new Date(transaction.date).toLocaleDateString('ar-EG')}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        transaction.type === 'income' ? 'bg-green-100 text-green-800' :
+                        transaction.type === 'expense' ? 'bg-red-100 text-red-800' :
+                        transaction.type === 'transfer_in' ? 'bg-blue-100 text-blue-800' :
+                        'bg-orange-100 text-orange-800'
+                      }`}>
+                        {transaction.type === 'income' ? 'دخل' :
+                         transaction.type === 'expense' ? 'مصروف' :
+                         transaction.type === 'transfer_in' ? 'تحويل وارد' : 'تحويل صادر'}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 p-2">{transaction.description}</td>
+                    <td className="border border-gray-300 p-2">
+                      <span className={
+                        transaction.type === 'income' || transaction.type === 'transfer_in' 
+                          ? 'text-green-600 font-semibold' 
+                          : 'text-red-600 font-semibold'
+                      }>
+                        {transaction.type === 'income' || transaction.type === 'transfer_in' ? '+' : '-'}
+                        ج.م {transaction.amount.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 p-2 text-sm text-gray-600">
+                      {transaction.reference || transaction.category || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {selectedAccountData.transactions.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                لا توجد عمليات لهذا الحساب
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Modal */}
+      {showTransferModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">تحويل أموال بين الحسابات</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">من حساب</label>
+                <select
+                  value={transferData.from}
+                  onChange={(e) => setTransferData({...transferData, from: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  {accounts.map(account => (
+                    <option key={account.id} value={account.id}>
+                      {account.name} (ج.م {account.balance.toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">إلى حساب</label>
+                <select
+                  value={transferData.to}
+                  onChange={(e) => setTransferData({...transferData, to: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  {accounts.filter(acc => acc.id !== transferData.from).map(account => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">المبلغ</label>
+                <input
+                  type="number"
+                  value={transferData.amount}
+                  onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">ملاحظات</label>
+                <input
+                  type="text"
+                  value={transferData.notes}
+                  onChange={(e) => setTransferData({...transferData, notes: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="ملاحظات إضافية (اختياري)"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 space-x-reverse mt-6">
+              <button
+                onClick={handleTransfer}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                تأكيد التحويل
+              </button>
+              <button
+                onClick={() => setShowTransferModal(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Transaction Modal */}
+      {showManualForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">إضافة عملية يدوية</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">الحساب</label>
+                <select
+                  value={manualTransaction.account}
+                  onChange={(e) => setManualTransaction({...manualTransaction, account: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  {accounts.map(account => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">نوع العملية</label>
+                <select
+                  value={manualTransaction.type}
+                  onChange={(e) => setManualTransaction({...manualTransaction, type: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="income">دخل</option>
+                  <option value="expense">مصروف</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">المبلغ</label>
+                <input
+                  type="number"
+                  value={manualTransaction.amount}
+                  onChange={(e) => setManualTransaction({...manualTransaction, amount: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">الوصف</label>
+                <input
+                  type="text"
+                  value={manualTransaction.description}
+                  onChange={(e) => setManualTransaction({...manualTransaction, description: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="وصف العملية"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">ملاحظات</label>
+                <input
+                  type="text"
+                  value={manualTransaction.notes}
+                  onChange={(e) => setManualTransaction({...manualTransaction, notes: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="ملاحظات إضافية (اختياري)"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 space-x-reverse mt-6">
+              <button
+                onClick={handleManualTransaction}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                إضافة العملية
+              </button>
+              <button
+                onClick={() => setShowManualForm(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Users Management Component  
 const Users = () => {
   const [users, setUsers] = useState([]);
