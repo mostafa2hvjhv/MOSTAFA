@@ -134,7 +134,12 @@ class Invoice(BaseModel):
     customer_id: str
     customer_name: str
     items: List[InvoiceItem]
-    total_amount: float
+    subtotal: Optional[float] = None  # المجموع الفرعي قبل الخصم
+    discount: Optional[float] = 0.0  # مبلغ الخصم
+    discount_type: Optional[str] = "amount"  # نوع الخصم: amount أو percentage
+    discount_value: Optional[float] = 0.0  # القيمة المدخلة للخصم
+    total_after_discount: Optional[float] = None  # الإجمالي بعد الخصم
+    total_amount: float  # الإجمالي النهائي (same as total_after_discount for compatibility)
     paid_amount: float = 0.0
     remaining_amount: float
     payment_method: PaymentMethod
