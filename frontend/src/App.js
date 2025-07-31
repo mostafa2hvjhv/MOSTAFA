@@ -3389,10 +3389,25 @@ const WorkOrders = () => {
                           </td>
                           <td className="border border-gray-300 p-2">
                             <div className="font-mono text-sm">
-                              <div>{item.material_used || 'غير محدد'}</div>
-                              {item.material_used && (
-                                <div className="text-xs text-gray-600">
-                                  {item.inner_diameter} × {item.outer_diameter} × {item.height}
+                              {item.material_details ? (
+                                item.material_details.is_finished_product ? (
+                                  <div className="text-center font-semibold text-blue-600">
+                                    مخزن انتاج تام
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div className="font-semibold">{item.material_details.unit_code}</div>
+                                    <div className="text-xs text-gray-600">
+                                      {item.material_details.inner_diameter} - {item.material_details.outer_diameter}
+                                    </div>
+                                  </div>
+                                )
+                              ) : (
+                                <div>
+                                  <div>{item.material_used || 'غير محدد'}</div>
+                                  <div className="text-xs text-gray-600">
+                                    {item.inner_diameter} - {item.outer_diameter}
+                                  </div>
                                 </div>
                               )}
                             </div>
