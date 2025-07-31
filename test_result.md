@@ -362,15 +362,18 @@ metadata:
 
   - task: "Treasury Yad Elsawy Account - إضافة حساب يد الصاوي للخزينة"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py + /app/frontend/src/App.js"
     stuck_count: 0 
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "تم إضافة حساب 'يد الصاوي' للخزينة مع إمكانية التصفير للمدير Elsawy فقط. تم إضافته كطريقة دفع في الفواتير أيضاً"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار حساب يد الصاوي بنجاح بنسبة 100%! جميع الاختبارات الـ10 نجحت. تم التأكد من: 1) حساب yad_elsawy موجود في GET /api/treasury/balances، 2) إنشاء فاتورة بطريقة دفع 'يد الصاوي' يعمل بشكل مثالي، 3) تحديث رصيد الحساب تلقائياً عند إنشاء الفواتير، 4) إضافة معاملات يدوية لحساب يد الصاوي (POST /api/treasury/transactions)، 5) تحويل الأموال من/إلى حساب يد الصاوي (POST /api/treasury/transfer)، 6) وظيفة تصفير الحساب تعمل بشكل مثالي (معاملة expense بقيمة الرصيد الحالي)، 7) الرصيد يصبح صفر بعد التصفير، 8) جميع المعاملات تُحفظ في قاعدة البيانات MongoDB. تم إصلاح مشكلة PaymentMethod enum لتشمل 'يد الصاوي'. النظام جاهز للاستخدام الإنتاجي مع حساب يد الصاوي."
 
 test_plan:
   current_focus:
