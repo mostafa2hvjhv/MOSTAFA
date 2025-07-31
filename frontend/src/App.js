@@ -447,7 +447,15 @@ const Sales = () => {
       quantity: parseInt(currentItem.quantity),
       unit_price: parseFloat(currentItem.unit_price),
       total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
-      material_used: selectedMaterial ? selectedMaterial.unit_code : null
+      material_used: selectedMaterial ? selectedMaterial.unit_code : null,
+      material_details: selectedMaterial ? {
+        unit_code: selectedMaterial.unit_code,
+        inner_diameter: selectedMaterial.inner_diameter,
+        outer_diameter: selectedMaterial.outer_diameter,
+        height: selectedMaterial.height,
+        material_type: selectedMaterial.material_type,
+        is_finished_product: false
+      } : null
     };
 
     setItems([...items, item]);
