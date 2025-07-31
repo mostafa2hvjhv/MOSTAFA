@@ -974,11 +974,18 @@ const Inventory = () => {
     if (!confirm('هل أنت متأكد من حذف جميع بيانات المخزون؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
     try {
-      // In a real implementation, this would call APIs to delete all data
-      setRawMaterials([]);
-      setFinishedProducts([]);
+      // Delete all raw materials
+      await axios.delete(`${API}/raw-materials/clear-all`);
+      // Delete all finished products
+      await axios.delete(`${API}/finished-products/clear-all`);
+      
+      // Refresh data
+      fetchRawMaterials();
+      fetchFinishedProducts();
+      
       alert('تم حذف جميع بيانات المخزون');
     } catch (error) {
+      console.error('Error clearing inventory:', error);
       alert('حدث خطأ في حذف البيانات');
     }
   };
