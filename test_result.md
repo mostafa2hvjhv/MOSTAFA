@@ -326,15 +326,18 @@ frontend:
 
   - task: "Work Order Unit Code Fix - إصلاح كود الوحدة في أمر الشغل"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py + /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main" 
         comment: "تم إصلاح نموذج InvoiceItem لدعم material_details - هذا سيحل مشكلة عدم حفظ بيانات الخامة المختارة في فحص التوافق"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار إصلاح material_details بنجاح بنسبة 100%! جميع الاختبارات الـ16 نجحت. تم التأكد من: 1) إنشاء فواتير مع material_details من فحص التوافق يعمل بشكل مثالي، 2) GET /api/invoices يعيد material_details كاملة، 3) أمر الشغل اليومي يحفظ الفواتير مع material_details، 4) GET /api/invoices/{id} يعيد material_details للفاتورة المحددة، 5) التوافق العكسي - الفواتير بدون material_details تعمل بشكل طبيعي. الآن عند اختيار خامة من فحص التوافق، تُحفظ جميع تفاصيلها (unit_code، المقاسات، النوع) مع الفاتورة وتظهر في أمر الشغل بدلاً من 'بيانات الخامة غير متوفرة'. المشكلة محلولة بالكامل."
 
 metadata:
   created_by: "main_agent"
