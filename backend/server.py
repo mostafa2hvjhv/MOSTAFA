@@ -666,6 +666,11 @@ async def get_work_orders():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.delete("/work-orders/clear-all")
+async def clear_all_work_orders():
+    result = await db.work_orders.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} أمر شغل", "deleted_count": result.deleted_count}
+
 @api_router.delete("/work-orders/{work_order_id}")
 async def delete_work_order(work_order_id: str):
     result = await db.work_orders.delete_one({"id": work_order_id})
