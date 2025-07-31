@@ -3477,7 +3477,8 @@ const Treasury = () => {
     { id: 'vodafone_elsawy', name: 'فودافون كاش محمد الصاوي', balance: 0, transactions: [] },
     { id: 'vodafone_wael', name: 'فودافون كاش وائل محمد', balance: 0, transactions: [] },
     { id: 'deferred', name: 'آجل', balance: 0, transactions: [] },
-    { id: 'instapay', name: 'انستاباي', balance: 0, transactions: [] }
+    { id: 'instapay', name: 'انستاباي', balance: 0, transactions: [] },
+    { id: 'yad_elsawy', name: 'يد الصاوي', balance: 0, transactions: [] }
   ]);
   
   const [selectedAccount, setSelectedAccount] = useState('cash');
