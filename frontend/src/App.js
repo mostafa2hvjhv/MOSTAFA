@@ -3415,10 +3415,11 @@ const WorkOrders = () => {
                                   </div>
                                 )
                               ) : (
+                                // للبيانات القديمة أو عندما لا توجد material_details
                                 <div>
-                                  <div>{item.material_used || 'غير محدد'}</div>
+                                  <div className="font-semibold">{item.material_used || 'غير محدد'}</div>
                                   <div className="text-xs text-gray-600">
-                                    {item.inner_diameter} - {item.outer_diameter}
+                                    معلومات الخامة غير متوفرة
                                   </div>
                                 </div>
                               )}
