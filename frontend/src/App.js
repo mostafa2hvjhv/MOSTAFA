@@ -3380,32 +3380,17 @@ const Treasury = () => {
     const amount = parseFloat(manualTransaction.amount);
     
     try {
-      const updatedAccounts = accounts.map(account => {
-        if (account.id === manualTransaction.account) {
-          const newBalance = manualTransaction.type === 'income' 
-            ? account.balance + amount 
-            : account.balance - amount;
-            
-          return {
-            ...account,
-            balance: newBalance,
-            transactions: [
-              {
-                id: `manual-${Date.now()}`,
-                type: manualTransaction.type,
-                amount: amount,
-                description: manualTransaction.description,
-                date: new Date().toISOString(),
-                reference: manualTransaction.notes || 'إدخال يدوي'
-              },
-              ...account.transactions
-            ]
-          };
-        }
-        return account;
+      await axios.post(`${API}/treasury/transactions`, {
+        account_id: manualTransaction.account,
+        transaction_type: manualTransaction.type,
+        amount: amount,
+        description: manualTransaction.description,
+        reference: manualTransaction.notes || 'إدخال يدوي'
       });
       
-      setAccounts(updatedAccounts);
+      // Refresh data
+      fetchTreasuryData();
+      
       setShowManualForm(false);
       setManualTransaction({
         account: 'cash',
