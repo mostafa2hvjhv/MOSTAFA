@@ -136,7 +136,8 @@ const Login = () => {
 const Navigation = ({ currentPage, onPageChange }) => {
   const { user, logout } = useAuth();
   
-  const adminPages = [
+  // Dashboard is only for Elsawy
+  const elsawyPages = [
     { key: 'dashboard', label: 'لوحة التحكم' },
     { key: 'sales', label: 'المبيعات' },
     { key: 'inventory', label: 'المخزون' },
@@ -149,8 +150,19 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'users', label: 'المستخدمين' }
   ];
   
+  const adminPages = [
+    { key: 'sales', label: 'المبيعات' },
+    { key: 'inventory', label: 'المخزون' },
+    { key: 'deferred', label: 'الآجل' },
+    { key: 'expenses', label: 'المصروفات' },
+    { key: 'revenue', label: 'الإيرادات' },
+    { key: 'treasury', label: 'الخزينة' },
+    { key: 'invoices', label: 'الفواتير' },
+    { key: 'work-orders', label: 'أمر شغل' },
+    { key: 'users', label: 'المستخدمين' }
+  ];
+  
   const userPages = [
-    { key: 'dashboard', label: 'لوحة التحكم' },
     { key: 'sales', label: 'المبيعات' },
     { key: 'inventory', label: 'المخزون' },
     { key: 'deferred', label: 'الآجل' },
@@ -159,7 +171,9 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'work-orders', label: 'أمر شغل' }
   ];
   
-  const pages = user?.role === 'admin' ? adminPages : userPages;
+  // Only Elsawy gets dashboard access
+  const pages = user?.username === 'Elsawy' ? elsawyPages : 
+               user?.role === 'admin' ? adminPages : userPages;
 
   return (
     <nav className="bg-blue-600 text-white" dir="rtl">
