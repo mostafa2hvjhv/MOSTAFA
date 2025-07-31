@@ -3352,44 +3352,16 @@ const Treasury = () => {
     }
     
     try {
-      const updatedAccounts = accounts.map(account => {
-        if (account.id === transferData.from) {
-          return {
-            ...account,
-            balance: account.balance - amount,
-            transactions: [
-              {
-                id: `transfer-${Date.now()}-out`,
-                type: 'transfer_out',
-                amount: amount,
-                description: `تحويل إلى ${accounts.find(acc => acc.id === transferData.to)?.name}`,
-                date: new Date().toISOString(),
-                reference: transferData.notes || 'تحويل داخلي'
-              },
-              ...account.transactions
-            ]
-          };
-        } else if (account.id === transferData.to) {
-          return {
-            ...account,
-            balance: account.balance + amount,
-            transactions: [
-              {
-                id: `transfer-${Date.now()}-in`,
-                type: 'transfer_in',
-                amount: amount,
-                description: `تحويل من ${accounts.find(acc => acc.id === transferData.from)?.name}`,
-                date: new Date().toISOString(),
-                reference: transferData.notes || 'تحويل داخلي'
-              },
-              ...account.transactions
-            ]
-          };
-        }
-        return account;
+      await axios.post(`${API}/treasury/transfer`, {
+        from_account: transferData.from,
+        to_account: transferData.to,
+        amount: amount,
+        notes: transferData.notes
       });
       
-      setAccounts(updatedAccounts);
+      // Refresh data
+      fetchTreasuryData();
+      
       setShowTransferModal(false);
       setTransferData({ from: 'cash', to: 'vodafone_elsawy', amount: '', notes: '' });
       alert('تم التحويل بنجاح');
