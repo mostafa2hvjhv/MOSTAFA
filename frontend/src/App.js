@@ -4082,6 +4082,7 @@ const App = () => {
       case 'deferred': return <Deferred />;
       case 'expenses': return <Expenses />;
       case 'revenue': return <Revenue />;
+      case 'treasury': return <Treasury />;
       case 'invoices': return <Invoices />;
       case 'work-orders': return <WorkOrders />;
       case 'users': return <Users />;
