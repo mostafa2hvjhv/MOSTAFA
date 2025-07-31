@@ -2365,18 +2365,18 @@ const Invoices = () => {
             text-align: right;
           }
           .company-name {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
             color: #000;
             margin: 0;
           }
           .company-subtitle {
-            font-size: 18px;
+            font-size: 20px;
             margin: 5px 0;
             color: #666;
           }
           .company-details {
-            font-size: 15px;
+            font-size: 16px;
             margin: 2px 0;
             color: #333;
           }
