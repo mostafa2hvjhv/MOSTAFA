@@ -131,7 +131,7 @@ class InvoiceItem(BaseModel):
 class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     invoice_number: str
-    customer_id: str
+    customer_id: Optional[str] = None
     customer_name: str
     items: List[InvoiceItem]
     subtotal: Optional[float] = None  # المجموع الفرعي قبل الخصم
