@@ -3530,7 +3530,8 @@ const Treasury = () => {
             'فودافون كاش محمد الصاوي': 'vodafone_elsawy', 
             'فودافون كاش وائل محمد': 'vodafone_wael',
             'آجل': 'deferred',
-            'انستاباي': 'instapay'
+            'انستاباي': 'instapay',
+            'يد الصاوي': 'yad_elsawy'
           };
           
           if (paymentMethodMap[invoice.payment_method] === account.id) {
