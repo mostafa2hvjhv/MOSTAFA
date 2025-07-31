@@ -335,6 +335,9 @@ test_plan:
       - working: true
         agent: "main"
         comment: "تم إنشاء دالة printWorkOrder وربطها بالزر. الدالة تطبع تفاصيل كاملة لأمر الشغل مع الفواتير والمنتجات"
+      - working: true
+        agent: "main"
+        comment: "تم إصلاح خطأ في كود الوحدة - كان يظهر مقاس السيل بدلاً من الخامة المستخدمة. الآن يظهر الخامة المستخدمة مع مقاسات السيل كتفاصيل إضافية"
 
 agent_communication:
   - agent: "main"
