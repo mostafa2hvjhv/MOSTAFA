@@ -668,6 +668,99 @@ async def create_work_order_multiple(work_order_data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/work-orders/daily/{work_date}")
+async def get_or_create_daily_work_order(work_date: str, supervisor_name: str = ""):
+    """Get or create daily work order for specified date"""
+    try:
+        # Parse date from string (YYYY-MM-DD format)
+        work_date_obj = datetime.strptime(work_date, "%Y-%m-%d").date()
+        
+        # Check if daily work order already exists for this date
+        existing_order = await db.work_orders.find_one({
+            "is_daily": True,
+            "work_date": work_date_obj.isoformat()
+        })
+        
+        if existing_order:
+            # Clean up MongoDB ObjectId
+            if "_id" in existing_order:
+                del existing_order["_id"]
+            return existing_order
+        
+        # Create new daily work order
+        work_order = WorkOrder(
+            title=f"أمر شغل يومي - {work_date_obj.strftime('%d/%m/%Y')}",
+            description=f"أمر شغل يومي لجميع فواتير يوم {work_date_obj.strftime('%d/%m/%Y')}",
+            supervisor_name=supervisor_name,
+            is_daily=True,
+            work_date=work_date_obj,
+            invoices=[],
+            total_amount=0.0,
+            total_items=0,
+            status="جديد"
+        )
+        
+        await db.work_orders.insert_one(work_order.dict())
+        
+        # Clean up MongoDB ObjectId for return
+        work_order_dict = work_order.dict()
+        if "_id" in work_order_dict:
+            del work_order_dict["_id"]
+            
+        return work_order_dict
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/work-orders/daily/{work_order_id}/add-invoice")
+async def add_invoice_to_daily_work_order(work_order_id: str, invoice_id: str):
+    """Add invoice to daily work order"""
+    try:
+        # Get the work order
+        work_order = await db.work_orders.find_one({"id": work_order_id})
+        if not work_order:
+            raise HTTPException(status_code=404, detail="أمر الشغل غير موجود")
+        
+        # Get the invoice
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+        
+        # Clean up MongoDB ObjectId from invoice
+        if "_id" in invoice:
+            del invoice["_id"]
+        
+        # Get current invoices
+        current_invoices = work_order.get("invoices", [])
+        
+        # Check if invoice already exists
+        if any(inv.get("id") == invoice_id for inv in current_invoices):
+            return {"message": "الفاتورة موجودة بالفعل في أمر الشغل"}
+            
+        current_invoices.append(invoice)
+        
+        # Update totals
+        new_total_amount = work_order.get("total_amount", 0) + invoice.get("total_amount", 0)
+        new_total_items = work_order.get("total_items", 0) + len(invoice.get("items", []))
+        
+        # Update in database
+        result = await db.work_orders.update_one(
+            {"id": work_order_id},
+            {"$set": {
+                "invoices": current_invoices,
+                "total_amount": new_total_amount,
+                "total_items": new_total_items
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="فشل في تحديث أمر الشغل")
+            
+        return {"message": "تم إضافة الفاتورة إلى أمر الشغل اليومي بنجاح"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/work-orders")
 async def get_work_orders():
     try:
