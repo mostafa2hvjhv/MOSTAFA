@@ -375,6 +375,18 @@ metadata:
         agent: "testing"
         comment: "✅ تم اختبار حساب يد الصاوي بنجاح بنسبة 100%! جميع الاختبارات الـ10 نجحت. تم التأكد من: 1) حساب yad_elsawy موجود في GET /api/treasury/balances، 2) إنشاء فاتورة بطريقة دفع 'يد الصاوي' يعمل بشكل مثالي، 3) تحديث رصيد الحساب تلقائياً عند إنشاء الفواتير، 4) إضافة معاملات يدوية لحساب يد الصاوي (POST /api/treasury/transactions)، 5) تحويل الأموال من/إلى حساب يد الصاوي (POST /api/treasury/transfer)، 6) وظيفة تصفير الحساب تعمل بشكل مثالي (معاملة expense بقيمة الرصيد الحالي)، 7) الرصيد يصبح صفر بعد التصفير، 8) جميع المعاملات تُحفظ في قاعدة البيانات MongoDB. تم إصلاح مشكلة PaymentMethod enum لتشمل 'يد الصاوي'. النظام جاهز للاستخدام الإنتاجي مع حساب يد الصاوي."
 
+  - task: "Invoice Discount Feature - بند الخصم في الفواتير"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py + /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "تم إضافة بند الخصم للفواتير مع دعم الخصم الثابت والنسبة المئوية، تحديث الحسابات والطباعة وعرض الفواتير"
+
 test_plan:
   current_focus: []
   stuck_tasks: []
