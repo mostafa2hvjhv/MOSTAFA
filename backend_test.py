@@ -561,6 +561,630 @@ class MasterSealAPITester:
                 self.log_test("Get Initial Material State", False, f"HTTP {response.status_code}")
         except Exception as e:
             self.log_test("Inventory Update Logic", False, f"Exception: {str(e)}")
+
+    def test_finished_products_management(self):
+        """Test finished products management APIs"""
+        print("\n=== Testing Finished Products Management ===")
+        
+        # Test finished products creation
+        products_data = [
+            {"seal_type": "RSL", "material_type": "NBR", "inner_diameter": 25.0, "outer_diameter": 35.0, "height": 8.0, "quantity": 20, "unit_price": 15.0},
+            {"seal_type": "RS", "material_type": "BUR", "inner_diameter": 30.0, "outer_diameter": 45.0, "height": 7.0, "quantity": 15, "unit_price": 20.0},
+            {"seal_type": "B17", "material_type": "VT", "inner_diameter": 40.0, "outer_diameter": 55.0, "height": 10.0, "quantity": 10, "unit_price": 25.0}
+        ]
+        
+        for product_data in products_data:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/finished-products", 
+                                           json=product_data,
+                                           headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('seal_type') == product_data['seal_type']:
+                        self.created_data.setdefault('finished_products', []).append(data)
+                        self.log_test(f"Create Finished Product - {product_data['seal_type']}", True, f"Product ID: {data.get('id')}")
+                    else:
+                        self.log_test(f"Create Finished Product - {product_data['seal_type']}", False, f"Type mismatch: {data}")
+                else:
+                    self.log_test(f"Create Finished Product - {product_data['seal_type']}", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test(f"Create Finished Product - {product_data['seal_type']}", False, f"Exception: {str(e)}")
+        
+        # Test get all finished products
+        try:
+            response = self.session.get(f"{BACKEND_URL}/finished-products")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test("Get All Finished Products", True, f"Retrieved {len(data)} products")
+                else:
+                    self.log_test("Get All Finished Products", False, f"Expected list, got: {type(data)}")
+            else:
+                self.log_test("Get All Finished Products", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Get All Finished Products", False, f"Exception: {str(e)}")
+
+    def test_user_management(self):
+        """Test user management APIs"""
+        print("\n=== Testing User Management ===")
+        
+        # Test user creation
+        users_data = [
+            {"username": "محمد_أحمد", "password": "password123", "role": "user"},
+            {"username": "فاطمة_علي", "password": "password456", "role": "user"},
+            {"username": "أحمد_مدير", "password": "admin123", "role": "admin"}
+        ]
+        
+        for user_data in users_data:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/users", 
+                                           json=user_data,
+                                           headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('username') == user_data['username']:
+                        self.created_data.setdefault('users', []).append(data)
+                        self.log_test(f"Create User - {user_data['username']}", True, f"User ID: {data.get('id')}")
+                    else:
+                        self.log_test(f"Create User - {user_data['username']}", False, f"Username mismatch: {data}")
+                else:
+                    self.log_test(f"Create User - {user_data['username']}", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test(f"Create User - {user_data['username']}", False, f"Exception: {str(e)}")
+        
+        # Test get all users
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test("Get All Users", True, f"Retrieved {len(data)} users")
+                else:
+                    self.log_test("Get All Users", False, f"Expected list, got: {type(data)}")
+            else:
+                self.log_test("Get All Users", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Get All Users", False, f"Exception: {str(e)}")
+
+    def test_work_orders_management(self):
+        """Test work orders management APIs"""
+        print("\n=== Testing Work Orders Management ===")
+        
+        if not self.created_data['invoices']:
+            self.log_test("Work Orders Management", False, "No invoices available for work order testing")
+            return
+        
+        # Test work order creation from multiple invoices
+        work_order_data = {
+            "title": "أمر شغل تجريبي",
+            "description": "أمر شغل لاختبار النظام",
+            "priority": "عالي",
+            "invoices": self.created_data['invoices'][:2] if len(self.created_data['invoices']) >= 2 else self.created_data['invoices'],
+            "total_amount": sum(inv.get('total_amount', 0) for inv in self.created_data['invoices'][:2]),
+            "total_items": sum(len(inv.get('items', [])) for inv in self.created_data['invoices'][:2])
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/work-orders/multiple", 
+                                       json=work_order_data,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('title') == work_order_data['title']:
+                    self.created_data.setdefault('work_orders', []).append(data)
+                    self.log_test("Create Work Order", True, f"Work Order ID: {data.get('id')}")
+                else:
+                    self.log_test("Create Work Order", False, f"Title mismatch: {data}")
+            else:
+                self.log_test("Create Work Order", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create Work Order", False, f"Exception: {str(e)}")
+        
+        # Test get all work orders
+        try:
+            response = self.session.get(f"{BACKEND_URL}/work-orders")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test("Get All Work Orders", True, f"Retrieved {len(data)} work orders")
+                else:
+                    self.log_test("Get All Work Orders", False, f"Expected list, got: {type(data)}")
+            else:
+                self.log_test("Get All Work Orders", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Get All Work Orders", False, f"Exception: {str(e)}")
+
+    def test_individual_delete_apis(self):
+        """Test individual delete APIs for all entities"""
+        print("\n=== Testing Individual Delete APIs ===")
+        
+        # Test delete customer
+        if self.created_data.get('customers'):
+            customer_id = self.created_data['customers'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/customers/{customer_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف العميل بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/customers/{customer_id}")
+                        if verify_response.status_code == 404:
+                            self.log_test("Delete Customer", True, f"Customer {customer_id} deleted successfully from database")
+                        else:
+                            self.log_test("Delete Customer", False, f"Customer still exists in database after deletion")
+                    else:
+                        self.log_test("Delete Customer", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Customer", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Customer", False, f"Exception: {str(e)}")
+        
+        # Test delete finished product
+        if self.created_data.get('finished_products'):
+            product_id = self.created_data['finished_products'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/finished-products/{product_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف المنتج بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/finished-products")
+                        if verify_response.status_code == 200:
+                            products = verify_response.json()
+                            if not any(p.get('id') == product_id for p in products):
+                                self.log_test("Delete Finished Product", True, f"Product {product_id} deleted successfully from database")
+                            else:
+                                self.log_test("Delete Finished Product", False, f"Product still exists in database after deletion")
+                        else:
+                            self.log_test("Delete Finished Product", False, f"Failed to verify deletion")
+                    else:
+                        self.log_test("Delete Finished Product", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Finished Product", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Finished Product", False, f"Exception: {str(e)}")
+        
+        # Test delete payment
+        if self.created_data.get('payments'):
+            payment_id = self.created_data['payments'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/payments/{payment_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف الدفعة بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/payments")
+                        if verify_response.status_code == 200:
+                            payments = verify_response.json()
+                            if not any(p.get('id') == payment_id for p in payments):
+                                self.log_test("Delete Payment", True, f"Payment {payment_id} deleted successfully from database")
+                            else:
+                                self.log_test("Delete Payment", False, f"Payment still exists in database after deletion")
+                        else:
+                            self.log_test("Delete Payment", False, f"Failed to verify deletion")
+                    else:
+                        self.log_test("Delete Payment", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Payment", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Payment", False, f"Exception: {str(e)}")
+        
+        # Test delete work order
+        if self.created_data.get('work_orders'):
+            work_order_id = self.created_data['work_orders'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/work-orders/{work_order_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف أمر الشغل بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/work-orders")
+                        if verify_response.status_code == 200:
+                            work_orders = verify_response.json()
+                            if not any(wo.get('id') == work_order_id for wo in work_orders):
+                                self.log_test("Delete Work Order", True, f"Work Order {work_order_id} deleted successfully from database")
+                            else:
+                                self.log_test("Delete Work Order", False, f"Work Order still exists in database after deletion")
+                        else:
+                            self.log_test("Delete Work Order", False, f"Failed to verify deletion")
+                    else:
+                        self.log_test("Delete Work Order", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Work Order", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Work Order", False, f"Exception: {str(e)}")
+        
+        # Test delete user
+        if self.created_data.get('users'):
+            user_id = self.created_data['users'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/users/{user_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف المستخدم بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/users/{user_id}")
+                        if verify_response.status_code == 404:
+                            self.log_test("Delete User", True, f"User {user_id} deleted successfully from database")
+                        else:
+                            self.log_test("Delete User", False, f"User still exists in database after deletion")
+                    else:
+                        self.log_test("Delete User", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete User", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete User", False, f"Exception: {str(e)}")
+        
+        # Test existing delete APIs
+        # Test delete raw material
+        if self.created_data.get('raw_materials'):
+            material_id = self.created_data['raw_materials'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/raw-materials/{material_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف المادة بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/raw-materials")
+                        if verify_response.status_code == 200:
+                            materials = verify_response.json()
+                            if not any(m.get('id') == material_id for m in materials):
+                                self.log_test("Delete Raw Material", True, f"Material {material_id} deleted successfully from database")
+                            else:
+                                self.log_test("Delete Raw Material", False, f"Material still exists in database after deletion")
+                        else:
+                            self.log_test("Delete Raw Material", False, f"Failed to verify deletion")
+                    else:
+                        self.log_test("Delete Raw Material", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Raw Material", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Raw Material", False, f"Exception: {str(e)}")
+        
+        # Test delete invoice
+        if self.created_data.get('invoices'):
+            invoice_id = self.created_data['invoices'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/invoices/{invoice_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف الفاتورة بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/invoices/{invoice_id}")
+                        if verify_response.status_code == 404:
+                            self.log_test("Delete Invoice", True, f"Invoice {invoice_id} deleted successfully from database")
+                        else:
+                            self.log_test("Delete Invoice", False, f"Invoice still exists in database after deletion")
+                    else:
+                        self.log_test("Delete Invoice", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Invoice", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Invoice", False, f"Exception: {str(e)}")
+        
+        # Test delete expense
+        if self.created_data.get('expenses'):
+            expense_id = self.created_data['expenses'][0]['id']
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/expenses/{expense_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف المصروف بنجاح" in data.get('message', ''):
+                        # Verify deletion from database
+                        verify_response = self.session.get(f"{BACKEND_URL}/expenses")
+                        if verify_response.status_code == 200:
+                            expenses = verify_response.json()
+                            if not any(e.get('id') == expense_id for e in expenses):
+                                self.log_test("Delete Expense", True, f"Expense {expense_id} deleted successfully from database")
+                            else:
+                                self.log_test("Delete Expense", False, f"Expense still exists in database after deletion")
+                        else:
+                            self.log_test("Delete Expense", False, f"Failed to verify deletion")
+                    else:
+                        self.log_test("Delete Expense", False, f"Unexpected response message: {data}")
+                else:
+                    self.log_test("Delete Expense", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Delete Expense", False, f"Exception: {str(e)}")
+
+    def test_clear_all_apis(self):
+        """Test clear all APIs for all entities"""
+        print("\n=== Testing Clear All APIs ===")
+        
+        # First, create some test data to clear
+        self.test_customer_management()
+        self.test_raw_materials_management()
+        self.test_finished_products_management()
+        self.test_invoice_management()
+        self.test_expense_management()
+        self.test_payment_management()
+        self.test_work_orders_management()
+        self.test_user_management()
+        
+        # Test clear all customers
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/customers/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "عميل" in data.get('message', ''):
+                    # Verify all customers are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/customers")
+                    if verify_response.status_code == 200:
+                        customers = verify_response.json()
+                        if len(customers) == 0:
+                            self.log_test("Clear All Customers", True, f"All customers cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Customers", False, f"Some customers still exist after clear all: {len(customers)}")
+                    else:
+                        self.log_test("Clear All Customers", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Customers", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Customers", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Customers", False, f"Exception: {str(e)}")
+        
+        # Test clear all raw materials
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/raw-materials/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "مادة خام" in data.get('message', ''):
+                    # Verify all raw materials are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/raw-materials")
+                    if verify_response.status_code == 200:
+                        materials = verify_response.json()
+                        if len(materials) == 0:
+                            self.log_test("Clear All Raw Materials", True, f"All raw materials cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Raw Materials", False, f"Some raw materials still exist after clear all: {len(materials)}")
+                    else:
+                        self.log_test("Clear All Raw Materials", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Raw Materials", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Raw Materials", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Raw Materials", False, f"Exception: {str(e)}")
+        
+        # Test clear all finished products
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/finished-products/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "منتج جاهز" in data.get('message', ''):
+                    # Verify all finished products are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/finished-products")
+                    if verify_response.status_code == 200:
+                        products = verify_response.json()
+                        if len(products) == 0:
+                            self.log_test("Clear All Finished Products", True, f"All finished products cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Finished Products", False, f"Some finished products still exist after clear all: {len(products)}")
+                    else:
+                        self.log_test("Clear All Finished Products", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Finished Products", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Finished Products", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Finished Products", False, f"Exception: {str(e)}")
+        
+        # Test clear all invoices
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/invoices/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "فاتورة" in data.get('message', ''):
+                    # Verify all invoices are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/invoices")
+                    if verify_response.status_code == 200:
+                        invoices = verify_response.json()
+                        if len(invoices) == 0:
+                            self.log_test("Clear All Invoices", True, f"All invoices cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Invoices", False, f"Some invoices still exist after clear all: {len(invoices)}")
+                    else:
+                        self.log_test("Clear All Invoices", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Invoices", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Invoices", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Invoices", False, f"Exception: {str(e)}")
+        
+        # Test clear all expenses
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/expenses/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "مصروف" in data.get('message', ''):
+                    # Verify all expenses are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/expenses")
+                    if verify_response.status_code == 200:
+                        expenses = verify_response.json()
+                        if len(expenses) == 0:
+                            self.log_test("Clear All Expenses", True, f"All expenses cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Expenses", False, f"Some expenses still exist after clear all: {len(expenses)}")
+                    else:
+                        self.log_test("Clear All Expenses", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Expenses", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Expenses", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Expenses", False, f"Exception: {str(e)}")
+        
+        # Test clear all payments
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/payments/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "دفعة" in data.get('message', ''):
+                    # Verify all payments are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/payments")
+                    if verify_response.status_code == 200:
+                        payments = verify_response.json()
+                        if len(payments) == 0:
+                            self.log_test("Clear All Payments", True, f"All payments cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Payments", False, f"Some payments still exist after clear all: {len(payments)}")
+                    else:
+                        self.log_test("Clear All Payments", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Payments", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Payments", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Payments", False, f"Exception: {str(e)}")
+        
+        # Test clear all work orders
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/work-orders/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "أمر شغل" in data.get('message', ''):
+                    # Verify all work orders are deleted from database
+                    verify_response = self.session.get(f"{BACKEND_URL}/work-orders")
+                    if verify_response.status_code == 200:
+                        work_orders = verify_response.json()
+                        if len(work_orders) == 0:
+                            self.log_test("Clear All Work Orders", True, f"All work orders cleared successfully. Deleted: {data.get('deleted_count', 0)}")
+                        else:
+                            self.log_test("Clear All Work Orders", False, f"Some work orders still exist after clear all: {len(work_orders)}")
+                    else:
+                        self.log_test("Clear All Work Orders", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Work Orders", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Work Orders", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Work Orders", False, f"Exception: {str(e)}")
+        
+        # Test clear all users (should preserve default users)
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/users/clear-all")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم حذف" in data.get('message', '') and "مستخدم" in data.get('message', ''):
+                    # Verify only custom users are deleted, default users preserved
+                    verify_response = self.session.get(f"{BACKEND_URL}/users")
+                    if verify_response.status_code == 200:
+                        users = verify_response.json()
+                        # Should only have default users (if any were created in database)
+                        self.log_test("Clear All Users", True, f"Custom users cleared successfully. Deleted: {data.get('deleted_count', 0)}, Remaining: {len(users)}")
+                    else:
+                        self.log_test("Clear All Users", False, f"Failed to verify clear all")
+                else:
+                    self.log_test("Clear All Users", False, f"Unexpected response message: {data}")
+            else:
+                self.log_test("Clear All Users", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Clear All Users", False, f"Exception: {str(e)}")
+
+    def test_delete_error_handling(self):
+        """Test error handling for delete APIs with non-existent IDs"""
+        print("\n=== Testing Delete Error Handling ===")
+        
+        fake_id = "non-existent-id-12345"
+        
+        # Test delete non-existent customer
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/customers/{fake_id}")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "العميل غير موجود" in data.get('detail', ''):
+                    self.log_test("Delete Non-existent Customer", True, "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Delete Non-existent Customer", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Delete Non-existent Customer", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Delete Non-existent Customer", False, f"Exception: {str(e)}")
+        
+        # Test delete non-existent finished product
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/finished-products/{fake_id}")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "المنتج غير موجود" in data.get('detail', ''):
+                    self.log_test("Delete Non-existent Product", True, "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Delete Non-existent Product", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Delete Non-existent Product", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Delete Non-existent Product", False, f"Exception: {str(e)}")
+        
+        # Test delete non-existent payment
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/payments/{fake_id}")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "الدفعة غير موجودة" in data.get('detail', ''):
+                    self.log_test("Delete Non-existent Payment", True, "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Delete Non-existent Payment", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Delete Non-existent Payment", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Delete Non-existent Payment", False, f"Exception: {str(e)}")
+        
+        # Test delete non-existent work order
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/work-orders/{fake_id}")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "أمر الشغل غير موجود" in data.get('detail', ''):
+                    self.log_test("Delete Non-existent Work Order", True, "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Delete Non-existent Work Order", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Delete Non-existent Work Order", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Delete Non-existent Work Order", False, f"Exception: {str(e)}")
+        
+        # Test delete non-existent user
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/users/{fake_id}")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "المستخدم غير موجود" in data.get('detail', ''):
+                    self.log_test("Delete Non-existent User", True, "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Delete Non-existent User", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Delete Non-existent User", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Delete Non-existent User", False, f"Exception: {str(e)}")
     
     def run_all_tests(self):
         """Run all backend API tests"""
