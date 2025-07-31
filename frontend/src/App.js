@@ -2602,7 +2602,10 @@ const WorkOrders = () => {
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.inner_diameter} × ${item.outer_diameter} × ${item.height}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.material_used || 'غير محدد'}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.inner_diameter}×${item.outer_diameter}×${item.height} ${item.material_type}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">
+                    ${item.material_used || 'غير محدد'}
+                    ${item.material_used ? `<br><small style="color: #666;">${item.inner_diameter}×${item.outer_diameter}×${item.height}</small>` : ''}
+                  </td>
                 </tr>
               `).join('') || ''
             ).join('')}
