@@ -742,8 +742,23 @@ const Sales = () => {
 
         <!-- Total Section -->
         <div class="total-section">
+          <div style="text-align: left; margin-bottom: 10px;">
+            ${invoice.subtotal ? `
+              <div style="margin-bottom: 5px;">
+                <span>المجموع الفرعي: ج.م ${invoice.subtotal.toFixed(2)}</span>
+              </div>
+            ` : ''}
+            ${invoice.discount && invoice.discount > 0 ? `
+              <div style="margin-bottom: 5px; color: #d32f2f;">
+                <span>الخصم: - ج.م ${invoice.discount.toFixed(2)}</span>
+                ${invoice.discount_type === 'percentage' && invoice.discount_value ? 
+                  ` <small>(${invoice.discount_value}%)</small>` : ''}
+              </div>
+              <hr style="margin: 5px 0; border: 1px solid #000;">
+            ` : ''}
+          </div>
           <div class="total-amount">
-            الإجمالي: ج.م ${invoice.total_amount.toFixed(2)}
+            الإجمالي النهائي: ج.م ${(invoice.total_after_discount || invoice.total_amount).toFixed(2)}
           </div>
         </div>
 
