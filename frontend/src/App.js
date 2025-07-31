@@ -515,12 +515,24 @@ const Sales = () => {
         customerName = customer ? customer.name : '';
       }
 
+      // حساب الإجمالي والخصم
+      const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
+      const discountAmount = discountType === 'percentage' 
+        ? (subtotal * parseFloat(discount || 0)) / 100
+        : parseFloat(discount || 0);
+      const totalAfterDiscount = subtotal - discountAmount;
+
       // إنشاء الفاتورة
       const invoiceData = {
         customer_id: customerId,
         customer_name: customerName,
         items: items,
         payment_method: paymentMethod,
+        subtotal: subtotal,
+        discount: discountAmount,
+        discount_type: discountType,
+        discount_value: parseFloat(discount || 0),
+        total_after_discount: totalAfterDiscount,
         notes: ''
       };
 
