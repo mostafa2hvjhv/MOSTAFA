@@ -2640,6 +2640,10 @@ class MasterSealAPITester:
         print("\n" + "💸" * 20 + " INVOICE DISCOUNT TESTS " + "💸" * 20)
         self.test_invoice_discount_feature()
         
+        # Test User Management Persistence - LATEST FIXES FOCUS
+        print("\n" + "👥" * 20 + " USER MANAGEMENT PERSISTENCE TESTS " + "👥" * 20)
+        self.test_user_management_persistence()
+        
         # Test delete functionality - the main focus
         print("\n" + "🗑️" * 20 + " DELETE FUNCTIONALITY TESTS " + "🗑️" * 20)
         self.test_individual_delete_apis()
