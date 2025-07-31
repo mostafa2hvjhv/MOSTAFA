@@ -4332,16 +4332,17 @@ const Users = () => {
         const updatedUser = {
           id: user.id,
           username: user.username,
+          password: newPassword.trim(),
           role: user.role,
-          permissions: user.permissions,
-          password: newPassword.trim()
+          permissions: user.permissions || [],
+          created_at: user.created_at
         };
         
         await axios.put(`${API}/users/${userId}`, updatedUser);
         alert('تم تحديث كلمة المرور بنجاح');
       } catch (error) {
         console.error('Error updating password:', error);
-        alert('حدث خطأ في تحديث كلمة المرور');
+        alert('حدث خطأ في تحديث كلمة المرور: ' + (error.response?.data?.detail || error.message));
       }
     }
   };
