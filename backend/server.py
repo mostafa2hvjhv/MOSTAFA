@@ -85,6 +85,7 @@ class User(BaseModel):
     username: str
     password: str
     role: UserRole
+    permissions: Optional[List[str]] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Customer(BaseModel):
