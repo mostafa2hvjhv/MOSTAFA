@@ -2988,7 +2988,9 @@ const WorkOrders = () => {
               
               {/* Work Order Actions */}
               <div className="flex space-x-4 space-x-reverse">
-                <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                <button 
+                  onClick={() => printWorkOrder(workOrder)}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                   طباعة أمر الشغل
                 </button>
                 <button className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
