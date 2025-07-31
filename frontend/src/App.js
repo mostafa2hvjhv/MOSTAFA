@@ -223,20 +223,27 @@ const Dashboard = () => {
     }
   };
 
-  const clearAllData = () => {
+  const clearAllData = async () => {
     if (!confirm('هل أنت متأكد من حذف جميع البيانات؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
-    // Reset dashboard stats
-    setStats({
-      total_sales: 0,
-      total_expenses: 0,
-      net_profit: 0,
-      total_unpaid: 0,
-      invoice_count: 0,
-      customer_count: 0
-    });
-    
-    alert('تم حذف جميع البيانات');
+    try {
+      // Clear all data from backend
+      await axios.delete(`${API}/customers/clear-all`);
+      await axios.delete(`${API}/raw-materials/clear-all`);
+      await axios.delete(`${API}/finished-products/clear-all`);
+      await axios.delete(`${API}/invoices/clear-all`);
+      await axios.delete(`${API}/expenses/clear-all`);
+      await axios.delete(`${API}/payments/clear-all`);
+      await axios.delete(`${API}/work-orders/clear-all`);
+      
+      // Refresh dashboard stats
+      fetchDashboardStats();
+      
+      alert('تم حذف جميع البيانات');
+    } catch (error) {
+      console.error('Error clearing all data:', error);
+      alert('حدث خطأ في حذف البيانات');
+    }
   };
 
   const printReport = (reportType) => {
