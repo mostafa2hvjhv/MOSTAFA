@@ -1067,7 +1067,85 @@ const Sales = () => {
               </select>
             </div>
             
-            <div className="text-xl font-bold">
+            {/* Discount Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium mb-1">نوع الخصم</label>
+                <select
+                  value={discountType}
+                  onChange={(e) => setDiscountType(e.target.value)}
+                  className="p-2 border border-gray-300 rounded w-full"
+                >
+                  <option value="amount">مبلغ ثابت</option>
+                  <option value="percentage">نسبة مئوية</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  قيمة الخصم {discountType === 'percentage' ? '(%)' : '(ج.م)'}
+                </label>
+                <input
+                  type="number"
+                  value={discount}
+                  onChange={(e) => setDiscount(e.target.value)}
+                  className="p-2 border border-gray-300 rounded w-full"
+                  placeholder="0"
+                  min="0"
+                  step={discountType === 'percentage' ? '0.1' : '0.01'}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">مبلغ الخصم</label>
+                <div className="p-2 bg-white border border-gray-300 rounded w-full">
+                  ج.م {(() => {
+                    const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
+                    const discountAmount = discountType === 'percentage' 
+                      ? (subtotal * parseFloat(discount || 0)) / 100
+                      : parseFloat(discount || 0);
+                    return discountAmount.toFixed(2);
+                  })()}
+                </div>
+              </div>
+            </div>
+            
+            {/* Total Section */}
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-lg">المجموع الفرعي:</span>
+                <span className="text-lg font-semibold">
+                  ج.م {items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-lg">الخصم:</span>
+                <span className="text-lg font-semibold text-red-600">
+                  - ج.م {(() => {
+                    const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
+                    const discountAmount = discountType === 'percentage' 
+                      ? (subtotal * parseFloat(discount || 0)) / 100
+                      : parseFloat(discount || 0);
+                    return discountAmount.toFixed(2);
+                  })()}
+                </span>
+              </div>
+              <hr className="my-2" />
+              <div className="flex justify-between items-center">
+                <span className="text-xl font-bold">الإجمالي النهائي:</span>
+                <span className="text-xl font-bold text-green-600">
+                  ج.م {(() => {
+                    const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
+                    const discountAmount = discountType === 'percentage' 
+                      ? (subtotal * parseFloat(discount || 0)) / 100
+                      : parseFloat(discount || 0);
+                    return (subtotal - discountAmount).toFixed(2);
+                  })()}
+                </span>
+              </div>
+            </div>
+            
+            <div className="text-xl font-bold" style="display: none;">
               الإجمالي: ج.م {items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}
             </div>
           </div>
