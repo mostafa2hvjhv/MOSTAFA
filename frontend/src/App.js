@@ -4268,12 +4268,21 @@ const Users = () => {
     }
 
     try {
-      // Update user in backend
+      // Find current user to preserve their permissions
+      const currentUser = users.find(u => u.id === editingUser);
+      if (!currentUser) {
+        alert('المستخدم غير موجود');
+        return;
+      }
+
+      // Update user in backend - preserve existing permissions
       const updatedUser = {
         id: editingUser,
         username: editForm.username,
         role: editForm.role,
-        password: editForm.password || 'unchanged' // Backend should handle password updates separately
+        password: editForm.password || currentUser.password,
+        permissions: currentUser.permissions || [],
+        created_at: currentUser.created_at
       };
       
       await axios.put(`${API}/users/${editingUser}`, updatedUser);
@@ -4286,7 +4295,7 @@ const Users = () => {
       alert('تم تحديث المستخدم بنجاح');
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('حدث خطأ في تحديث المستخدم');
+      alert('حدث خطأ في تحديث المستخدم: ' + (error.response?.data?.detail || error.message));
     }
   };
 
