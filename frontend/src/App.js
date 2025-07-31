@@ -1667,9 +1667,11 @@ const Expenses = () => {
     if (!confirm('هل أنت متأكد من حذف جميع المصروفات؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
     try {
-      setExpenses([]);
+      await axios.delete(`${API}/expenses/clear-all`);
+      fetchExpenses();
       alert('تم حذف جميع المصروفات');
     } catch (error) {
+      console.error('Error clearing expenses:', error);
       alert('حدث خطأ في حذف البيانات');
     }
   };
