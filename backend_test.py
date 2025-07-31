@@ -1703,6 +1703,10 @@ class MasterSealAPITester:
         print("\n" + "🔧" * 20 + " MATERIAL DETAILS TESTS " + "🔧" * 20)
         self.test_material_details_functionality()
         
+        # Test Treasury Yad Elsawy Account functionality
+        print("\n" + "💰" * 20 + " TREASURY YAD ELSAWY TESTS " + "💰" * 20)
+        self.test_treasury_yad_elsawy_account()
+        
         # Test delete functionality - the main focus
         print("\n" + "🗑️" * 20 + " DELETE FUNCTIONALITY TESTS " + "🗑️" * 20)
         self.test_individual_delete_apis()
