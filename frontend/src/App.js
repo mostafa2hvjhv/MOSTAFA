@@ -546,7 +546,7 @@ const Sales = () => {
             margin: 0;
             padding: 20px;
             direction: rtl;
-            font-size: 14px;
+            font-size: 15px;
           }
           .header {
             display: flex;
