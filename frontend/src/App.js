@@ -1047,6 +1047,7 @@ const Sales = () => {
                 <option value="فودافون كاش محمد الصاوي">فودافون كاش محمد الصاوي</option>
                 <option value="فودافون كاش وائل محمد">فودافون كاش وائل محمد</option>
                 <option value="انستاباي">انستاباي</option>
+                <option value="يد الصاوي">يد الصاوي</option>
               </select>
             </div>
             
