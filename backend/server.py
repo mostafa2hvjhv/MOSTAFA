@@ -157,10 +157,20 @@ class Expense(BaseModel):
 
 class WorkOrder(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    invoice_id: str
-    items: List[Dict[str, Any]]  # Items with material codes
+    title: Optional[str] = None
+    description: Optional[str] = None
+    supervisor_name: Optional[str] = None  # اسم المشرف على التصنيع
+    is_daily: bool = False  # هل هو أمر شغل يومي تلقائي
+    work_date: Optional[date] = None  # تاريخ العمل للأوامر اليومية
+    invoices: List[Dict[str, Any]] = Field(default_factory=list)  # الفواتير المرتبطة
+    total_amount: float = 0.0
+    total_items: int = 0
     status: str = "جديد"
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # For backward compatibility
+    invoice_id: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
 
 # Request Models
 class CustomerCreate(BaseModel):
