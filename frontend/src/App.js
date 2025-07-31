@@ -2821,8 +2821,13 @@ const WorkOrders = () => {
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.material_used || 'غير محدد'}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
-                    ${item.material_used || 'غير محدد'}
-                    ${item.material_used ? `<br><small style="color: #666;">${item.inner_diameter}×${item.outer_diameter}×${item.height}</small>` : ''}
+                    ${item.material_details ? 
+                      (item.material_details.is_finished_product ? 
+                        'مخزن انتاج تام' : 
+                        `${item.material_details.unit_code}<br><small style="color: #666;">${item.material_details.inner_diameter}×${item.material_details.outer_diameter}×${item.material_details.height}</small>`
+                      ) : 
+                      (item.material_used || 'غير محدد')
+                    }
                   </td>
                 </tr>
               `).join('') || ''
