@@ -973,6 +973,19 @@ const Inventory = () => {
     }
   };
 
+  const deleteFinishedProduct = async (productId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+
+    try {
+      await axios.delete(`${API}/finished-products/${productId}`);
+      fetchFinishedProducts();
+      alert('تم حذف المنتج بنجاح');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('حدث خطأ في حذف المنتج');
+    }
+  };
+
   const printReport = (reportType) => {
     window.print();
   };
