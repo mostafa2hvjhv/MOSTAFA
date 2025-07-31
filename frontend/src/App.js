@@ -497,6 +497,7 @@ const Sales = () => {
         setItems([]);
         setSelectedCustomer('');
         setNewCustomer('');
+        setSupervisorName('');
         setPaymentMethod('نقدي');
         
         // طباعة الفاتورة
