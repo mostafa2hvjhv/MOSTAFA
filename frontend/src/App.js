@@ -226,6 +226,19 @@ const Navigation = ({ currentPage, onPageChange }) => {
 
 // Dashboard Component
 const Dashboard = () => {
+  const { user } = useAuth();
+  
+  // Only Elsawy can access dashboard
+  if (user?.username !== 'Elsawy') {
+    return (
+      <div className="p-6" dir="rtl">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <strong>غير مسموح!</strong> لوحة التحكم مخصصة للمستخدم Elsawy فقط.
+        </div>
+      </div>
+    );
+  }
+
   const [stats, setStats] = useState({
     total_sales: 0,
     total_expenses: 0,
