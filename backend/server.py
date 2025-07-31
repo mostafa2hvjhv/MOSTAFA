@@ -491,6 +491,11 @@ async def get_invoice(invoice_id: str):
         raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
     return Invoice(**invoice)
 
+@api_router.delete("/invoices/clear-all")
+async def clear_all_invoices():
+    result = await db.invoices.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} فاتورة", "deleted_count": result.deleted_count}
+
 @api_router.delete("/invoices/{invoice_id}")
 async def delete_invoice(invoice_id: str):
     result = await db.invoices.delete_one({"id": invoice_id})
