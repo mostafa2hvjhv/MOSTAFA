@@ -166,8 +166,17 @@ const Navigation = ({ currentPage, onPageChange }) => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4 space-x-reverse">
-            <h1 className="text-xl font-bold">ماستر سيل</h1>
-            <span className="text-sm">الحرفيان شارع السوبر جيت - 01020630677</span>
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
+                alt="Master Seal Logo" 
+                className="h-10 w-auto"
+              />
+              <div>
+                <h1 className="text-xl font-bold">ماستر سيل</h1>
+                <span className="text-xs text-blue-100">الحرفيين - السلام - أمام السوبر جيت</span>
+              </div>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4 space-x-reverse">
