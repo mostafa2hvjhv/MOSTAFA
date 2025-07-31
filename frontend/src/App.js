@@ -2376,7 +2376,7 @@ const Invoices = () => {
             color: #666;
           }
           .company-details {
-            font-size: 14px;
+            font-size: 15px;
             margin: 2px 0;
             color: #333;
           }
