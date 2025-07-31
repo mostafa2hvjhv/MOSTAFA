@@ -371,6 +371,7 @@ const Sales = () => {
   const [customers, setCustomers] = useState([]);
   const [newCustomer, setNewCustomer] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [supervisorName, setSupervisorName] = useState(''); // اسم المشرف على التصنيع
   const [currentItem, setCurrentItem] = useState({
     seal_type: 'RSL',
     material_type: 'NBR',
