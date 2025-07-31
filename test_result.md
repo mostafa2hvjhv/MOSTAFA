@@ -309,6 +309,18 @@ frontend:
         agent: "testing"
         comment: "✅ تم اختبار جميع الصفحات الأخرى بنجاح - جميع الصفحات (المخزون، الآجل، المصروفات، الإيرادات، الفواتير، أمر شغل، المستخدمين) تفتح بشكل صحيح وتعرض العناوين المناسبة باللغة العربية. الصفحات تحتوي على رسائل 'قيد التطوير' كما هو متوقع للنسخة الأولية."
 
+  - task: "Daily Work Order functionality - أمر الشغل اليومي التلقائي"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py + /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "تم تطوير وظيفة أمر الشغل اليومي التلقائي - ينشأ مع أول فاتورة ويضاف إليه كل فاتورة في اليوم، مع إمكانية إضافة اسم المشرف"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
