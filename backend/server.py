@@ -323,6 +323,11 @@ async def get_customer(customer_id: str):
         raise HTTPException(status_code=404, detail="العميل غير موجود")
     return Customer(**customer)
 
+@api_router.delete("/customers/clear-all")
+async def clear_all_customers():
+    result = await db.customers.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} عميل", "deleted_count": result.deleted_count}
+
 @api_router.delete("/customers/{customer_id}")
 async def delete_customer(customer_id: str):
     result = await db.customers.delete_one({"id": customer_id})
