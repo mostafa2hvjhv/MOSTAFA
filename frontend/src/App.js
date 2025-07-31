@@ -2942,24 +2942,51 @@ const Users = () => {
   ];
 
   useEffect(() => {
-    // Since users are predefined, we'll show them statically
-    setUsers([
-      { 
-        id: '1', 
-        username: 'Elsawy', 
-        role: 'admin', 
-        created_at: new Date().toISOString(),
-        permissions: allPermissions.map(p => p.key)
-      },
-      { 
-        id: '2', 
-        username: 'Root', 
-        role: 'user', 
-        created_at: new Date().toISOString(),
-        permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders']
-      }
-    ]);
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/users`);
+      // Combine predefined users with database users
+      const predefinedUsers = [
+        { 
+          id: '1', 
+          username: 'Elsawy', 
+          role: 'admin', 
+          created_at: new Date().toISOString(),
+          permissions: allPermissions.map(p => p.key)
+        },
+        { 
+          id: '2', 
+          username: 'Root', 
+          role: 'user', 
+          created_at: new Date().toISOString(),
+          permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders']
+        }
+      ];
+      setUsers([...predefinedUsers, ...response.data]);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      // Fall back to predefined users only
+      setUsers([
+        { 
+          id: '1', 
+          username: 'Elsawy', 
+          role: 'admin', 
+          created_at: new Date().toISOString(),
+          permissions: allPermissions.map(p => p.key)
+        },
+        { 
+          id: '2', 
+          username: 'Root', 
+          role: 'user', 
+          created_at: new Date().toISOString(),
+          permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders']
+        }
+      ]);
+    }
+  };
 
   const addUser = async () => {
     if (!newUser.username || !newUser.password) {
