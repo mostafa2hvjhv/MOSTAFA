@@ -143,6 +143,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
     { key: 'revenue', label: 'الإيرادات' },
+    { key: 'treasury', label: 'الخزينة' },
     { key: 'invoices', label: 'الفواتير' },
     { key: 'work-orders', label: 'أمر شغل' },
     { key: 'users', label: 'المستخدمين' }
@@ -154,6 +155,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'inventory', label: 'المخزون' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
+    { key: 'treasury', label: 'الخزينة' },
     { key: 'work-orders', label: 'أمر شغل' }
   ];
   
