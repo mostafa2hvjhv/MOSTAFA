@@ -3472,6 +3472,7 @@ const WorkOrders = () => {
 
 // Treasury Management Component
 const Treasury = () => {
+  const { user } = useAuth(); // للحصول على معلومات المستخدم الحالي
   const [accounts, setAccounts] = useState([
     { id: 'cash', name: 'نقدي', balance: 0, transactions: [] },
     { id: 'vodafone_elsawy', name: 'فودافون كاش محمد الصاوي', balance: 0, transactions: [] },
