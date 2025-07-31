@@ -1675,6 +1675,214 @@ class MasterSealAPITester:
         except Exception as e:
             self.log_test("Invoice without material_details (backward compatibility)", False, f"Exception: {str(e)}")
 
+    def test_treasury_yad_elsawy_account(self):
+        """Test Treasury Yad Elsawy Account functionality"""
+        print("\n=== Testing Treasury Yad Elsawy Account ===")
+        
+        # Test 1: Check if yad_elsawy account is included in treasury balances
+        try:
+            response = self.session.get(f"{BACKEND_URL}/treasury/balances")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'yad_elsawy' in data:
+                    self.log_test("Treasury Balances - Yad Elsawy Account", True, f"yad_elsawy account found with balance: {data['yad_elsawy']}")
+                else:
+                    self.log_test("Treasury Balances - Yad Elsawy Account", False, f"yad_elsawy account not found in balances: {list(data.keys())}")
+            else:
+                self.log_test("Treasury Balances - Yad Elsawy Account", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Treasury Balances - Yad Elsawy Account", False, f"Exception: {str(e)}")
+        
+        # Test 2: Create invoice with "يد الصاوي" payment method
+        if self.created_data.get('customers'):
+            invoice_data = {
+                "customer_id": self.created_data['customers'][0]['id'],
+                "customer_name": self.created_data['customers'][0]['name'],
+                "items": [
+                    {
+                        "seal_type": "RSL",
+                        "material_type": "NBR",
+                        "inner_diameter": 25.0,
+                        "outer_diameter": 35.0,
+                        "height": 8.0,
+                        "quantity": 5,
+                        "unit_price": 20.0,
+                        "total_price": 100.0
+                    }
+                ],
+                "payment_method": "يد الصاوي",
+                "notes": "فاتورة تجريبية - يد الصاوي"
+            }
+            
+            try:
+                response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                           json=invoice_data,
+                                           headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('payment_method') == 'يد الصاوي':
+                        self.created_data.setdefault('yad_elsawy_invoices', []).append(data)
+                        self.log_test("Create Invoice - Yad Elsawy Payment", True, f"Invoice created: {data.get('invoice_number')}, Amount: {data.get('total_amount')}")
+                        
+                        # Verify balance update
+                        balance_response = self.session.get(f"{BACKEND_URL}/treasury/balances")
+                        if balance_response.status_code == 200:
+                            balance_data = balance_response.json()
+                            yad_elsawy_balance = balance_data.get('yad_elsawy', 0)
+                            if yad_elsawy_balance >= 100.0:  # Should include our invoice amount
+                                self.log_test("Treasury Balance Update - Yad Elsawy", True, f"Balance updated correctly: {yad_elsawy_balance}")
+                            else:
+                                self.log_test("Treasury Balance Update - Yad Elsawy", False, f"Balance not updated correctly: {yad_elsawy_balance}")
+                    else:
+                        self.log_test("Create Invoice - Yad Elsawy Payment", False, f"Payment method mismatch: {data.get('payment_method')}")
+                else:
+                    self.log_test("Create Invoice - Yad Elsawy Payment", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Create Invoice - Yad Elsawy Payment", False, f"Exception: {str(e)}")
+        
+        # Test 3: Add manual transaction to yad_elsawy account
+        transaction_data = {
+            "account_id": "yad_elsawy",
+            "transaction_type": "income",
+            "amount": 250.0,
+            "description": "إيداع يدوي في حساب يد الصاوي",
+            "reference": "تجريبي"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/treasury/transactions", 
+                                       json=transaction_data,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('account_id') == 'yad_elsawy' and data.get('transaction_type') == 'income':
+                    self.log_test("Manual Transaction - Yad Elsawy Income", True, f"Transaction created: {data.get('amount')} - {data.get('description')}")
+                else:
+                    self.log_test("Manual Transaction - Yad Elsawy Income", False, f"Transaction data mismatch: {data}")
+            else:
+                self.log_test("Manual Transaction - Yad Elsawy Income", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Manual Transaction - Yad Elsawy Income", False, f"Exception: {str(e)}")
+        
+        # Test 4: Transfer funds from yad_elsawy to cash
+        transfer_data = {
+            "from_account": "yad_elsawy",
+            "to_account": "cash",
+            "amount": 150.0,
+            "notes": "تحويل من يد الصاوي إلى النقدية"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/treasury/transfer", 
+                                       json=transfer_data,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم التحويل بنجاح" in data.get('message', ''):
+                    self.log_test("Transfer from Yad Elsawy to Cash", True, f"Transfer successful: {transfer_data['amount']}")
+                else:
+                    self.log_test("Transfer from Yad Elsawy to Cash", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Transfer from Yad Elsawy to Cash", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Transfer from Yad Elsawy to Cash", False, f"Exception: {str(e)}")
+        
+        # Test 5: Transfer funds to yad_elsawy from cash
+        transfer_data_reverse = {
+            "from_account": "cash",
+            "to_account": "yad_elsawy",
+            "amount": 75.0,
+            "notes": "تحويل من النقدية إلى يد الصاوي"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/treasury/transfer", 
+                                       json=transfer_data_reverse,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "تم التحويل بنجاح" in data.get('message', ''):
+                    self.log_test("Transfer from Cash to Yad Elsawy", True, f"Transfer successful: {transfer_data_reverse['amount']}")
+                else:
+                    self.log_test("Transfer from Cash to Yad Elsawy", False, f"Unexpected response: {data}")
+            else:
+                self.log_test("Transfer from Cash to Yad Elsawy", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Transfer from Cash to Yad Elsawy", False, f"Exception: {str(e)}")
+        
+        # Test 6: Get current balance after all transactions
+        try:
+            response = self.session.get(f"{BACKEND_URL}/treasury/balances")
+            
+            if response.status_code == 200:
+                data = response.json()
+                yad_elsawy_balance = data.get('yad_elsawy', 0)
+                self.log_test("Final Balance Check - Yad Elsawy", True, f"Current balance: {yad_elsawy_balance}")
+                
+                # Store balance for zeroing test
+                self.yad_elsawy_current_balance = yad_elsawy_balance
+            else:
+                self.log_test("Final Balance Check - Yad Elsawy", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Final Balance Check - Yad Elsawy", False, f"Exception: {str(e)}")
+        
+        # Test 7: Test account zeroing functionality (expense transaction)
+        if hasattr(self, 'yad_elsawy_current_balance') and self.yad_elsawy_current_balance > 0:
+            zero_transaction_data = {
+                "account_id": "yad_elsawy",
+                "transaction_type": "expense",
+                "amount": self.yad_elsawy_current_balance,
+                "description": f"تصفير حساب يد الصاوي - المبلغ: {self.yad_elsawy_current_balance}",
+                "reference": "تصفير حساب"
+            }
+            
+            try:
+                response = self.session.post(f"{BACKEND_URL}/treasury/transactions", 
+                                           json=zero_transaction_data,
+                                           headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('account_id') == 'yad_elsawy' and data.get('transaction_type') == 'expense':
+                        self.log_test("Account Zeroing - Yad Elsawy", True, f"Zeroing transaction created: {data.get('amount')}")
+                        
+                        # Verify balance is now zero
+                        balance_response = self.session.get(f"{BACKEND_URL}/treasury/balances")
+                        if balance_response.status_code == 200:
+                            balance_data = balance_response.json()
+                            final_balance = balance_data.get('yad_elsawy', 0)
+                            if abs(final_balance) < 0.01:  # Allow for small floating point differences
+                                self.log_test("Balance After Zeroing - Yad Elsawy", True, f"Balance successfully zeroed: {final_balance}")
+                            else:
+                                self.log_test("Balance After Zeroing - Yad Elsawy", False, f"Balance not zeroed correctly: {final_balance}")
+                    else:
+                        self.log_test("Account Zeroing - Yad Elsawy", False, f"Transaction data mismatch: {data}")
+                else:
+                    self.log_test("Account Zeroing - Yad Elsawy", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Account Zeroing - Yad Elsawy", False, f"Exception: {str(e)}")
+        
+        # Test 8: Get all treasury transactions to verify they're saved
+        try:
+            response = self.session.get(f"{BACKEND_URL}/treasury/transactions")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    yad_elsawy_transactions = [t for t in data if t.get('account_id') == 'yad_elsawy']
+                    self.log_test("Get Treasury Transactions - Yad Elsawy", True, f"Found {len(yad_elsawy_transactions)} yad_elsawy transactions")
+                else:
+                    self.log_test("Get Treasury Transactions - Yad Elsawy", False, f"Expected list, got: {type(data)}")
+            else:
+                self.log_test("Get Treasury Transactions - Yad Elsawy", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Get Treasury Transactions - Yad Elsawy", False, f"Exception: {str(e)}")
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting Master Seal Backend API Tests")
