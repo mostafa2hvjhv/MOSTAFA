@@ -2850,7 +2850,22 @@ const Invoices = () => {
                   </td>
                   <td className="border border-gray-300 p-2">{invoice.payment_method}</td>
                   <td className="border border-gray-300 p-2 font-semibold">
-                    ج.م {invoice.total_amount?.toFixed(2) || '0.00'}
+                    ج.م {invoice.subtotal?.toFixed(2) || (invoice.total_amount?.toFixed(2)) || '0.00'}
+                  </td>
+                  <td className="border border-gray-300 p-2 text-red-600">
+                    {invoice.discount && invoice.discount > 0 ? (
+                      <div>
+                        <span>ج.م {invoice.discount.toFixed(2)}</span>
+                        {invoice.discount_type === 'percentage' && invoice.discount_value && (
+                          <small className="block text-xs">(%{invoice.discount_value})</small>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">لا يوجد</span>
+                    )}
+                  </td>
+                  <td className="border border-gray-300 p-2 font-semibold text-green-600">
+                    ج.م {(invoice.total_after_discount || invoice.total_amount)?.toFixed(2) || '0.00'}
                   </td>
                   <td className="border border-gray-300 p-2">
                     <span className={`px-2 py-1 rounded text-sm cursor-pointer ${
