@@ -513,44 +513,215 @@ const Sales = () => {
 
   const printInvoice = (invoice) => {
     const printContent = `
-      <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1>ماستر سيل</h1>
-          <p>الحرفيان شارع السوبر جيت - 01020630677</p>
+      <!DOCTYPE html>
+      <html dir="rtl">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            font-size: 14px;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+          .company-info {
+            text-align: right;
+          }
+          .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin: 0;
+          }
+          .company-subtitle {
+            font-size: 16px;
+            margin: 5px 0;
+            color: #666;
+          }
+          .company-details {
+            font-size: 12px;
+            margin: 2px 0;
+            color: #333;
+          }
+          .logo-section {
+            text-align: center;
+            flex: 1;
+          }
+          .invoice-title {
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #ff4444;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-bottom: 10px;
+          }
+          .invoice-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff4444;
+          }
+          .customer-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+          }
+          .customer-details {
+            text-align: right;
+          }
+          .date-info {
+            text-align: left;
+          }
+          .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+            margin: 20px 0;
+          }
+          .products-table th,
+          .products-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+          }
+          .products-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+          }
+          .footer {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+          }
+          .total-section {
+            text-align: left;
+            margin-top: 10px;
+          }
+          .total-amount {
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #000;
+            padding: 10px;
+            display: inline-block;
+            background-color: #f9f9f9;
+          }
+          @media print {
+            body { margin: 0; padding: 10px; }
+          }
+        </style>
+      </head>
+      <body>
+        <!-- Header Section -->
+        <div class="header">
+          <div class="company-info">
+            <h1 class="company-name">شركة ماستر سيل</h1>
+            <p class="company-subtitle">تصنيع جميع أنواع الأويل سيل</p>
+            <p class="company-details">جميع الأقطار حتى ٥٠٠مل</p>
+            <p class="company-details">هيدروليك - نيوماتيك</p>
+          </div>
+          
+          <div class="logo-section">
+            <div class="invoice-title">عرض سعر</div>
+            <div class="invoice-number">${invoice.invoice_number}</div>
+          </div>
         </div>
-        <div style="margin-bottom: 20px;">
-          <strong>رقم الفاتورة:</strong> ${invoice.invoice_number}<br>
-          <strong>العميل:</strong> ${invoice.customer_name}<br>
-          <strong>التاريخ:</strong> ${new Date(invoice.date).toLocaleDateString('ar-EG')}<br>
-          <strong>طريقة الدفع:</strong> ${invoice.payment_method}
+
+        <!-- Customer and Date Info -->
+        <div class="customer-info">
+          <div class="customer-details">
+            <p><strong>السادة:</strong> ${invoice.customer_name}</p>
+            <p><strong>العنوان:</strong> ${invoice.customer_address || '........................'}</p>
+          </div>
+          <div class="date-info">
+            <p><strong>تحرير في:</strong> ${new Date(invoice.date).toLocaleDateString('ar-EG')}</p>
+            <p><strong>Date:</strong> ${new Date(invoice.date).toLocaleDateString('en-GB')}</p>
+          </div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+
+        <!-- Products Table -->
+        <table class="products-table">
           <thead>
-            <tr style="background-color: #f0f0f0;">
-              <th style="border: 1px solid #ddd; padding: 8px;">المنتج</th>
-              <th style="border: 1px solid #ddd; padding: 8px;">الكمية</th>
-              <th style="border: 1px solid #ddd; padding: 8px;">السعر</th>
-              <th style="border: 1px solid #ddd; padding: 8px;">المجموع</th>
+            <tr>
+              <th style="width: 60px;">المسلسل<br>Item</th>
+              <th style="width: 80px;">الكمية<br>QTY</th>
+              <th style="width: 200px;">Description<br>المواصفات</th>
+              <th style="width: 100px;">سعر الوحدة<br>Unit Price</th>
+              <th style="width: 100px;">إجمالي<br>Total</th>
             </tr>
           </thead>
           <tbody>
-            ${invoice.items.map(item => `
+            ${invoice.items.map((item, index) => `
               <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">
+                <td>${index + 1}</td>
+                <td>${item.quantity}</td>
+                <td style="text-align: right;">
                   ${item.seal_type} - ${item.material_type}<br>
-                  ${item.inner_diameter} × ${item.outer_diameter} × ${item.height}
+                  <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>
                 </td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${item.unit_price}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${item.total_price}</td>
+                <td>ج.م ${item.unit_price.toFixed(2)}</td>
+                <td>ج.م ${item.total_price.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+            <!-- Empty rows for additional items -->
+            ${Array.from({length: Math.max(0, 8 - invoice.items.length)}, (_, i) => `
+              <tr style="height: 40px;">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
               </tr>
             `).join('')}
           </tbody>
         </table>
-        <div style="text-align: left;">
-          <strong>الإجمالي: ج.م ${invoice.total_amount}</strong>
+
+        <!-- Total Section -->
+        <div class="total-section">
+          <div class="total-amount">
+            الإجمالي: ج.م ${invoice.total_amount.toFixed(2)}
+          </div>
         </div>
-      </div>
+
+        <!-- Additional Info -->
+        <div style="margin-top: 20px; text-align: center; font-size: 12px;">
+          <p><strong>ملحوظة:</strong> فقط وقدره</p>
+          <div style="height: 30px; border-bottom: 1px solid #000; margin: 10px 40px;"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <div>
+            <p><strong>التوقيع:</strong></p>
+            <p>موبايل: ٠١٠٢٠٦٣٠٦٧٧ - ٠١٠٦٢٣٩٠٨٧٠</p>
+            <p>تليفون: ٠١٠٢٠٦٣٠٦٧٧</p>
+          </div>
+          <div style="text-align: left;">
+            <p><strong>المستلم:</strong></p>
+            <p>٥ شارع الشهيد طيار أحمد إسماعيل - القاهرة</p>
+            <p>أول مدخل العرب - الحرفيين - السلام - أمام السوبر جيت</p>
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #666;">
+          <p>يقر المشتري بأنه قام بمعاينة البضاعة وقبولها</p>
+        </div>
+      </body>
+      </html>
     `;
     
     const printWindow = window.open('', '_blank');
