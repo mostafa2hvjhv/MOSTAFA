@@ -4333,14 +4333,28 @@ const Users = () => {
     });
   };
 
-  const savePermissions = () => {
-    setUsers(users.map(user => 
-      user.id === selectedUserPermissions.id 
-        ? { ...user, permissions: selectedUserPermissions.tempPermissions }
-        : user
-    ));
-    setSelectedUserPermissions(null);
-    alert('تم تحديث الصلاحيات بنجاح');
+  const savePermissions = async () => {
+    try {
+      // Update permissions in backend
+      const updatedUser = {
+        id: selectedUserPermissions.id,
+        username: selectedUserPermissions.username,
+        role: selectedUserPermissions.role,
+        permissions: selectedUserPermissions.tempPermissions,
+        password: 'unchanged'
+      };
+      
+      await axios.put(`${API}/users/${selectedUserPermissions.id}`, updatedUser);
+      
+      // Fetch updated data from database
+      fetchUsers();
+      
+      setSelectedUserPermissions(null);
+      alert('تم تحديث الصلاحيات بنجاح');
+    } catch (error) {
+      console.error('Error updating permissions:', error);
+      alert('حدث خطأ في تحديث الصلاحيات');
+    }
   };
 
   const saveCompanyInfo = () => {
