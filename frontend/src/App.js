@@ -3650,7 +3650,7 @@ const Users = () => {
       // Default permissions based on role
       const defaultPermissions = newUser.role === 'admin' 
         ? allPermissions.map(p => p.key)
-        : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders'];
+        : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders'];
 
       const user = {
         id: Date.now().toString(),
