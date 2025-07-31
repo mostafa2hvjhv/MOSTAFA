@@ -547,6 +547,8 @@ const Sales = () => {
         setNewCustomer('');
         setSupervisorName('');
         setPaymentMethod('نقدي');
+        setDiscount(0);
+        setDiscountType('amount');
         
         // طباعة الفاتورة
         printInvoice(response.data);
