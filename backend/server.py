@@ -58,6 +58,7 @@ class PaymentMethod(str, Enum):
     VODAFONE_SAWY = "فودافون كاش محمد الصاوي"
     VODAFONE_WAEL = "فودافون كاش وائل محمد"
     INSTAPAY = "انستاباي"
+    YAD_ELSAWY = "يد الصاوي"
 
 class ExpenseCategory(str, Enum):
     MATERIALS = "خامات"
