@@ -2518,9 +2518,11 @@ const WorkOrders = () => {
     if (!confirm('هل أنت متأكد من حذف جميع أوامر الشغل؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
     try {
-      setWorkOrders([]);
+      await axios.delete(`${API}/work-orders/clear-all`);
+      fetchWorkOrders();
       alert('تم حذف جميع أوامر الشغل');
     } catch (error) {
+      console.error('Error clearing work orders:', error);
       alert('حدث خطأ في حذف البيانات');
     }
   };
