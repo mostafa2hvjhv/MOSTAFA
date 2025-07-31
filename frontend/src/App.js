@@ -2529,6 +2529,106 @@ const WorkOrders = () => {
     );
   };
 
+  const printWorkOrder = (workOrder) => {
+    const workOrderInvoices = workOrder.invoices?.map(invoiceData => 
+      invoices.find(inv => inv.id === invoiceData.id) || invoiceData
+    ).filter(inv => inv) || [];
+    
+    const totalAmount = workOrderInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+    const totalItems = workOrderInvoices.reduce((sum, inv) => sum + (inv.items?.length || 0), 0);
+    
+    const printContent = `
+      <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1>ماستر سيل</h1>
+          <p>الحرفيان شارع السوبر جيت - 01020630677</p>
+          <h2 style="color: #333; margin-top: 20px;">أمر شغل</h2>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <strong>رقم أمر الشغل:</strong> ${workOrder.id}<br>
+          <strong>العنوان:</strong> ${workOrder.title || `أمر شغل #${workOrder.id.slice(-8)}`}<br>
+          <strong>التاريخ:</strong> ${new Date(workOrder.created_at).toLocaleDateString('ar-EG')}<br>
+          <strong>الحالة:</strong> ${workOrder.status || 'جديد'}<br>
+          <strong>عدد الفواتير:</strong> ${workOrderInvoices.length}<br>
+          <strong>إجمالي المبلغ:</strong> ج.م ${totalAmount.toFixed(2)}
+          ${workOrder.description ? `<br><strong>الوصف:</strong> ${workOrder.description}` : ''}
+        </div>
+
+        <h3 style="color: #333; margin-bottom: 10px;">الفواتير المدرجة:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #f0f0f0;">
+              <th style="border: 1px solid #ddd; padding: 8px;">رقم الفاتورة</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">العميل</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">التاريخ</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">المبلغ</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">عدد المنتجات</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${workOrderInvoices.map(invoice => `
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${invoice.invoice_number}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${invoice.customer_name}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(invoice.date).toLocaleDateString('ar-EG')}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">ج.م ${invoice.total_amount?.toFixed(2) || '0.00'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${invoice.items?.length || 0}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <h3 style="color: #333; margin-bottom: 10px;">تفاصيل المنتجات:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background-color: #f0f0f0;">
+              <th style="border: 1px solid #ddd; padding: 8px;">رقم الفاتورة</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">نوع السيل</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">نوع الخامة</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">المقاس</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">الكمية</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">الخامة المستخدمة</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">كود الوحدة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${workOrderInvoices.map(invoice => 
+              invoice.items?.map(item => `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${invoice.invoice_number}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.seal_type}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.material_type}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.inner_diameter} × ${item.outer_diameter} × ${item.height}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.material_used || 'غير محدد'}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.inner_diameter}×${item.outer_diameter}×${item.height} ${item.material_type}</td>
+                </tr>
+              `).join('') || ''
+            ).join('')}
+          </tbody>
+        </table>
+        
+        <div style="margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px;">
+          <div style="float: left;">
+            <strong>ملاحظات التصنيع:</strong><br>
+            <div style="margin-top: 10px; height: 50px; border: 1px solid #ddd;"></div>
+          </div>
+          <div style="float: right;">
+            <strong>توقيع المسؤول:</strong><br>
+            <div style="margin-top: 10px; height: 50px; border: 1px solid #ddd; width: 150px;"></div>
+          </div>
+          <div style="clear: both;"></div>
+        </div>
+      </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const clearAllWorkOrders = async () => {
     if (!confirm('هل أنت متأكد من حذف جميع أوامر الشغل؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
