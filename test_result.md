@@ -311,15 +311,18 @@ frontend:
 
   - task: "Daily Work Order functionality - أمر الشغل اليومي التلقائي"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py + /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "تم تطوير وظيفة أمر الشغل اليومي التلقائي - ينشأ مع أول فاتورة ويضاف إليه كل فاتورة في اليوم، مع إمكانية إضافة اسم المشرف"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار وظيفة أمر الشغل اليومي التلقائي بنجاح! جميع الاختبارات الـ6 نجحت بنسبة 100%. تم التأكد من: 1) إنشاء أمر شغل يومي تلقائياً عند إنشاء أول فاتورة مع اسم المشرف، 2) إضافة الفواتير التالية في نفس اليوم لنفس أمر الشغل، 3) تحديث المجاميع (total_amount, total_items) بشكل صحيح، 4) API الحصول على أمر الشغل اليومي يعمل بشكل مثالي، 5) إنشاء أوامر شغل منفصلة لأيام مختلفة، 6) دعم جميع الحقول الجديدة في WorkOrder Model (supervisor_name, is_daily, work_date, invoices, total_amount, total_items). تم إصلاح مشكلة تسلسل التواريخ في JSON."
 
 metadata:
   created_by: "main_agent"
