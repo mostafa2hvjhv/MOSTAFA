@@ -3259,16 +3259,19 @@ const Treasury = () => {
 
   const fetchTreasuryData = async () => {
     try {
-      // Fetch all invoices to calculate automatic transactions
+      // Fetch balances and transactions from backend
+      const balancesResponse = await axios.get(`${API}/treasury/balances`);
+      const transactionsResponse = await axios.get(`${API}/treasury/transactions`);
       const invoicesResponse = await axios.get(`${API}/invoices`);
       const expensesResponse = await axios.get(`${API}/expenses`);
       
+      const balances = balancesResponse.data;
+      const manualTransactions = transactionsResponse.data;
       const invoices = invoicesResponse.data;
       const expenses = expensesResponse.data;
       
-      // Calculate balances from invoices and expenses
+      // Update accounts with balances and transactions
       const updatedAccounts = accounts.map(account => {
-        let balance = 0;
         let transactions = [];
         
         // Add invoice transactions
@@ -3282,12 +3285,10 @@ const Treasury = () => {
           };
           
           if (paymentMethodMap[invoice.payment_method] === account.id) {
-            const amount = invoice.total_amount || 0;
-            balance += amount;
             transactions.push({
               id: `inv-${invoice.id}`,
               type: 'income',
-              amount: amount,
+              amount: invoice.total_amount || 0,
               description: `فاتورة رقم ${invoice.invoice_number}`,
               date: invoice.date,
               reference: `العميل: ${invoice.customer_name}`
@@ -3298,7 +3299,6 @@ const Treasury = () => {
         // Add expense transactions (only from cash account)
         if (account.id === 'cash') {
           expenses.forEach(expense => {
-            balance -= expense.amount || 0;
             transactions.push({
               id: `exp-${expense.id}`,
               type: 'expense',
@@ -3310,9 +3310,23 @@ const Treasury = () => {
           });
         }
         
+        // Add manual transactions
+        manualTransactions
+          .filter(transaction => transaction.account_id === account.id)
+          .forEach(transaction => {
+            transactions.push({
+              id: transaction.id,
+              type: transaction.transaction_type,
+              amount: transaction.amount,
+              description: transaction.description,
+              date: transaction.date,
+              reference: transaction.reference
+            });
+          });
+        
         return {
           ...account,
-          balance: balance,
+          balance: balances[account.id] || 0,
           transactions: transactions.sort((a, b) => new Date(b.date) - new Date(a.date))
         };
       });
