@@ -604,6 +604,17 @@ const Sales = () => {
                 عميل جديد
               </button>
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">اسم المشرف على التصنيع</label>
+              <input
+                type="text"
+                value={supervisorName}
+                onChange={(e) => setSupervisorName(e.target.value)}
+                placeholder="اسم المشرف (اختياري)"
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
           </div>
         </div>
 
