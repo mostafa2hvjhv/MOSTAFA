@@ -125,6 +125,7 @@ class InvoiceItem(BaseModel):
     unit_price: float
     total_price: float
     material_used: Optional[str] = None  # كود الوحدة للخامة المستخدمة
+    material_details: Optional[Dict[str, Any]] = None  # تفاصيل الخامة المختارة
 
 class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
