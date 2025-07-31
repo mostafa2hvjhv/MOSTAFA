@@ -209,6 +209,31 @@ class PaymentCreate(BaseModel):
     payment_method: PaymentMethod
     notes: Optional[str] = None
 
+class TreasuryTransaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    account_id: str  # نوع الحساب (cash, vodafone_elsawy, etc.)
+    transaction_type: str  # income, expense, transfer_in, transfer_out
+    amount: float
+    description: str
+    reference: Optional[str] = None
+    related_transaction_id: Optional[str] = None  # للتحويلات
+    date: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class TreasuryTransactionCreate(BaseModel):
+    account_id: str
+    transaction_type: str
+    amount: float
+    description: str
+    reference: Optional[str] = None
+    related_transaction_id: Optional[str] = None
+
+class TransferRequest(BaseModel):
+    from_account: str
+    to_account: str
+    amount: float
+    notes: Optional[str] = None
+
 class ExpenseCreate(BaseModel):
     description: str
     amount: float
