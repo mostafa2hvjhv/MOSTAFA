@@ -650,6 +650,305 @@ class MasterSealAPITester:
         except Exception as e:
             self.log_test("Get All Users", False, f"Exception: {str(e)}")
 
+    def test_user_management_persistence(self):
+        """Test comprehensive user management with focus on data persistence after latest fixes"""
+        print("\n=== Testing User Management with Data Persistence ===")
+        
+        # Clear existing test users first
+        try:
+            self.session.delete(f"{BACKEND_URL}/users/clear-all")
+        except:
+            pass
+        
+        created_users = []
+        
+        # Test 1: Create multiple users with different roles and permissions
+        users_data = [
+            {
+                "username": "مدير_مبيعات_أحمد",
+                "password": "sales123",
+                "role": "user",
+                "permissions": ["view_sales", "create_invoice", "view_customers", "manage_inventory"]
+            },
+            {
+                "username": "موظف_مخزن_محمد",
+                "password": "warehouse456",
+                "role": "user", 
+                "permissions": ["view_inventory", "update_materials", "view_work_orders"]
+            },
+            {
+                "username": "محاسب_فاطمة",
+                "password": "accounting789",
+                "role": "admin",
+                "permissions": ["view_all", "manage_expenses", "view_reports", "manage_payments", "manage_users"]
+            }
+        ]
+        
+        for user_data in users_data:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/users", 
+                                           json=user_data,
+                                           headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('username') == user_data['username'] and data.get('role') == user_data['role']:
+                        created_users.append(data)
+                        self.log_test(f"Create User with Permissions - {user_data['username']}", True, 
+                                    f"User ID: {data.get('id')}, Role: {data.get('role')}, Permissions: {len(data.get('permissions', []))}")
+                    else:
+                        self.log_test(f"Create User with Permissions - {user_data['username']}", False, f"Data mismatch: {data}")
+                else:
+                    self.log_test(f"Create User with Permissions - {user_data['username']}", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test(f"Create User with Permissions - {user_data['username']}", False, f"Exception: {str(e)}")
+        
+        # Test 2: GET /api/users - retrieving all users
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) >= len(created_users):
+                    # Verify all created users are present
+                    created_usernames = [u['username'] for u in created_users]
+                    retrieved_usernames = [u.get('username') for u in data]
+                    
+                    if all(username in retrieved_usernames for username in created_usernames):
+                        self.log_test("GET All Users", True, f"Retrieved {len(data)} users, all created users present")
+                    else:
+                        missing = [u for u in created_usernames if u not in retrieved_usernames]
+                        self.log_test("GET All Users", False, f"Missing users: {missing}")
+                else:
+                    self.log_test("GET All Users", False, f"Expected list with at least {len(created_users)} users, got: {len(data) if isinstance(data, list) else type(data)}")
+            else:
+                self.log_test("GET All Users", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("GET All Users", False, f"Exception: {str(e)}")
+        
+        if not created_users:
+            self.log_test("User Management Persistence", False, "No users created for persistence testing")
+            return
+        
+        # Test 3: GET /api/users/{id} - retrieving specific user with all details
+        test_user = created_users[0]
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users/{test_user['id']}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get('id') == test_user['id'] and 
+                    data.get('username') == test_user['username'] and
+                    data.get('role') == test_user['role'] and
+                    'permissions' in data):
+                    self.log_test("GET Specific User", True, f"Retrieved user: {data.get('username')} with {len(data.get('permissions', []))} permissions")
+                else:
+                    self.log_test("GET Specific User", False, f"Data mismatch: {data}")
+            else:
+                self.log_test("GET Specific User", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("GET Specific User", False, f"Exception: {str(e)}")
+        
+        # Test 4: PUT /api/users/{id} - updating user details (username, role) while preserving permissions
+        test_user = created_users[1] if len(created_users) > 1 else created_users[0]
+        original_permissions = test_user.get('permissions', [])
+        updated_user_data = {
+            "id": test_user['id'],
+            "username": "موظف_مخزن_محمد_محدث",
+            "password": test_user['password'],
+            "role": "admin",  # Changed from user to admin
+            "permissions": original_permissions,  # Keep original permissions
+            "created_at": test_user.get('created_at')
+        }
+        
+        try:
+            response = self.session.put(f"{BACKEND_URL}/users/{test_user['id']}", 
+                                      json=updated_user_data,
+                                      headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                # Verify update by retrieving the user
+                verify_response = self.session.get(f"{BACKEND_URL}/users/{test_user['id']}")
+                if verify_response.status_code == 200:
+                    updated_data = verify_response.json()
+                    if (updated_data.get('username') == updated_user_data['username'] and
+                        updated_data.get('role') == updated_user_data['role'] and
+                        updated_data.get('permissions') == original_permissions):
+                        self.log_test("Update User Details (Preserve Permissions)", True, 
+                                    f"Username: {updated_data.get('username')}, Role: {updated_data.get('role')}, Permissions preserved: {len(updated_data.get('permissions', []))}")
+                    else:
+                        self.log_test("Update User Details (Preserve Permissions)", False, f"Update not reflected: {updated_data}")
+                else:
+                    self.log_test("Update User Details (Preserve Permissions)", False, f"Failed to verify update: {verify_response.status_code}")
+            else:
+                self.log_test("Update User Details (Preserve Permissions)", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Update User Details (Preserve Permissions)", False, f"Exception: {str(e)}")
+        
+        # Test 5: PUT /api/users/{id} - updating user permissions specifically
+        test_user = created_users[2] if len(created_users) > 2 else created_users[0]
+        new_permissions = ["view_all", "manage_expenses", "view_reports", "manage_payments", "manage_users", "create_work_orders", "manage_treasury"]
+        updated_permissions_data = {
+            "id": test_user['id'],
+            "username": test_user['username'],
+            "password": test_user['password'],
+            "role": test_user['role'],
+            "permissions": new_permissions,
+            "created_at": test_user.get('created_at')
+        }
+        
+        try:
+            response = self.session.put(f"{BACKEND_URL}/users/{test_user['id']}", 
+                                      json=updated_permissions_data,
+                                      headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                # Verify permissions update
+                verify_response = self.session.get(f"{BACKEND_URL}/users/{test_user['id']}")
+                if verify_response.status_code == 200:
+                    updated_data = verify_response.json()
+                    if updated_data.get('permissions') == new_permissions:
+                        self.log_test("Update User Permissions", True, 
+                                    f"Permissions updated successfully: {len(new_permissions)} permissions")
+                    else:
+                        self.log_test("Update User Permissions", False, 
+                                    f"Permissions not updated correctly. Expected: {new_permissions}, Got: {updated_data.get('permissions')}")
+                else:
+                    self.log_test("Update User Permissions", False, f"Failed to verify permissions update: {verify_response.status_code}")
+            else:
+                self.log_test("Update User Permissions", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Update User Permissions", False, f"Exception: {str(e)}")
+        
+        # Test 6: PUT /api/users/{id} - updating user password
+        test_user = created_users[0]
+        new_password = "new_secure_password_123"
+        updated_password_data = {
+            "id": test_user['id'],
+            "username": test_user['username'],
+            "password": new_password,
+            "role": test_user['role'],
+            "permissions": test_user.get('permissions', []),
+            "created_at": test_user.get('created_at')
+        }
+        
+        try:
+            response = self.session.put(f"{BACKEND_URL}/users/{test_user['id']}", 
+                                      json=updated_password_data,
+                                      headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                # Verify password update by trying to login (if login API supports database users)
+                verify_response = self.session.get(f"{BACKEND_URL}/users/{test_user['id']}")
+                if verify_response.status_code == 200:
+                    updated_data = verify_response.json()
+                    if updated_data.get('password') == new_password:
+                        self.log_test("Update User Password", True, "Password updated successfully")
+                    else:
+                        self.log_test("Update User Password", False, "Password not updated in database")
+                else:
+                    self.log_test("Update User Password", False, f"Failed to verify password update: {verify_response.status_code}")
+            else:
+                self.log_test("Update User Password", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Update User Password", False, f"Exception: {str(e)}")
+        
+        # Test 7: Verify all updates persist correctly in MongoDB (multiple operations test)
+        print("\n--- Testing Data Persistence After Multiple Operations ---")
+        
+        # Perform multiple operations on the same user
+        persistence_test_user = created_users[0]
+        
+        # Operation 1: Update username
+        step1_data = {
+            "id": persistence_test_user['id'],
+            "username": "مستخدم_اختبار_الاستمرارية",
+            "password": persistence_test_user['password'],
+            "role": persistence_test_user['role'],
+            "permissions": persistence_test_user.get('permissions', []),
+            "created_at": persistence_test_user.get('created_at')
+        }
+        
+        try:
+            response1 = self.session.put(f"{BACKEND_URL}/users/{persistence_test_user['id']}", 
+                                       json=step1_data, headers={'Content-Type': 'application/json'})
+            
+            # Operation 2: Update role
+            step2_data = step1_data.copy()
+            step2_data['role'] = 'admin'
+            response2 = self.session.put(f"{BACKEND_URL}/users/{persistence_test_user['id']}", 
+                                       json=step2_data, headers={'Content-Type': 'application/json'})
+            
+            # Operation 3: Update permissions
+            step3_data = step2_data.copy()
+            step3_data['permissions'] = ["full_access", "system_admin", "data_management"]
+            response3 = self.session.put(f"{BACKEND_URL}/users/{persistence_test_user['id']}", 
+                                       json=step3_data, headers={'Content-Type': 'application/json'})
+            
+            # Operation 4: Update password
+            step4_data = step3_data.copy()
+            step4_data['password'] = "final_password_456"
+            response4 = self.session.put(f"{BACKEND_URL}/users/{persistence_test_user['id']}", 
+                                       json=step4_data, headers={'Content-Type': 'application/json'})
+            
+            if all(r.status_code == 200 for r in [response1, response2, response3, response4]):
+                # Verify final state
+                final_verify = self.session.get(f"{BACKEND_URL}/users/{persistence_test_user['id']}")
+                if final_verify.status_code == 200:
+                    final_data = final_verify.json()
+                    
+                    success_conditions = [
+                        final_data.get('username') == "مستخدم_اختبار_الاستمرارية",
+                        final_data.get('role') == 'admin',
+                        final_data.get('permissions') == ["full_access", "system_admin", "data_management"],
+                        final_data.get('password') == "final_password_456"
+                    ]
+                    
+                    if all(success_conditions):
+                        self.log_test("Multiple Operations Persistence", True, 
+                                    "All 4 operations persisted correctly: username, role, permissions, password")
+                    else:
+                        failed_conditions = []
+                        if not success_conditions[0]: failed_conditions.append("username")
+                        if not success_conditions[1]: failed_conditions.append("role")
+                        if not success_conditions[2]: failed_conditions.append("permissions")
+                        if not success_conditions[3]: failed_conditions.append("password")
+                        self.log_test("Multiple Operations Persistence", False, f"Failed conditions: {failed_conditions}")
+                else:
+                    self.log_test("Multiple Operations Persistence", False, f"Failed to verify final state: {final_verify.status_code}")
+            else:
+                failed_ops = [i+1 for i, r in enumerate([response1, response2, response3, response4]) if r.status_code != 200]
+                self.log_test("Multiple Operations Persistence", False, f"Failed operations: {failed_ops}")
+                
+        except Exception as e:
+            self.log_test("Multiple Operations Persistence", False, f"Exception: {str(e)}")
+        
+        # Test 8: Test that changes survive system reload (simulate by getting all users again)
+        try:
+            final_check = self.session.get(f"{BACKEND_URL}/users")
+            if final_check.status_code == 200:
+                all_users = final_check.json()
+                
+                # Find our test users and verify they have the latest changes
+                test_user_final = next((u for u in all_users if u.get('id') == persistence_test_user['id']), None)
+                
+                if test_user_final:
+                    if (test_user_final.get('username') == "مستخدم_اختبار_الاستمرارية" and
+                        test_user_final.get('role') == 'admin' and
+                        test_user_final.get('permissions') == ["full_access", "system_admin", "data_management"]):
+                        self.log_test("Changes Survive System Reload", True, "All changes persisted after system reload simulation")
+                    else:
+                        self.log_test("Changes Survive System Reload", False, f"Changes not persisted: {test_user_final}")
+                else:
+                    self.log_test("Changes Survive System Reload", False, "Test user not found after reload simulation")
+            else:
+                self.log_test("Changes Survive System Reload", False, f"Failed to get users for reload test: {final_check.status_code}")
+        except Exception as e:
+            self.log_test("Changes Survive System Reload", False, f"Exception: {str(e)}")
+        
+        # Store created users for cleanup
+        self.created_data['users'] = created_users
+
     def test_work_orders_management(self):
         """Test work orders management APIs"""
         print("\n=== Testing Work Orders Management ===")
