@@ -2238,6 +2238,372 @@ class MasterSealAPITester:
             except Exception as e:
                 self.log_test("Daily Work Order Discount Integration", False, f"Exception: {str(e)}")
 
+    def test_user_management_comprehensive(self):
+        """Comprehensive test for user management functionality focusing on persistence"""
+        print("\n=== Testing User Management - Comprehensive (Focus on Persistence) ===")
+        
+        # Clear existing test users first
+        try:
+            self.session.delete(f"{BACKEND_URL}/users/clear-all")
+        except:
+            pass
+        
+        created_users = []
+        
+        # Test 1: Create users with different roles and permissions
+        test_users = [
+            {
+                "username": "مدير_المبيعات",
+                "password": "sales123",
+                "role": "admin",
+                "permissions": ["sales", "customers", "invoices", "reports"]
+            },
+            {
+                "username": "موظف_المخزن",
+                "password": "warehouse456",
+                "role": "user",
+                "permissions": ["inventory", "raw_materials", "finished_products"]
+            },
+            {
+                "username": "محاسب_الشركة",
+                "password": "accounting789",
+                "role": "user",
+                "permissions": ["expenses", "payments", "treasury", "reports"]
+            }
+        ]
+        
+        for user_data in test_users:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/users", 
+                                           json=user_data,
+                                           headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if (data.get('username') == user_data['username'] and 
+                        data.get('role') == user_data['role'] and
+                        data.get('permissions') == user_data['permissions']):
+                        created_users.append(data)
+                        self.log_test(f"Create User - {user_data['username']}", True, 
+                                    f"User ID: {data.get('id')}, Role: {data.get('role')}, Permissions: {len(data.get('permissions', []))}")
+                    else:
+                        self.log_test(f"Create User - {user_data['username']}", False, f"Data mismatch: {data}")
+                else:
+                    self.log_test(f"Create User - {user_data['username']}", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test(f"Create User - {user_data['username']}", False, f"Exception: {str(e)}")
+        
+        # Test 2: GET /api/users - Retrieve all users
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) >= len(created_users):
+                    # Verify all created users are present
+                    created_usernames = [u['username'] for u in created_users]
+                    retrieved_usernames = [u['username'] for u in data]
+                    
+                    if all(username in retrieved_usernames for username in created_usernames):
+                        self.log_test("GET /api/users - Retrieve All", True, 
+                                    f"Retrieved {len(data)} users, all created users present")
+                    else:
+                        missing = [u for u in created_usernames if u not in retrieved_usernames]
+                        self.log_test("GET /api/users - Retrieve All", False, f"Missing users: {missing}")
+                else:
+                    self.log_test("GET /api/users - Retrieve All", False, f"Expected list with {len(created_users)}+ users, got: {type(data)} with {len(data) if isinstance(data, list) else 'N/A'} items")
+            else:
+                self.log_test("GET /api/users - Retrieve All", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("GET /api/users - Retrieve All", False, f"Exception: {str(e)}")
+        
+        # Test 3: GET /api/users/{id} - Retrieve specific user
+        if created_users:
+            user_id = created_users[0]['id']
+            try:
+                response = self.session.get(f"{BACKEND_URL}/users/{user_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if (data.get('id') == user_id and 
+                        data.get('username') == created_users[0]['username'] and
+                        data.get('permissions') == created_users[0]['permissions']):
+                        self.log_test("GET /api/users/{id} - Retrieve Specific", True, 
+                                    f"Retrieved user: {data.get('username')} with {len(data.get('permissions', []))} permissions")
+                    else:
+                        self.log_test("GET /api/users/{id} - Retrieve Specific", False, f"Data mismatch: {data}")
+                else:
+                    self.log_test("GET /api/users/{id} - Retrieve Specific", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/users/{id} - Retrieve Specific", False, f"Exception: {str(e)}")
+        
+        # Test 4: PUT /api/users/{id} - Update user details (username, role)
+        if created_users:
+            user_id = created_users[0]['id']
+            updated_user_data = {
+                "id": user_id,
+                "username": "مدير_المبيعات_المحدث",
+                "password": "newsales123",
+                "role": "admin",
+                "permissions": ["sales", "customers", "invoices", "reports", "users"],  # Added users permission
+                "created_at": created_users[0]['created_at']
+            }
+            
+            try:
+                response = self.session.put(f"{BACKEND_URL}/users/{user_id}", 
+                                          json=updated_user_data,
+                                          headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    # Verify update by retrieving the user
+                    verify_response = self.session.get(f"{BACKEND_URL}/users/{user_id}")
+                    if verify_response.status_code == 200:
+                        updated_data = verify_response.json()
+                        if (updated_data.get('username') == updated_user_data['username'] and
+                            updated_data.get('password') == updated_user_data['password'] and
+                            updated_data.get('permissions') == updated_user_data['permissions']):
+                            self.log_test("PUT /api/users/{id} - Update User Details", True, 
+                                        f"Updated username and permissions successfully")
+                            # Update our local copy
+                            created_users[0] = updated_data
+                        else:
+                            self.log_test("PUT /api/users/{id} - Update User Details", False, 
+                                        f"Update not persisted correctly: {updated_data}")
+                    else:
+                        self.log_test("PUT /api/users/{id} - Update User Details", False, 
+                                    f"Failed to verify update: {verify_response.status_code}")
+                else:
+                    self.log_test("PUT /api/users/{id} - Update User Details", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/users/{id} - Update User Details", False, f"Exception: {str(e)}")
+        
+        # Test 5: PUT /api/users/{id} - Update user permissions only
+        if len(created_users) > 1:
+            user_id = created_users[1]['id']
+            updated_permissions = ["inventory", "raw_materials", "finished_products", "work_orders", "reports"]
+            
+            updated_user_data = {
+                "id": user_id,
+                "username": created_users[1]['username'],
+                "password": created_users[1]['password'],
+                "role": created_users[1]['role'],
+                "permissions": updated_permissions,
+                "created_at": created_users[1]['created_at']
+            }
+            
+            try:
+                response = self.session.put(f"{BACKEND_URL}/users/{user_id}", 
+                                          json=updated_user_data,
+                                          headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    # Verify permissions update
+                    verify_response = self.session.get(f"{BACKEND_URL}/users/{user_id}")
+                    if verify_response.status_code == 200:
+                        updated_data = verify_response.json()
+                        if updated_data.get('permissions') == updated_permissions:
+                            self.log_test("PUT /api/users/{id} - Update Permissions", True, 
+                                        f"Permissions updated from {len(created_users[1]['permissions'])} to {len(updated_permissions)}")
+                            created_users[1] = updated_data
+                        else:
+                            self.log_test("PUT /api/users/{id} - Update Permissions", False, 
+                                        f"Permissions not updated correctly: {updated_data.get('permissions')}")
+                    else:
+                        self.log_test("PUT /api/users/{id} - Update Permissions", False, 
+                                    f"Failed to verify permissions update: {verify_response.status_code}")
+                else:
+                    self.log_test("PUT /api/users/{id} - Update Permissions", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/users/{id} - Update Permissions", False, f"Exception: {str(e)}")
+        
+        # Test 6: PUT /api/users/{id} - Reset user password
+        if len(created_users) > 2:
+            user_id = created_users[2]['id']
+            new_password = "newaccounting2024"
+            
+            updated_user_data = {
+                "id": user_id,
+                "username": created_users[2]['username'],
+                "password": new_password,
+                "role": created_users[2]['role'],
+                "permissions": created_users[2]['permissions'],
+                "created_at": created_users[2]['created_at']
+            }
+            
+            try:
+                response = self.session.put(f"{BACKEND_URL}/users/{user_id}", 
+                                          json=updated_user_data,
+                                          headers={'Content-Type': 'application/json'})
+                
+                if response.status_code == 200:
+                    # Verify password update by retrieving user
+                    verify_response = self.session.get(f"{BACKEND_URL}/users/{user_id}")
+                    if verify_response.status_code == 200:
+                        updated_data = verify_response.json()
+                        if updated_data.get('password') == new_password:
+                            self.log_test("PUT /api/users/{id} - Reset Password", True, 
+                                        f"Password updated successfully for user: {updated_data.get('username')}")
+                            created_users[2] = updated_data
+                        else:
+                            self.log_test("PUT /api/users/{id} - Reset Password", False, 
+                                        f"Password not updated correctly")
+                    else:
+                        self.log_test("PUT /api/users/{id} - Reset Password", False, 
+                                    f"Failed to verify password update: {verify_response.status_code}")
+                else:
+                    self.log_test("PUT /api/users/{id} - Reset Password", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/users/{id} - Reset Password", False, f"Exception: {str(e)}")
+        
+        # Test 7: Persistence Test - Verify all changes survive "page reload" (re-fetch all users)
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users")
+            
+            if response.status_code == 200:
+                all_users = response.json()
+                persistence_success = True
+                persistence_details = []
+                
+                for created_user in created_users:
+                    found_user = next((u for u in all_users if u['id'] == created_user['id']), None)
+                    if found_user:
+                        if (found_user.get('username') == created_user['username'] and
+                            found_user.get('password') == created_user['password'] and
+                            found_user.get('role') == created_user['role'] and
+                            found_user.get('permissions') == created_user['permissions']):
+                            persistence_details.append(f"✓ {found_user['username']}")
+                        else:
+                            persistence_success = False
+                            persistence_details.append(f"✗ {created_user['username']} - data mismatch")
+                    else:
+                        persistence_success = False
+                        persistence_details.append(f"✗ {created_user['username']} - not found")
+                
+                if persistence_success:
+                    self.log_test("Persistence Test - All Changes Survive Reload", True, 
+                                f"All {len(created_users)} users and their updates persisted correctly")
+                else:
+                    self.log_test("Persistence Test - All Changes Survive Reload", False, 
+                                f"Some changes not persisted: {'; '.join(persistence_details)}")
+            else:
+                self.log_test("Persistence Test - All Changes Survive Reload", False, 
+                            f"Failed to retrieve users for persistence test: {response.status_code}")
+        except Exception as e:
+            self.log_test("Persistence Test - All Changes Survive Reload", False, f"Exception: {str(e)}")
+        
+        # Test 8: DELETE /api/users/{id} - Delete specific user
+        if created_users:
+            user_to_delete = created_users[-1]  # Delete the last user
+            user_id = user_to_delete['id']
+            
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/users/{user_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "تم حذف المستخدم بنجاح" in data.get('message', ''):
+                        # Verify deletion by trying to retrieve the user
+                        verify_response = self.session.get(f"{BACKEND_URL}/users/{user_id}")
+                        if verify_response.status_code == 404:
+                            self.log_test("DELETE /api/users/{id} - Delete User", True, 
+                                        f"User {user_to_delete['username']} deleted successfully from database")
+                            created_users.remove(user_to_delete)
+                        else:
+                            self.log_test("DELETE /api/users/{id} - Delete User", False, 
+                                        f"User still exists after deletion: {verify_response.status_code}")
+                    else:
+                        self.log_test("DELETE /api/users/{id} - Delete User", False, f"Unexpected response: {data}")
+                else:
+                    self.log_test("DELETE /api/users/{id} - Delete User", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("DELETE /api/users/{id} - Delete User", False, f"Exception: {str(e)}")
+        
+        # Test 9: Error handling - Try to update non-existent user
+        fake_user_id = "non-existent-user-12345"
+        try:
+            fake_user_data = {
+                "id": fake_user_id,
+                "username": "fake_user",
+                "password": "fake123",
+                "role": "user",
+                "permissions": []
+            }
+            
+            response = self.session.put(f"{BACKEND_URL}/users/{fake_user_id}", 
+                                      json=fake_user_data,
+                                      headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "المستخدم غير موجود" in data.get('detail', ''):
+                    self.log_test("Error Handling - Update Non-existent User", True, 
+                                "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Error Handling - Update Non-existent User", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Error Handling - Update Non-existent User", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Error Handling - Update Non-existent User", False, f"Exception: {str(e)}")
+        
+        # Test 10: Error handling - Try to delete non-existent user
+        try:
+            response = self.session.delete(f"{BACKEND_URL}/users/{fake_user_id}")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if "المستخدم غير موجود" in data.get('detail', ''):
+                    self.log_test("Error Handling - Delete Non-existent User", True, 
+                                "Correctly returned 404 with Arabic error message")
+                else:
+                    self.log_test("Error Handling - Delete Non-existent User", False, f"Wrong error message: {data}")
+            else:
+                self.log_test("Error Handling - Delete Non-existent User", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Error Handling - Delete Non-existent User", False, f"Exception: {str(e)}")
+        
+        # Store created users for potential cleanup
+        self.created_data['users'] = created_users
+
+    def print_summary(self):
+        """Print test summary"""
+        print("\n" + "=" * 60)
+        print("📊 TEST SUMMARY")
+        print("=" * 60)
+        
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result['success'])
+        failed_tests = total_tests - passed_tests
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        
+        if failed_tests > 0:
+            print("\n❌ FAILED TESTS:")
+            for result in self.test_results:
+                if not result['success']:
+                    print(f"  - {result['test']}: {result['details']}")
+        
+        print("\n📋 CREATED TEST DATA:")
+        for data_type, items in self.created_data.items():
+            if items:
+                print(f"  - {data_type}: {len(items)} items")
+        
+        return passed_tests, failed_tests
+
+    def run_user_management_tests_only(self):
+        """Run only user management tests as requested"""
+        print("🚀 Starting User Management API Tests - Focus on Persistence")
+        print(f"Backend URL: {BACKEND_URL}")
+        print("=" * 80)
+        
+        # Run comprehensive user management tests
+        self.test_user_management_comprehensive()
+        
+        # Print summary
+        return self.print_summary()
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting Master Seal Backend API Tests")
@@ -2281,31 +2647,7 @@ class MasterSealAPITester:
         self.test_clear_all_apis()
         
         # Print summary
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
-        
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        failed_tests = total_tests - passed_tests
-        
-        print(f"Total Tests: {total_tests}")
-        print(f"✅ Passed: {passed_tests}")
-        print(f"❌ Failed: {failed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-        
-        if failed_tests > 0:
-            print("\n❌ FAILED TESTS:")
-            for result in self.test_results:
-                if not result['success']:
-                    print(f"  - {result['test']}: {result['details']}")
-        
-        print("\n📋 CREATED TEST DATA:")
-        for data_type, items in self.created_data.items():
-            if items:
-                print(f"  - {data_type}: {len(items)} items")
-        
-        return passed_tests, failed_tests
+        return self.print_summary()
 
 if __name__ == "__main__":
     tester = MasterSealAPITester()
