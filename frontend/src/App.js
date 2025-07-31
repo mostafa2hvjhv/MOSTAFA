@@ -560,18 +560,18 @@ const Sales = () => {
             text-align: right;
           }
           .company-name {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: #000;
             margin: 0;
           }
           .company-subtitle {
-            font-size: 16px;
+            font-size: 20px;
             margin: 5px 0;
             color: #666;
           }
           .company-details {
-            font-size: 12px;
+            font-size: 16px;
             margin: 2px 0;
             color: #333;
           }
