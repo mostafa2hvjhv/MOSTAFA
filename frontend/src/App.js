@@ -3653,6 +3653,34 @@ const Treasury = () => {
     }
   };
 
+  const clearAccount = async (accountId) => {
+    if (!confirm('هل أنت متأكد من تصفير هذا الحساب؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    const account = accounts.find(acc => acc.id === accountId);
+    if (!account || account.balance === 0) {
+      alert('الحساب فارغ بالفعل أو غير موجود');
+      return;
+    }
+    
+    try {
+      // Create expense transaction to zero the account
+      await axios.post(`${API}/treasury/transactions`, {
+        account_id: accountId,
+        transaction_type: 'expense',
+        amount: account.balance,
+        description: `تصفير حساب ${account.name}`,
+        reference: 'تصفير بواسطة المدير'
+      });
+      
+      // Refresh data
+      fetchTreasuryData();
+      alert(`تم تصفير حساب ${account.name} بنجاح`);
+    } catch (error) {
+      console.error('Error clearing account:', error);
+      alert('حدث خطأ في تصفير الحساب');
+    }
+  };
+
   const selectedAccountData = accounts.find(acc => acc.id === selectedAccount);
 
   return (
