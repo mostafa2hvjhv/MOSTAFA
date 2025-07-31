@@ -962,7 +962,11 @@ const Sales = () => {
                     onClick={() => setSelectedMaterial({
                       unit_code: `FINISHED-${product.id}`,
                       material_type: product.material_type,
-                      seal_type: product.seal_type
+                      seal_type: product.seal_type,
+                      inner_diameter: product.inner_diameter,
+                      outer_diameter: product.outer_diameter,
+                      height: product.height,
+                      is_finished_product: true
                     })}
                   >
                     <p><strong>النوع:</strong> {product.seal_type} - {product.material_type}</p>
