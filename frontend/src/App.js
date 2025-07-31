@@ -405,16 +405,31 @@ const Sales = () => {
   };
 
   const checkCompatibility = async () => {
+    if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height) {
+      alert('الرجاء إدخال جميع المقاسات المطلوبة');
+      return;
+    }
+    
+    const innerDiameter = parseFloat(currentItem.inner_diameter);
+    const outerDiameter = parseFloat(currentItem.outer_diameter);
+    const height = parseFloat(currentItem.height);
+    
+    if (isNaN(innerDiameter) || isNaN(outerDiameter) || isNaN(height)) {
+      alert('الرجاء إدخال أرقام صحيحة للمقاسات');
+      return;
+    }
+    
     try {
       const response = await axios.post(`${API}/compatibility-check`, {
         seal_type: currentItem.seal_type,
-        inner_diameter: parseFloat(currentItem.inner_diameter),
-        outer_diameter: parseFloat(currentItem.outer_diameter),
-        height: parseFloat(currentItem.height)
+        inner_diameter: innerDiameter,
+        outer_diameter: outerDiameter,
+        height: height
       });
       setCompatibilityResults(response.data);
     } catch (error) {
       console.error('Error checking compatibility:', error);
+      alert('حدث خطأ في فحص التوافق');
     }
   };
 
