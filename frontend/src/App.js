@@ -4369,9 +4369,10 @@ const Users = () => {
       const updatedUser = {
         id: selectedUserPermissions.id,
         username: selectedUserPermissions.username,
+        password: selectedUserPermissions.password,
         role: selectedUserPermissions.role,
         permissions: selectedUserPermissions.tempPermissions,
-        password: 'unchanged'
+        created_at: selectedUserPermissions.created_at
       };
       
       await axios.put(`${API}/users/${selectedUserPermissions.id}`, updatedUser);
@@ -4383,7 +4384,7 @@ const Users = () => {
       alert('تم تحديث الصلاحيات بنجاح');
     } catch (error) {
       console.error('Error updating permissions:', error);
-      alert('حدث خطأ في تحديث الصلاحيات');
+      alert('حدث خطأ في تحديث الصلاحيات: ' + (error.response?.data?.detail || error.message));
     }
   };
 
