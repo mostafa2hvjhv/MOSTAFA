@@ -1010,7 +1010,8 @@ async def get_account_balances():
             'vodafone_elsawy': 0,
             'vodafone_wael': 0,
             'deferred': 0,
-            'instapay': 0
+            'instapay': 0,
+            'yad_elsawy': 0
         }
         
         # Add invoice amounts
