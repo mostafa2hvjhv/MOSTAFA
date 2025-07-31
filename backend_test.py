@@ -1401,6 +1401,280 @@ class MasterSealAPITester:
                 missing = [f for f in new_fields if f not in work_order]
                 self.log_test("WorkOrder Model New Fields", False, f"Missing fields: {missing}")
 
+    def test_material_details_functionality(self):
+        """Test material_details field in InvoiceItem and work orders"""
+        print("\n=== Testing Material Details Functionality (Unit Code Fix) ===")
+        
+        # First, ensure we have raw materials and customers for testing
+        if not self.created_data.get('raw_materials'):
+            self.test_raw_materials_management()
+        if not self.created_data.get('customers'):
+            self.test_customer_management()
+        
+        if not self.created_data.get('raw_materials') or not self.created_data.get('customers'):
+            self.log_test("Material Details Test Setup", False, "Missing required test data (raw materials or customers)")
+            return
+        
+        # Test 1: Create invoice with material_details from compatibility check
+        print("\n--- Test 1: Invoice with material_details ---")
+        
+        # First, do a compatibility check to get material details
+        compatibility_check = {
+            "seal_type": "RSL",
+            "inner_diameter": 25.0,
+            "outer_diameter": 35.0,
+            "height": 8.0
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/compatibility-check", 
+                                       json=compatibility_check,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                compatibility_data = response.json()
+                compatible_materials = compatibility_data.get('compatible_materials', [])
+                
+                if compatible_materials:
+                    # Use the first compatible material
+                    selected_material = compatible_materials[0]
+                    
+                    # Create invoice with material_details
+                    invoice_data = {
+                        "customer_id": self.created_data['customers'][0]['id'],
+                        "customer_name": self.created_data['customers'][0]['name'],
+                        "items": [
+                            {
+                                "seal_type": "RSL",
+                                "material_type": selected_material['material_type'],
+                                "inner_diameter": 25.0,
+                                "outer_diameter": 35.0,
+                                "height": 8.0,
+                                "quantity": 5,
+                                "unit_price": 20.0,
+                                "total_price": 100.0,
+                                "material_used": selected_material['unit_code'],
+                                "material_details": {
+                                    "unit_code": selected_material['unit_code'],
+                                    "material_type": selected_material['material_type'],
+                                    "inner_diameter": selected_material['inner_diameter'],
+                                    "outer_diameter": selected_material['outer_diameter'],
+                                    "height": selected_material['height'],
+                                    "pieces_count": selected_material['pieces_count'],
+                                    "cost_per_mm": selected_material['cost_per_mm'],
+                                    "selected_from_compatibility": True
+                                }
+                            }
+                        ],
+                        "payment_method": "نقدي",
+                        "notes": "اختبار حفظ تفاصيل الخامة من فحص التوافق"
+                    }
+                    
+                    # Create the invoice
+                    response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                               json=invoice_data,
+                                               headers={'Content-Type': 'application/json'},
+                                               params={"supervisor_name": "مشرف الاختبار"})
+                    
+                    if response.status_code == 200:
+                        invoice_created = response.json()
+                        self.created_data.setdefault('test_invoices', []).append(invoice_created)
+                        
+                        # Verify material_details is saved
+                        if (invoice_created.get('items') and 
+                            len(invoice_created['items']) > 0 and 
+                            invoice_created['items'][0].get('material_details')):
+                            
+                            material_details = invoice_created['items'][0]['material_details']
+                            if (material_details.get('unit_code') == selected_material['unit_code'] and
+                                material_details.get('selected_from_compatibility') == True):
+                                self.log_test("Create Invoice with material_details", True, 
+                                            f"Invoice {invoice_created.get('invoice_number')} created with complete material_details")
+                            else:
+                                self.log_test("Create Invoice with material_details", False, 
+                                            f"material_details incomplete: {material_details}")
+                        else:
+                            self.log_test("Create Invoice with material_details", False, 
+                                        "material_details not found in created invoice")
+                    else:
+                        self.log_test("Create Invoice with material_details", False, 
+                                    f"HTTP {response.status_code}: {response.text}")
+                else:
+                    self.log_test("Compatibility Check for Material Details", False, "No compatible materials found")
+            else:
+                self.log_test("Compatibility Check for Material Details", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create Invoice with material_details", False, f"Exception: {str(e)}")
+        
+        # Test 2: Verify GET /api/invoices returns material_details
+        print("\n--- Test 2: GET invoices with material_details ---")
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/invoices")
+            
+            if response.status_code == 200:
+                invoices = response.json()
+                
+                # Find our test invoice
+                test_invoice = None
+                for invoice in invoices:
+                    if (invoice.get('items') and 
+                        len(invoice['items']) > 0 and 
+                        invoice['items'][0].get('material_details')):
+                        test_invoice = invoice
+                        break
+                
+                if test_invoice:
+                    material_details = test_invoice['items'][0]['material_details']
+                    if (material_details.get('unit_code') and 
+                        material_details.get('selected_from_compatibility')):
+                        self.log_test("GET invoices returns material_details", True, 
+                                    f"material_details correctly retrieved: {material_details.get('unit_code')}")
+                    else:
+                        self.log_test("GET invoices returns material_details", False, 
+                                    f"material_details incomplete in GET response: {material_details}")
+                else:
+                    self.log_test("GET invoices returns material_details", False, 
+                                "No invoices with material_details found in GET response")
+            else:
+                self.log_test("GET invoices returns material_details", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("GET invoices returns material_details", False, f"Exception: {str(e)}")
+        
+        # Test 3: Verify daily work order contains material_details
+        print("\n--- Test 3: Daily work order with material_details ---")
+        
+        try:
+            # Get today's work orders
+            response = self.session.get(f"{BACKEND_URL}/work-orders")
+            
+            if response.status_code == 200:
+                work_orders = response.json()
+                
+                # Find daily work order
+                daily_work_order = None
+                for wo in work_orders:
+                    if wo.get('is_daily') == True and wo.get('invoices'):
+                        daily_work_order = wo
+                        break
+                
+                if daily_work_order:
+                    # Check if any invoice in the work order has material_details
+                    found_material_details = False
+                    for invoice in daily_work_order.get('invoices', []):
+                        if (invoice.get('items') and 
+                            len(invoice['items']) > 0 and 
+                            invoice['items'][0].get('material_details')):
+                            found_material_details = True
+                            material_details = invoice['items'][0]['material_details']
+                            
+                            if material_details.get('unit_code'):
+                                self.log_test("Daily work order contains material_details", True, 
+                                            f"Work order contains invoice with material_details: {material_details.get('unit_code')}")
+                            else:
+                                self.log_test("Daily work order contains material_details", False, 
+                                            f"material_details incomplete in work order: {material_details}")
+                            break
+                    
+                    if not found_material_details:
+                        self.log_test("Daily work order contains material_details", False, 
+                                    "No invoices with material_details found in daily work order")
+                else:
+                    self.log_test("Daily work order contains material_details", False, 
+                                "No daily work order found")
+            else:
+                self.log_test("Daily work order contains material_details", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Daily work order contains material_details", False, f"Exception: {str(e)}")
+        
+        # Test 4: Verify specific invoice GET returns material_details
+        print("\n--- Test 4: GET specific invoice with material_details ---")
+        
+        if self.created_data.get('test_invoices'):
+            test_invoice_id = self.created_data['test_invoices'][0]['id']
+            
+            try:
+                response = self.session.get(f"{BACKEND_URL}/invoices/{test_invoice_id}")
+                
+                if response.status_code == 200:
+                    invoice = response.json()
+                    
+                    if (invoice.get('items') and 
+                        len(invoice['items']) > 0 and 
+                        invoice['items'][0].get('material_details')):
+                        
+                        material_details = invoice['items'][0]['material_details']
+                        if (material_details.get('unit_code') and 
+                            material_details.get('selected_from_compatibility')):
+                            self.log_test("GET specific invoice returns material_details", True, 
+                                        f"Specific invoice correctly returns material_details: {material_details.get('unit_code')}")
+                        else:
+                            self.log_test("GET specific invoice returns material_details", False, 
+                                        f"material_details incomplete: {material_details}")
+                    else:
+                        self.log_test("GET specific invoice returns material_details", False, 
+                                    "material_details not found in specific invoice GET")
+                else:
+                    self.log_test("GET specific invoice returns material_details", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET specific invoice returns material_details", False, f"Exception: {str(e)}")
+        
+        # Test 5: Test invoice without material_details (backward compatibility)
+        print("\n--- Test 5: Invoice without material_details (backward compatibility) ---")
+        
+        try:
+            invoice_data_no_details = {
+                "customer_id": self.created_data['customers'][0]['id'],
+                "customer_name": self.created_data['customers'][0]['name'],
+                "items": [
+                    {
+                        "seal_type": "RS",
+                        "material_type": "NBR",
+                        "inner_diameter": 30.0,
+                        "outer_diameter": 40.0,
+                        "height": 7.0,
+                        "quantity": 3,
+                        "unit_price": 18.0,
+                        "total_price": 54.0
+                        # No material_details field
+                    }
+                ],
+                "payment_method": "آجل",
+                "notes": "اختبار التوافق العكسي بدون material_details"
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_no_details,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                invoice_created = response.json()
+                
+                # Verify invoice is created successfully even without material_details
+                if invoice_created.get('invoice_number'):
+                    # Check that material_details is None or not present
+                    item = invoice_created.get('items', [{}])[0]
+                    material_details = item.get('material_details')
+                    
+                    if material_details is None:
+                        self.log_test("Invoice without material_details (backward compatibility)", True, 
+                                    f"Invoice {invoice_created.get('invoice_number')} created successfully without material_details")
+                    else:
+                        self.log_test("Invoice without material_details (backward compatibility)", True, 
+                                    f"Invoice created with empty material_details: {material_details}")
+                else:
+                    self.log_test("Invoice without material_details (backward compatibility)", False, 
+                                "Invoice creation failed")
+            else:
+                self.log_test("Invoice without material_details (backward compatibility)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Invoice without material_details (backward compatibility)", False, f"Exception: {str(e)}")
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting Master Seal Backend API Tests")
