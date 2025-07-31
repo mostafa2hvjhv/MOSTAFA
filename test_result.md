@@ -332,15 +332,18 @@ metadata:
 
   - task: "Multiple Bug Fixes - إصلاح مشاكل متعددة"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py + /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "تم إصلاح 3 مشاكل: 1) صفحة الآجل (تحديث فلتر الفواتير) 2) الخزينة (إضافة APIs لحفظ التحويلات) 3) فحص التوافق (تحسين validation)"
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار الإصلاحات الثلاثة الجديدة بنجاح بنسبة 100%! اختبار شامل لـ 35 حالة اختبار. **1) إصلاح صفحة الآجل:** تم التأكد من GET /api/invoices يعرض فواتير بحالات مختلفة (انتظار، غير مدفوعة، مدفوعة جزئياً) وأن فلتر الآجل يعرض فقط الفواتير ذات remaining_amount > 0 بشكل صحيح. **2) إصلاح APIs الخزينة الجديدة:** جميع APIs تعمل بشكل مثالي - GET /api/treasury/balances يحسب أرصدة الحسابات الخمسة بدقة، GET /api/treasury/transactions يجلب المعاملات، POST /api/treasury/transactions ينشئ معاملات يدوية، POST /api/treasury/transfer ينشئ تحويلات مع معاملتين مرتبطتين (صادر/وارد). **3) إصلاح فحص التوافق:** POST /api/compatibility-check يعمل مع validation محسن - يقبل البيانات الصحيحة ويرفض البيانات الناقصة بـ HTTP 422، منطق التوافق يعمل بدقة للمواد والمنتجات النهائية. جميع البيانات تُحفظ في MongoDB بشكل دائم."
 
 test_plan:
   current_focus:
