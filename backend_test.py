@@ -1186,6 +1186,221 @@ class MasterSealAPITester:
         except Exception as e:
             self.log_test("Delete Non-existent User", False, f"Exception: {str(e)}")
     
+    def test_daily_work_order_functionality(self):
+        """Test daily work order automatic functionality"""
+        print("\n=== Testing Daily Work Order Functionality ===")
+        
+        # First, ensure we have some customers and raw materials for testing
+        if not self.created_data.get('customers'):
+            self.test_customer_management()
+        if not self.created_data.get('raw_materials'):
+            self.test_raw_materials_management()
+        
+        if not self.created_data.get('customers') or not self.created_data.get('raw_materials'):
+            self.log_test("Daily Work Order Setup", False, "No customers or raw materials available for testing")
+            return
+        
+        # Test 1: Create first invoice with supervisor name - should create daily work order automatically
+        supervisor_name = "المهندس أحمد الصاوي"
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        invoice_data_1 = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "RSL",
+                    "material_type": "NBR",
+                    "inner_diameter": 25.0,
+                    "outer_diameter": 35.0,
+                    "height": 8.0,
+                    "quantity": 5,
+                    "unit_price": 15.0,
+                    "total_price": 75.0,
+                    "material_used": self.created_data['raw_materials'][0]['unit_code']
+                }
+            ],
+            "payment_method": "نقدي",
+            "notes": "فاتورة اختبار أمر الشغل اليومي الأولى"
+        }
+        
+        try:
+            # Create invoice with supervisor name
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_1,
+                                       params={"supervisor_name": supervisor_name},
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                invoice_1 = response.json()
+                self.created_data.setdefault('daily_invoices', []).append(invoice_1)
+                self.log_test("Create First Invoice with Supervisor", True, 
+                            f"Invoice: {invoice_1.get('invoice_number')}, Amount: {invoice_1.get('total_amount')}")
+                
+                # Test 2: Check if daily work order was created automatically
+                try:
+                    response = self.session.get(f"{BACKEND_URL}/work-orders/daily/{today}", 
+                                              params={"supervisor_name": supervisor_name})
+                    
+                    if response.status_code == 200:
+                        daily_work_order = response.json()
+                        
+                        # Verify daily work order properties
+                        if (daily_work_order.get('is_daily') == True and 
+                            daily_work_order.get('work_date') == today and
+                            daily_work_order.get('supervisor_name') == supervisor_name and
+                            len(daily_work_order.get('invoices', [])) == 1 and
+                            daily_work_order.get('total_amount') == 75.0 and
+                            daily_work_order.get('total_items') == 1):
+                            
+                            self.created_data.setdefault('daily_work_orders', []).append(daily_work_order)
+                            self.log_test("Auto-Create Daily Work Order", True, 
+                                        f"Daily work order created with 1 invoice, total: {daily_work_order.get('total_amount')}")
+                        else:
+                            self.log_test("Auto-Create Daily Work Order", False, 
+                                        f"Daily work order properties incorrect: {daily_work_order}")
+                    else:
+                        self.log_test("Auto-Create Daily Work Order", False, 
+                                    f"HTTP {response.status_code}: {response.text}")
+                except Exception as e:
+                    self.log_test("Auto-Create Daily Work Order", False, f"Exception: {str(e)}")
+                
+            else:
+                self.log_test("Create First Invoice with Supervisor", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return
+        except Exception as e:
+            self.log_test("Create First Invoice with Supervisor", False, f"Exception: {str(e)}")
+            return
+        
+        # Test 3: Create second invoice on same day - should add to existing daily work order
+        invoice_data_2 = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "RS",
+                    "material_type": "BUR",
+                    "inner_diameter": 30.0,
+                    "outer_diameter": 45.0,
+                    "height": 7.0,
+                    "quantity": 3,
+                    "unit_price": 20.0,
+                    "total_price": 60.0,
+                    "material_used": self.created_data['raw_materials'][1]['unit_code'] if len(self.created_data['raw_materials']) > 1 else None
+                }
+            ],
+            "payment_method": "آجل",
+            "notes": "فاتورة اختبار أمر الشغل اليومي الثانية"
+        }
+        
+        try:
+            # Create second invoice with same supervisor
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_2,
+                                       params={"supervisor_name": supervisor_name},
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                invoice_2 = response.json()
+                self.created_data['daily_invoices'].append(invoice_2)
+                self.log_test("Create Second Invoice Same Day", True, 
+                            f"Invoice: {invoice_2.get('invoice_number')}, Amount: {invoice_2.get('total_amount')}")
+                
+                # Test 4: Verify second invoice was added to same daily work order
+                try:
+                    response = self.session.get(f"{BACKEND_URL}/work-orders/daily/{today}", 
+                                              params={"supervisor_name": supervisor_name})
+                    
+                    if response.status_code == 200:
+                        updated_work_order = response.json()
+                        
+                        # Verify updated totals
+                        expected_total_amount = 75.0 + 60.0  # First + Second invoice
+                        expected_total_items = 2  # 1 item from each invoice
+                        
+                        if (len(updated_work_order.get('invoices', [])) == 2 and
+                            updated_work_order.get('total_amount') == expected_total_amount and
+                            updated_work_order.get('total_items') == expected_total_items):
+                            
+                            self.log_test("Add Second Invoice to Daily Work Order", True, 
+                                        f"Daily work order now has 2 invoices, total: {updated_work_order.get('total_amount')}")
+                        else:
+                            self.log_test("Add Second Invoice to Daily Work Order", False, 
+                                        f"Totals incorrect. Expected: {expected_total_amount}, {expected_total_items}. Got: {updated_work_order.get('total_amount')}, {updated_work_order.get('total_items')}")
+                    else:
+                        self.log_test("Add Second Invoice to Daily Work Order", False, 
+                                    f"HTTP {response.status_code}: {response.text}")
+                except Exception as e:
+                    self.log_test("Add Second Invoice to Daily Work Order", False, f"Exception: {str(e)}")
+                
+            else:
+                self.log_test("Create Second Invoice Same Day", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create Second Invoice Same Day", False, f"Exception: {str(e)}")
+        
+        # Test 5: Test GET API for daily work order directly
+        try:
+            response = self.session.get(f"{BACKEND_URL}/work-orders/daily/{today}", 
+                                      params={"supervisor_name": supervisor_name})
+            
+            if response.status_code == 200:
+                work_order = response.json()
+                
+                # Verify all required fields are present and correct
+                required_fields = ['id', 'title', 'description', 'supervisor_name', 'is_daily', 
+                                 'work_date', 'invoices', 'total_amount', 'total_items', 'status']
+                
+                if all(field in work_order for field in required_fields):
+                    self.log_test("GET Daily Work Order API", True, 
+                                f"All required fields present. Invoices: {len(work_order.get('invoices', []))}")
+                else:
+                    missing_fields = [f for f in required_fields if f not in work_order]
+                    self.log_test("GET Daily Work Order API", False, f"Missing fields: {missing_fields}")
+            else:
+                self.log_test("GET Daily Work Order API", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("GET Daily Work Order API", False, f"Exception: {str(e)}")
+        
+        # Test 6: Test creating daily work order for different date (should create new one)
+        different_date = "2024-01-15"  # Fixed date for testing
+        try:
+            response = self.session.get(f"{BACKEND_URL}/work-orders/daily/{different_date}", 
+                                      params={"supervisor_name": "مشرف آخر"})
+            
+            if response.status_code == 200:
+                different_work_order = response.json()
+                
+                if (different_work_order.get('is_daily') == True and 
+                    different_work_order.get('work_date') == different_date and
+                    different_work_order.get('supervisor_name') == "مشرف آخر" and
+                    len(different_work_order.get('invoices', [])) == 0):
+                    
+                    self.log_test("Create Daily Work Order Different Date", True, 
+                                f"New daily work order created for {different_date}")
+                else:
+                    self.log_test("Create Daily Work Order Different Date", False, 
+                                f"Properties incorrect: {different_work_order}")
+            else:
+                self.log_test("Create Daily Work Order Different Date", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create Daily Work Order Different Date", False, f"Exception: {str(e)}")
+        
+        # Test 7: Verify WorkOrder model supports all new fields
+        if self.created_data.get('daily_work_orders'):
+            work_order = self.created_data['daily_work_orders'][0]
+            new_fields = ['supervisor_name', 'is_daily', 'work_date', 'invoices', 'total_amount', 'total_items']
+            
+            if all(field in work_order for field in new_fields):
+                self.log_test("WorkOrder Model New Fields", True, 
+                            f"All new fields supported: {new_fields}")
+            else:
+                missing = [f for f in new_fields if f not in work_order]
+                self.log_test("WorkOrder Model New Fields", False, f"Missing fields: {missing}")
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting Master Seal Backend API Tests")
@@ -1205,6 +1420,10 @@ class MasterSealAPITester:
         self.test_expense_management()
         self.test_work_orders_management()
         self.test_inventory_update_logic()
+        
+        # Test new daily work order functionality
+        print("\n" + "📋" * 20 + " DAILY WORK ORDER TESTS " + "📋" * 20)
+        self.test_daily_work_order_functionality()
         
         # Test delete functionality - the main focus
         print("\n" + "🗑️" * 20 + " DELETE FUNCTIONALITY TESTS " + "🗑️" * 20)
