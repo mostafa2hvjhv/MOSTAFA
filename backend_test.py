@@ -1883,6 +1883,361 @@ class MasterSealAPITester:
         except Exception as e:
             self.log_test("Get Treasury Transactions - Yad Elsawy", False, f"Exception: {str(e)}")
 
+    def test_invoice_discount_feature(self):
+        """Test invoice discount functionality comprehensively"""
+        print("\n=== Testing Invoice Discount Feature ===")
+        
+        # First ensure we have customers and raw materials for testing
+        if not self.created_data.get('customers'):
+            self.test_customer_management()
+        if not self.created_data.get('raw_materials'):
+            self.test_raw_materials_management()
+        
+        if not self.created_data.get('customers'):
+            self.log_test("Invoice Discount Feature", False, "No customers available for discount testing")
+            return
+        
+        # Test 1: Invoice with fixed discount (50 EGP on 500 EGP total)
+        invoice_data_fixed = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "RSL",
+                    "material_type": "NBR",
+                    "inner_diameter": 25.0,
+                    "outer_diameter": 35.0,
+                    "height": 8.0,
+                    "quantity": 10,
+                    "unit_price": 50.0,
+                    "total_price": 500.0,
+                    "material_used": self.created_data['raw_materials'][0]['unit_code'] if self.created_data.get('raw_materials') else None
+                }
+            ],
+            "payment_method": "نقدي",
+            "discount_type": "amount",
+            "discount_value": 50.0,
+            "notes": "اختبار خصم ثابت 50 ج.م"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_fixed,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify discount calculations
+                expected_subtotal = 500.0
+                expected_discount = 50.0
+                expected_total_after_discount = 450.0
+                
+                subtotal = data.get('subtotal', 0)
+                discount = data.get('discount', 0)
+                total_after_discount = data.get('total_after_discount', 0)
+                total_amount = data.get('total_amount', 0)
+                discount_type = data.get('discount_type', '')
+                discount_value = data.get('discount_value', 0)
+                
+                if (abs(subtotal - expected_subtotal) < 0.01 and 
+                    abs(discount - expected_discount) < 0.01 and 
+                    abs(total_after_discount - expected_total_after_discount) < 0.01 and
+                    abs(total_amount - expected_total_after_discount) < 0.01 and
+                    discount_type == "amount" and
+                    abs(discount_value - 50.0) < 0.01):
+                    
+                    self.created_data.setdefault('discount_invoices', []).append(data)
+                    self.log_test("Fixed Discount Invoice (50 EGP on 500 EGP)", True, 
+                                f"Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}")
+                else:
+                    self.log_test("Fixed Discount Invoice (50 EGP on 500 EGP)", False, 
+                                f"Calculation error - Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}")
+            else:
+                self.log_test("Fixed Discount Invoice (50 EGP on 500 EGP)", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Fixed Discount Invoice (50 EGP on 500 EGP)", False, f"Exception: {str(e)}")
+        
+        # Test 2: Invoice with percentage discount (15% on 1000 EGP total)
+        invoice_data_percentage = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "RS",
+                    "material_type": "BUR",
+                    "inner_diameter": 30.0,
+                    "outer_diameter": 45.0,
+                    "height": 7.0,
+                    "quantity": 20,
+                    "unit_price": 50.0,
+                    "total_price": 1000.0,
+                    "material_used": self.created_data['raw_materials'][1]['unit_code'] if len(self.created_data.get('raw_materials', [])) > 1 else None
+                }
+            ],
+            "payment_method": "آجل",
+            "discount_type": "percentage",
+            "discount_value": 15.0,
+            "notes": "اختبار خصم نسبة 15% على 1000 ج.م"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_percentage,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify discount calculations
+                expected_subtotal = 1000.0
+                expected_discount = 150.0  # 15% of 1000
+                expected_total_after_discount = 850.0
+                expected_remaining_amount = 850.0  # For deferred payment
+                
+                subtotal = data.get('subtotal', 0)
+                discount = data.get('discount', 0)
+                total_after_discount = data.get('total_after_discount', 0)
+                total_amount = data.get('total_amount', 0)
+                remaining_amount = data.get('remaining_amount', 0)
+                discount_type = data.get('discount_type', '')
+                discount_value = data.get('discount_value', 0)
+                
+                if (abs(subtotal - expected_subtotal) < 0.01 and 
+                    abs(discount - expected_discount) < 0.01 and 
+                    abs(total_after_discount - expected_total_after_discount) < 0.01 and
+                    abs(total_amount - expected_total_after_discount) < 0.01 and
+                    abs(remaining_amount - expected_remaining_amount) < 0.01 and
+                    discount_type == "percentage" and
+                    abs(discount_value - 15.0) < 0.01):
+                    
+                    self.created_data.setdefault('discount_invoices', []).append(data)
+                    self.log_test("Percentage Discount Invoice (15% on 1000 EGP)", True, 
+                                f"Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}, Remaining: {remaining_amount}")
+                else:
+                    self.log_test("Percentage Discount Invoice (15% on 1000 EGP)", False, 
+                                f"Calculation error - Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}, Remaining: {remaining_amount}")
+            else:
+                self.log_test("Percentage Discount Invoice (15% on 1000 EGP)", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Percentage Discount Invoice (15% on 1000 EGP)", False, f"Exception: {str(e)}")
+        
+        # Test 3: Invoice with no discount
+        invoice_data_no_discount = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "B17",
+                    "material_type": "VT",
+                    "inner_diameter": 40.0,
+                    "outer_diameter": 55.0,
+                    "height": 10.0,
+                    "quantity": 5,
+                    "unit_price": 30.0,
+                    "total_price": 150.0
+                }
+            ],
+            "payment_method": "فودافون كاش محمد الصاوي",
+            "discount_type": "amount",
+            "discount_value": 0.0,
+            "notes": "اختبار فاتورة بدون خصم"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_no_discount,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify no discount calculations
+                expected_subtotal = 150.0
+                expected_discount = 0.0
+                expected_total_after_discount = 150.0
+                
+                subtotal = data.get('subtotal', 0)
+                discount = data.get('discount', 0)
+                total_after_discount = data.get('total_after_discount', 0)
+                total_amount = data.get('total_amount', 0)
+                
+                if (abs(subtotal - expected_subtotal) < 0.01 and 
+                    abs(discount - expected_discount) < 0.01 and 
+                    abs(total_after_discount - expected_total_after_discount) < 0.01 and
+                    abs(total_amount - expected_total_after_discount) < 0.01):
+                    
+                    self.created_data.setdefault('discount_invoices', []).append(data)
+                    self.log_test("No Discount Invoice", True, 
+                                f"Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}")
+                else:
+                    self.log_test("No Discount Invoice", False, 
+                                f"Calculation error - Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}")
+            else:
+                self.log_test("No Discount Invoice", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("No Discount Invoice", False, f"Exception: {str(e)}")
+        
+        # Test 4: Invoice with 100% discount (full discount)
+        invoice_data_full_discount = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "B3",
+                    "material_type": "BOOM",
+                    "inner_diameter": 15.0,
+                    "outer_diameter": 22.0,
+                    "height": 5.0,
+                    "quantity": 4,
+                    "unit_price": 25.0,
+                    "total_price": 100.0
+                }
+            ],
+            "payment_method": "نقدي",
+            "discount_type": "percentage",
+            "discount_value": 100.0,
+            "notes": "اختبار خصم كامل 100%"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_full_discount,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify full discount calculations
+                expected_subtotal = 100.0
+                expected_discount = 100.0  # 100% of 100
+                expected_total_after_discount = 0.0
+                
+                subtotal = data.get('subtotal', 0)
+                discount = data.get('discount', 0)
+                total_after_discount = data.get('total_after_discount', 0)
+                total_amount = data.get('total_amount', 0)
+                
+                if (abs(subtotal - expected_subtotal) < 0.01 and 
+                    abs(discount - expected_discount) < 0.01 and 
+                    abs(total_after_discount - expected_total_after_discount) < 0.01 and
+                    abs(total_amount - expected_total_after_discount) < 0.01):
+                    
+                    self.created_data.setdefault('discount_invoices', []).append(data)
+                    self.log_test("Full Discount Invoice (100%)", True, 
+                                f"Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}")
+                else:
+                    self.log_test("Full Discount Invoice (100%)", False, 
+                                f"Calculation error - Subtotal: {subtotal}, Discount: {discount}, Total: {total_after_discount}")
+            else:
+                self.log_test("Full Discount Invoice (100%)", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Full Discount Invoice (100%)", False, f"Exception: {str(e)}")
+        
+        # Test 5: Test decimal calculations
+        invoice_data_decimal = {
+            "customer_id": self.created_data['customers'][0]['id'],
+            "customer_name": self.created_data['customers'][0]['name'],
+            "items": [
+                {
+                    "seal_type": "RSE",
+                    "material_type": "NBR",
+                    "inner_diameter": 22.5,
+                    "outer_diameter": 33.75,
+                    "height": 6.5,
+                    "quantity": 3,
+                    "unit_price": 17.33,
+                    "total_price": 51.99
+                }
+            ],
+            "payment_method": "انستاباي",
+            "discount_type": "percentage",
+            "discount_value": 12.5,
+            "notes": "اختبار حسابات عشرية - خصم 12.5%"
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/invoices", 
+                                       json=invoice_data_decimal,
+                                       headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify decimal discount calculations
+                expected_subtotal = 51.99
+                expected_discount = 6.49875  # 12.5% of 51.99
+                expected_total_after_discount = 45.49125
+                
+                subtotal = data.get('subtotal', 0)
+                discount = data.get('discount', 0)
+                total_after_discount = data.get('total_after_discount', 0)
+                total_amount = data.get('total_amount', 0)
+                
+                if (abs(subtotal - expected_subtotal) < 0.01 and 
+                    abs(discount - expected_discount) < 0.01 and 
+                    abs(total_after_discount - expected_total_after_discount) < 0.01 and
+                    abs(total_amount - expected_total_after_discount) < 0.01):
+                    
+                    self.created_data.setdefault('discount_invoices', []).append(data)
+                    self.log_test("Decimal Discount Invoice (12.5%)", True, 
+                                f"Subtotal: {subtotal}, Discount: {discount:.2f}, Total: {total_after_discount:.2f}")
+                else:
+                    self.log_test("Decimal Discount Invoice (12.5%)", False, 
+                                f"Calculation error - Subtotal: {subtotal}, Discount: {discount:.2f}, Total: {total_after_discount:.2f}")
+            else:
+                self.log_test("Decimal Discount Invoice (12.5%)", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Decimal Discount Invoice (12.5%)", False, f"Exception: {str(e)}")
+        
+        # Test 6: Verify discount fields are saved and retrieved correctly
+        if self.created_data.get('discount_invoices'):
+            try:
+                invoice_id = self.created_data['discount_invoices'][0]['id']
+                response = self.session.get(f"{BACKEND_URL}/invoices/{invoice_id}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    required_fields = ['subtotal', 'discount', 'discount_type', 'discount_value', 'total_after_discount', 'total_amount']
+                    
+                    if all(field in data for field in required_fields):
+                        self.log_test("Discount Fields Persistence", True, 
+                                    f"All discount fields saved and retrieved correctly")
+                    else:
+                        missing = [f for f in required_fields if f not in data]
+                        self.log_test("Discount Fields Persistence", False, f"Missing fields: {missing}")
+                else:
+                    self.log_test("Discount Fields Persistence", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Discount Fields Persistence", False, f"Exception: {str(e)}")
+        
+        # Test 7: Test daily work order integration with discounts
+        if self.created_data.get('discount_invoices'):
+            try:
+                today = datetime.now().strftime("%Y-%m-%d")
+                response = self.session.get(f"{BACKEND_URL}/work-orders/daily/{today}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Check if work order uses total_after_discount
+                    total_amount = data.get('total_amount', 0)
+                    invoices = data.get('invoices', [])
+                    
+                    # Calculate expected total from invoices (should use total_after_discount)
+                    expected_total = sum(inv.get('total_after_discount', inv.get('total_amount', 0)) for inv in invoices)
+                    
+                    if abs(total_amount - expected_total) < 0.01:
+                        self.log_test("Daily Work Order Discount Integration", True, 
+                                    f"Work order correctly uses total_after_discount: {total_amount}")
+                    else:
+                        self.log_test("Daily Work Order Discount Integration", False, 
+                                    f"Work order total mismatch - Expected: {expected_total}, Got: {total_amount}")
+                else:
+                    self.log_test("Daily Work Order Discount Integration", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Daily Work Order Discount Integration", False, f"Exception: {str(e)}")
+
     def run_all_tests(self):
         """Run all backend API tests"""
         print("🚀 Starting Master Seal Backend API Tests")
@@ -1914,6 +2269,10 @@ class MasterSealAPITester:
         # Test Treasury Yad Elsawy Account functionality
         print("\n" + "💰" * 20 + " TREASURY YAD ELSAWY TESTS " + "💰" * 20)
         self.test_treasury_yad_elsawy_account()
+        
+        # Test Invoice Discount Feature - NEW FOCUS
+        print("\n" + "💸" * 20 + " INVOICE DISCOUNT TESTS " + "💸" * 20)
+        self.test_invoice_discount_feature()
         
         # Test delete functionality - the main focus
         print("\n" + "🗑️" * 20 + " DELETE FUNCTIONALITY TESTS " + "🗑️" * 20)
