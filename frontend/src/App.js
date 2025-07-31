@@ -394,6 +394,8 @@ const Sales = () => {
   });
   const [items, setItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('نقدي');
+  const [discount, setDiscount] = useState(0); // الخصم
+  const [discountType, setDiscountType] = useState('amount'); // نوع الخصم: amount أو percentage
   const [compatibilityResults, setCompatibilityResults] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
 
