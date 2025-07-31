@@ -555,6 +555,11 @@ async def get_payments():
     payments = await db.payments.find().sort("date", -1).to_list(1000)
     return [Payment(**payment) for payment in payments]
 
+@api_router.delete("/payments/clear-all")
+async def clear_all_payments():
+    result = await db.payments.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} دفعة", "deleted_count": result.deleted_count}
+
 @api_router.delete("/payments/{payment_id}")
 async def delete_payment(payment_id: str):
     result = await db.payments.delete_one({"id": payment_id})
