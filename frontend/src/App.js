@@ -2994,28 +2994,35 @@ const Users = () => {
       return;
     }
 
-    // Check if username already exists
-    if (users.some(user => user.username === newUser.username)) {
-      alert('اسم المستخدم موجود بالفعل');
-      return;
+    try {
+      // Check if username already exists
+      if (users.some(user => user.username === newUser.username)) {
+        alert('اسم المستخدم موجود بالفعل');
+        return;
+      }
+
+      // Default permissions based on role
+      const defaultPermissions = newUser.role === 'admin' 
+        ? allPermissions.map(p => p.key)
+        : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders'];
+
+      const user = {
+        id: Date.now().toString(),
+        username: newUser.username,
+        password: newUser.password,
+        role: newUser.role,
+        permissions: defaultPermissions,
+        created_at: new Date().toISOString()
+      };
+
+      await axios.post(`${API}/users`, user);
+      fetchUsers();
+      setNewUser({ username: '', password: '', role: 'user' });
+      alert('تم إضافة المستخدم بنجاح');
+    } catch (error) {
+      console.error('Error adding user:', error);
+      alert('حدث خطأ في إضافة المستخدم');
     }
-
-    // Default permissions based on role
-    const defaultPermissions = newUser.role === 'admin' 
-      ? allPermissions.map(p => p.key)
-      : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders'];
-
-    const user = {
-      id: Date.now().toString(),
-      username: newUser.username,
-      role: newUser.role,
-      permissions: defaultPermissions,
-      created_at: new Date().toISOString()
-    };
-
-    setUsers([...users, user]);
-    setNewUser({ username: '', password: '', role: 'user' });
-    alert('تم إضافة المستخدم بنجاح');
   };
 
   const startEdit = (user) => {
