@@ -2542,6 +2542,19 @@ const WorkOrders = () => {
     }
   };
 
+  const deleteWorkOrder = async (workOrderId) => {
+    if (!confirm('هل أنت متأكد من حذف أمر الشغل هذا؟')) return;
+    
+    try {
+      await axios.delete(`${API}/work-orders/${workOrderId}`);
+      fetchWorkOrders();
+      alert('تم حذف أمر الشغل بنجاح');
+    } catch (error) {
+      console.error('Error deleting work order:', error);
+      alert('حدث خطأ في حذف أمر الشغل');
+    }
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="mb-6">
