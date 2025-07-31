@@ -454,7 +454,7 @@ const Sales = () => {
         outer_diameter: selectedMaterial.outer_diameter,
         height: selectedMaterial.height,
         material_type: selectedMaterial.material_type,
-        is_finished_product: false
+        is_finished_product: selectedMaterial.is_finished_product || false
       } : null
     };
 
