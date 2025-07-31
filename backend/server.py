@@ -731,7 +731,7 @@ async def get_or_create_daily_work_order(work_date: str, supervisor_name: str = 
         # Check if daily work order already exists for this date
         existing_order = await db.work_orders.find_one({
             "is_daily": True,
-            "work_date": work_date_obj.isoformat()
+            "work_date": work_date_obj.isoformat()  # Store as string
         })
         
         if existing_order:
