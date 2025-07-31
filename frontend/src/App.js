@@ -3685,7 +3685,7 @@ const Users = () => {
     setEditForm({ username: '', password: '', role: 'user' });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editForm.username) {
       alert('الرجاء إدخال اسم المستخدم');
       return;
@@ -3697,15 +3697,31 @@ const Users = () => {
       return;
     }
 
-    setUsers(users.map(user => 
-      user.id === editingUser 
-        ? { ...user, username: editForm.username, role: editForm.role }
-        : user
-    ));
+    try {
+      // Update user in backend
+      const updatedUser = {
+        id: editingUser,
+        username: editForm.username,
+        role: editForm.role,
+        password: editForm.password || 'unchanged' // Backend should handle password updates separately
+      };
+      
+      await axios.put(`${API}/users/${editingUser}`, updatedUser);
+      
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === editingUser 
+          ? { ...user, username: editForm.username, role: editForm.role }
+          : user
+      ));
 
-    setEditingUser(null);
-    setEditForm({ username: '', password: '', role: 'user' });
-    alert('تم تحديث المستخدم بنجاح');
+      setEditingUser(null);
+      setEditForm({ username: '', password: '', role: 'user' });
+      alert('تم تحديث المستخدم بنجاح');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('حدث خطأ في تحديث المستخدم');
+    }
   };
 
   const deleteUser = async (userId) => {
