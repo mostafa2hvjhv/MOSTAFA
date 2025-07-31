@@ -464,7 +464,7 @@ async def check_compatibility(check: CompatibilityCheck):
 
 # Invoice endpoints
 @api_router.post("/invoices", response_model=Invoice)
-async def create_invoice(invoice: InvoiceCreate):
+async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     # Generate invoice number
     invoice_count = await db.invoices.count_documents({})
     invoice_number = f"INV-{invoice_count + 1:06d}"
@@ -493,6 +493,59 @@ async def create_invoice(invoice: InvoiceCreate):
             )
     
     await db.invoices.insert_one(invoice_obj.dict())
+    
+    # Add to daily work order automatically
+    try:
+        today = datetime.now().date()
+        
+        # Get or create daily work order for today
+        daily_work_order = await db.work_orders.find_one({
+            "is_daily": True,
+            "work_date": today.isoformat()
+        })
+        
+        if not daily_work_order:
+            # Create new daily work order
+            work_order = WorkOrder(
+                title=f"أمر شغل يومي - {today.strftime('%d/%m/%Y')}",
+                description=f"أمر شغل يومي لجميع فواتير يوم {today.strftime('%d/%m/%Y')}",
+                supervisor_name=supervisor_name,
+                is_daily=True,
+                work_date=today,
+                invoices=[],
+                total_amount=0.0,
+                total_items=0,
+                status="جديد"
+            )
+            
+            await db.work_orders.insert_one(work_order.dict())
+            daily_work_order = work_order.dict()
+        
+        # Add invoice to daily work order
+        invoice_for_work_order = invoice_obj.dict()
+        if "_id" in invoice_for_work_order:
+            del invoice_for_work_order["_id"]
+            
+        current_invoices = daily_work_order.get("invoices", [])
+        current_invoices.append(invoice_for_work_order)
+        
+        new_total_amount = daily_work_order.get("total_amount", 0) + total_amount
+        new_total_items = daily_work_order.get("total_items", 0) + len(invoice.items)
+        
+        await db.work_orders.update_one(
+            {"id": daily_work_order["id"]},
+            {"$set": {
+                "invoices": current_invoices,
+                "total_amount": new_total_amount,
+                "total_items": new_total_items,
+                "supervisor_name": supervisor_name  # Update supervisor name if provided
+            }}
+        )
+        
+    except Exception as e:
+        # Log error but don't fail invoice creation
+        print(f"Error adding invoice to daily work order: {str(e)}")
+    
     return invoice_obj
 
 @api_router.get("/invoices", response_model=List[Invoice])
