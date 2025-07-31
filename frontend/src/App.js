@@ -3581,6 +3581,7 @@ const Users = () => {
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
     { key: 'revenue', label: 'الإيرادات' },
+    { key: 'treasury', label: 'الخزينة' },
     { key: 'invoices', label: 'الفواتير' },
     { key: 'work-orders', label: 'أمر شغل' },
     { key: 'users', label: 'إدارة المستخدمين' }
