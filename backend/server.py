@@ -383,6 +383,11 @@ async def get_finished_products():
     products = await db.finished_products.find().to_list(1000)
     return [FinishedProduct(**product) for product in products]
 
+@api_router.delete("/finished-products/clear-all")
+async def clear_all_finished_products():
+    result = await db.finished_products.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} منتج جاهز", "deleted_count": result.deleted_count}
+
 @api_router.delete("/finished-products/{product_id}")
 async def delete_finished_product(product_id: str):
     result = await db.finished_products.delete_one({"id": product_id})
