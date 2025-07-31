@@ -4279,12 +4279,8 @@ const Users = () => {
       
       await axios.put(`${API}/users/${editingUser}`, updatedUser);
       
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === editingUser 
-          ? { ...user, username: editForm.username, role: editForm.role }
-          : user
-      ));
+      // Fetch updated data from database instead of updating local state
+      fetchUsers();
 
       setEditingUser(null);
       setEditForm({ username: '', password: '', role: 'user' });
