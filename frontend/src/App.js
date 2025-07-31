@@ -3383,9 +3383,21 @@ const WorkOrders = () => {
                           </td>
                           <td className="border border-gray-300 p-2">{item.quantity}</td>
                           <td className="border border-gray-300 p-2">
-                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-                              {item.material_type}
-                            </span>
+                            {item.material_details ? (
+                              item.material_details.is_finished_product ? (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                                  منتج جاهز
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                                  {item.material_details.material_type}
+                                </span>
+                              )
+                            ) : (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                                {item.material_used || 'غير محدد'}
+                              </span>
+                            )}
                           </td>
                           <td className="border border-gray-300 p-2">
                             <div className="font-mono text-sm">
