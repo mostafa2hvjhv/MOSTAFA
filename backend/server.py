@@ -733,48 +733,6 @@ async def add_invoice_to_work_order(work_order_id: str, invoice_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Clear all data endpoints
-@api_router.delete("/customers/clear-all")
-async def clear_all_customers():
-    result = await db.customers.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} عميل", "deleted_count": result.deleted_count}
-
-@api_router.delete("/raw-materials/clear-all")
-async def clear_all_raw_materials():
-    result = await db.raw_materials.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} مادة خام", "deleted_count": result.deleted_count}
-
-@api_router.delete("/finished-products/clear-all")
-async def clear_all_finished_products():
-    result = await db.finished_products.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} منتج جاهز", "deleted_count": result.deleted_count}
-
-@api_router.delete("/invoices/clear-all")
-async def clear_all_invoices():
-    result = await db.invoices.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} فاتورة", "deleted_count": result.deleted_count}
-
-@api_router.delete("/expenses/clear-all")
-async def clear_all_expenses():
-    result = await db.expenses.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} مصروف", "deleted_count": result.deleted_count}
-
-@api_router.delete("/payments/clear-all")
-async def clear_all_payments():
-    result = await db.payments.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} دفعة", "deleted_count": result.deleted_count}
-
-@api_router.delete("/work-orders/clear-all")
-async def clear_all_work_orders():
-    result = await db.work_orders.delete_many({})
-    return {"message": f"تم حذف {result.deleted_count} أمر شغل", "deleted_count": result.deleted_count}
-
-@api_router.delete("/users/clear-all")
-async def clear_all_users():
-    # Don't delete default users, only custom ones
-    result = await db.users.delete_many({"username": {"$nin": ["Elsawy", "Root"]}})
-    return {"message": f"تم حذف {result.deleted_count} مستخدم", "deleted_count": result.deleted_count}
-
 # Include the router in the main app
 app.include_router(api_router)
 
