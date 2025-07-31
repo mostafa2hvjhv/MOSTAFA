@@ -4165,43 +4165,43 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(`${API}/users`);
-      // Combine predefined users with database users
-      const predefinedUsers = [
-        { 
-          id: '1', 
-          username: 'Elsawy', 
-          role: 'admin', 
-          created_at: new Date().toISOString(),
+      
+      // Check if default users exist in database
+      const dbUsers = response.data || [];
+      const hasElsawy = dbUsers.some(user => user.username === 'Elsawy');
+      const hasRoot = dbUsers.some(user => user.username === 'Root');
+      
+      // Create default users if they don't exist
+      if (!hasElsawy) {
+        await axios.post(`${API}/users`, {
+          username: 'Elsawy',
+          password: '100100',
+          role: 'admin',
           permissions: allPermissions.map(p => p.key)
-        },
-        { 
-          id: '2', 
-          username: 'Root', 
-          role: 'user', 
-          created_at: new Date().toISOString(),
+        });
+      }
+      
+      if (!hasRoot) {
+        await axios.post(`${API}/users`, {
+          username: 'Root',
+          password: 'master',
+          role: 'user',
           permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders']
-        }
-      ];
-      setUsers([...predefinedUsers, ...response.data]);
+        });
+      }
+      
+      // Fetch users again if we created default users
+      if (!hasElsawy || !hasRoot) {
+        const updatedResponse = await axios.get(`${API}/users`);
+        setUsers(updatedResponse.data || []);
+      } else {
+        setUsers(dbUsers);
+      }
+      
     } catch (error) {
       console.error('Error fetching users:', error);
-      // Fall back to predefined users only
-      setUsers([
-        { 
-          id: '1', 
-          username: 'Elsawy', 
-          role: 'admin', 
-          created_at: new Date().toISOString(),
-          permissions: allPermissions.map(p => p.key)
-        },
-        { 
-          id: '2', 
-          username: 'Root', 
-          role: 'user', 
-          created_at: new Date().toISOString(),
-          permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders']
-        }
-      ]);
+      // Fall back to empty array for now
+      setUsers([]);
     }
   };
 
