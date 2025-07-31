@@ -488,7 +488,7 @@ const Sales = () => {
         notes: ''
       };
 
-      const response = await axios.post(`${API}/invoices`, invoiceData);
+      const response = await axios.post(`${API}/invoices?supervisor_name=${encodeURIComponent(supervisorName)}`, invoiceData);
       
       if (response.data) {
         alert('تم إنشاء الفاتورة بنجاح');
