@@ -2902,7 +2902,9 @@ const WorkOrders = () => {
                   className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
                   إضافة فاتورة
                 </button>
-                <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                <button 
+                  onClick={() => deleteWorkOrder(workOrder.id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                   حذف
                 </button>
               </div>
