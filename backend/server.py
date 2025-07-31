@@ -738,6 +738,11 @@ async def get_or_create_daily_work_order(work_date: str, supervisor_name: str = 
             # Clean up MongoDB ObjectId
             if "_id" in existing_order:
                 del existing_order["_id"]
+            
+            # Convert date to string for JSON serialization
+            if "work_date" in existing_order and existing_order["work_date"]:
+                existing_order["work_date"] = existing_order["work_date"] if isinstance(existing_order["work_date"], str) else existing_order["work_date"].isoformat()
+                
             return existing_order
         
         # Create new daily work order
