@@ -2566,6 +2566,8 @@ const WorkOrders = () => {
           <strong>عدد الفواتير:</strong> ${workOrderInvoices.length}<br>
           <strong>إجمالي المبلغ:</strong> ج.م ${totalAmount.toFixed(2)}
           ${workOrder.description ? `<br><strong>الوصف:</strong> ${workOrder.description}` : ''}
+          ${workOrder.supervisor_name ? `<br><strong>المشرف على التصنيع:</strong> ${workOrder.supervisor_name}` : ''}
+          ${workOrder.is_daily ? `<br><strong>نوع الأمر:</strong> أمر شغل يومي تلقائي` : ''}
         </div>
 
         <h3 style="color: #333; margin-bottom: 10px;">الفواتير المدرجة:</h3>
