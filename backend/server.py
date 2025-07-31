@@ -208,6 +208,8 @@ class InvoiceCreate(BaseModel):
     customer_name: str
     items: List[InvoiceItem]
     payment_method: PaymentMethod
+    discount_type: Optional[str] = "amount"  # نوع الخصم: amount أو percentage
+    discount_value: Optional[float] = 0.0  # القيمة المدخلة للخصم
     notes: Optional[str] = None
 
 class PaymentCreate(BaseModel):
