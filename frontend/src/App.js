@@ -2160,9 +2160,11 @@ const Invoices = () => {
     if (!confirm('هل أنت متأكد من حذف جميع الفواتير؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     
     try {
-      setInvoices([]);
+      await axios.delete(`${API}/invoices/clear-all`);
+      fetchInvoices();
       alert('تم حذف جميع الفواتير');
     } catch (error) {
+      console.error('Error clearing invoices:', error);
       alert('حدث خطأ في حذف البيانات');
     }
   };
