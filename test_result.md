@@ -324,6 +324,18 @@ frontend:
         agent: "testing"
         comment: "✅ تم اختبار وظيفة أمر الشغل اليومي التلقائي بنجاح! جميع الاختبارات الـ6 نجحت بنسبة 100%. تم التأكد من: 1) إنشاء أمر شغل يومي تلقائياً عند إنشاء أول فاتورة مع اسم المشرف، 2) إضافة الفواتير التالية في نفس اليوم لنفس أمر الشغل، 3) تحديث المجاميع (total_amount, total_items) بشكل صحيح، 4) API الحصول على أمر الشغل اليومي يعمل بشكل مثالي، 5) إنشاء أوامر شغل منفصلة لأيام مختلفة، 6) دعم جميع الحقول الجديدة في WorkOrder Model (supervisor_name, is_daily, work_date, invoices, total_amount, total_items). تم إصلاح مشكلة تسلسل التواريخ في JSON."
 
+  - task: "Work Order Unit Code Fix - إصلاح كود الوحدة في أمر الشغل"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py + /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main" 
+        comment: "تم إصلاح نموذج InvoiceItem لدعم material_details - هذا سيحل مشكلة عدم حفظ بيانات الخامة المختارة في فحص التوافق"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
