@@ -242,6 +242,46 @@ async def login(username: str, password: str):
     
     raise HTTPException(status_code=401, detail="خطأ في اسم المستخدم أو كلمة المرور")
 
+# User management endpoints
+@api_router.post("/users", response_model=User)
+async def create_user(user: User):
+    # Check if username already exists
+    existing_user = await db.users.find_one({"username": user.username})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="اسم المستخدم موجود بالفعل")
+    
+    await db.users.insert_one(user.dict())
+    return user
+
+@api_router.get("/users", response_model=List[User])
+async def get_users():
+    users = await db.users.find().to_list(1000)
+    return [User(**user) for user in users]
+
+@api_router.get("/users/{user_id}", response_model=User)
+async def get_user(user_id: str):
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    return User(**user)
+
+@api_router.put("/users/{user_id}")
+async def update_user(user_id: str, user: User):
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": user.dict()}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    return {"message": "تم تحديث المستخدم بنجاح"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str):
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    return {"message": "تم حذف المستخدم بنجاح"}
+
 # Dashboard endpoints
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats():
