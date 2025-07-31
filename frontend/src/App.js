@@ -3628,7 +3628,7 @@ const Users = () => {
           username: 'Root', 
           role: 'user', 
           created_at: new Date().toISOString(),
-          permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'work-orders']
+          permissions: ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders']
         }
       ]);
     }
