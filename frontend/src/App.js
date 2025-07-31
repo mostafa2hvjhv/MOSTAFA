@@ -1306,7 +1306,9 @@ const Inventory = () => {
                       <button className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
                         تعديل
                       </button>
-                      <button className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
+                      <button 
+                        onClick={() => deleteFinishedProduct(product.id)}
+                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
                         حذف
                       </button>
                     </div>
