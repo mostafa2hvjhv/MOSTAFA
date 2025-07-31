@@ -321,6 +321,21 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Work Order Print functionality - طباعة أمر الشغل"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "المستخدم أبلغ أن طباعة أمر الشغل لا تعمل"
+      - working: true
+        agent: "main"
+        comment: "تم إنشاء دالة printWorkOrder وربطها بالزر. الدالة تطبع تفاصيل كاملة لأمر الشغل مع الفواتير والمنتجات"
+
 agent_communication:
   - agent: "main"
     message: "تم بناء النظام الأساسي بنجاح. الواجهة تعمل بشكل ممتاز مع نظام المصادقة ولوحة التحكم وصفحة المبيعات. تم اختبار جميع APIs الخلفية بنجاح."
