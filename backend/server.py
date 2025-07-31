@@ -759,6 +759,10 @@ async def get_or_create_daily_work_order(work_date: str, supervisor_name: str = 
         work_order_dict = work_order.dict()
         if "_id" in work_order_dict:
             del work_order_dict["_id"]
+        
+        # Convert date to string for JSON serialization
+        if "work_date" in work_order_dict and work_order_dict["work_date"]:
+            work_order_dict["work_date"] = work_order_dict["work_date"].isoformat() if hasattr(work_order_dict["work_date"], 'isoformat') else str(work_order_dict["work_date"])
             
         return work_order_dict
         
