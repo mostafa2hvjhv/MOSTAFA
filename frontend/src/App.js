@@ -237,7 +237,7 @@ const Dashboard = () => {
       await axios.delete(`${API}/work-orders/clear-all`);
       
       // Refresh dashboard stats
-      fetchDashboardStats();
+      fetchStats();
       
       alert('تم حذف جميع البيانات');
     } catch (error) {
