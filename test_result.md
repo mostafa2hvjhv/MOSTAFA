@@ -309,6 +309,21 @@ frontend:
         agent: "testing"
         comment: "✅ تم اختبار جميع الصفحات الأخرى بنجاح - جميع الصفحات (المخزون، الآجل، المصروفات، الإيرادات، الفواتير، أمر شغل، المستخدمين) تفتح بشكل صحيح وتعرض العناوين المناسبة باللغة العربية. الصفحات تحتوي على رسائل 'قيد التطوير' كما هو متوقع للنسخة الأولية."
 
+  - task: "JSX Style Syntax Fix - إصلاح خطأ JSX في المبيعات"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "المستخدم أبلغ عن خطأ JavaScript في صفحة المبيعات عند الضغط على زر 'إضافة للفاتورة' - رسالة خطأ تشير إلى مشكلة في style prop"
+      - working: true
+        agent: "main"
+        comment: "تم تحديد وإصلاح المشكلة: خطأ JSX في السطر 1163 حيث كان style='display: none;' (string) يجب أن يكون style={{display: 'none'}} (object). تم إصلاح الخطأ وإعادة تشغيل الخدمات بنجاح"
+
   - task: "Daily Work Order functionality - أمر الشغل اليومي التلقائي"
     implemented: true
     working: true
