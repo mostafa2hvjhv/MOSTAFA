@@ -1197,11 +1197,20 @@ class MasterSealAPITester:
         self.test_dashboard_stats()
         self.test_customer_management()
         self.test_raw_materials_management()
+        self.test_finished_products_management()
+        self.test_user_management()
         self.test_compatibility_check()
         self.test_invoice_management()
         self.test_payment_management()
         self.test_expense_management()
+        self.test_work_orders_management()
         self.test_inventory_update_logic()
+        
+        # Test delete functionality - the main focus
+        print("\n" + "🗑️" * 20 + " DELETE FUNCTIONALITY TESTS " + "🗑️" * 20)
+        self.test_individual_delete_apis()
+        self.test_delete_error_handling()
+        self.test_clear_all_apis()
         
         # Print summary
         print("\n" + "=" * 60)
