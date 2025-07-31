@@ -161,7 +161,7 @@ class WorkOrder(BaseModel):
     description: Optional[str] = None
     supervisor_name: Optional[str] = None  # اسم المشرف على التصنيع
     is_daily: bool = False  # هل هو أمر شغل يومي تلقائي
-    work_date: Optional[date] = None  # تاريخ العمل للأوامر اليومية
+    work_date: Optional[str] = None  # تاريخ العمل للأوامر اليومية (stored as string)
     invoices: List[Dict[str, Any]] = Field(default_factory=list)  # الفواتير المرتبطة
     total_amount: float = 0.0
     total_items: int = 0
