@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://8e377b14-d41b-4b7b-943e-e8967dfb230e.preview.emergentagent.com/api"
+BACKEND_URL = "https://7194fb5a-e781-47eb-a7a7-f1f4c1a30a57.preview.emergentagent.com/api"
 
 class BugFixesTester:
     def __init__(self):
