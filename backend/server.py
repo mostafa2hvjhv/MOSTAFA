@@ -926,6 +926,127 @@ async def add_invoice_to_work_order(work_order_id: str, invoice_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Treasury Management APIs
+@api_router.get("/treasury/transactions")
+async def get_treasury_transactions():
+    """Get all treasury transactions"""
+    try:
+        transactions = await db.treasury_transactions.find().sort("date", -1).to_list(1000)
+        
+        # Clean up MongoDB ObjectIds
+        for transaction in transactions:
+            if "_id" in transaction:
+                del transaction["_id"]
+                
+        return transactions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/treasury/transactions")
+async def create_treasury_transaction(transaction: TreasuryTransactionCreate):
+    """Create a new treasury transaction"""
+    try:
+        transaction_obj = TreasuryTransaction(**transaction.dict())
+        await db.treasury_transactions.insert_one(transaction_obj.dict())
+        
+        transaction_dict = transaction_obj.dict()
+        if "_id" in transaction_dict:
+            del transaction_dict["_id"]
+            
+        return transaction_dict
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/treasury/transfer")
+async def transfer_funds(transfer: TransferRequest):
+    """Transfer funds between accounts"""
+    try:
+        # Create outgoing transaction
+        out_transaction = TreasuryTransaction(
+            account_id=transfer.from_account,
+            transaction_type="transfer_out",
+            amount=transfer.amount,
+            description=f"تحويل إلى حساب {transfer.to_account}",
+            reference=transfer.notes or "تحويل داخلي"
+        )
+        
+        # Create incoming transaction
+        in_transaction = TreasuryTransaction(
+            account_id=transfer.to_account,
+            transaction_type="transfer_in",
+            amount=transfer.amount,
+            description=f"تحويل من حساب {transfer.from_account}",
+            reference=transfer.notes or "تحويل داخلي",
+            related_transaction_id=out_transaction.id
+        )
+        
+        # Link transactions
+        out_transaction.related_transaction_id = in_transaction.id
+        
+        # Save both transactions
+        await db.treasury_transactions.insert_one(out_transaction.dict())
+        await db.treasury_transactions.insert_one(in_transaction.dict())
+        
+        return {"message": "تم التحويل بنجاح", "transfer_id": out_transaction.id}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/treasury/balances")
+async def get_account_balances():
+    """Get current balances for all accounts"""
+    try:
+        # Get all transactions
+        transactions = await db.treasury_transactions.find().to_list(10000)
+        
+        # Get invoice data for automatic transactions
+        invoices = await db.invoices.find().to_list(1000)
+        expenses = await db.expenses.find().to_list(1000)
+        
+        # Calculate balances
+        account_balances = {
+            'cash': 0,
+            'vodafone_elsawy': 0,
+            'vodafone_wael': 0,
+            'deferred': 0,
+            'instapay': 0
+        }
+        
+        # Add invoice amounts
+        payment_method_map = {
+            'نقدي': 'cash',
+            'فودافون كاش محمد الصاوي': 'vodafone_elsawy',
+            'فودافون كاش وائل محمد': 'vodafone_wael',
+            'آجل': 'deferred',
+            'انستاباي': 'instapay'
+        }
+        
+        for invoice in invoices:
+            account_id = payment_method_map.get(invoice.get('payment_method'))
+            if account_id:
+                account_balances[account_id] += invoice.get('total_amount', 0)
+        
+        # Subtract expenses from cash
+        for expense in expenses:
+            account_balances['cash'] -= expense.get('amount', 0)
+        
+        # Apply manual transactions
+        for transaction in transactions:
+            account_id = transaction.get('account_id')
+            if account_id in account_balances:
+                amount = transaction.get('amount', 0)
+                transaction_type = transaction.get('transaction_type')
+                
+                if transaction_type in ['income', 'transfer_in']:
+                    account_balances[account_id] += amount
+                elif transaction_type in ['expense', 'transfer_out']:
+                    account_balances[account_id] -= amount
+        
+        return account_balances
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
