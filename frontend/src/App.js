@@ -3010,9 +3010,9 @@ const WorkOrders = () => {
                     ${item.material_details ? 
                       (item.material_details.is_finished_product ? 
                         'مخزن انتاج تام' : 
-                        `${item.material_details.unit_code}<br><small style="color: #666;">${item.material_details.inner_diameter}×${item.material_details.outer_diameter}×${item.material_details.height}</small>`
+                        `${item.material_details.unit_code} / ${item.material_details.inner_diameter}-${item.material_details.outer_diameter}`
                       ) : 
-                      (item.material_used || 'غير محدد')
+                      `${item.material_used || 'غير محدد'} / معلومات غير متوفرة`
                     }
                   </td>
                 </tr>
