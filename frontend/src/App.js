@@ -4223,13 +4223,12 @@ const Users = () => {
         ? allPermissions.map(p => p.key)
         : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders'];
 
+      // Let backend generate ID and created_at
       const user = {
-        id: Date.now().toString(),
         username: newUser.username,
         password: newUser.password,
         role: newUser.role,
-        permissions: defaultPermissions,
-        created_at: new Date().toISOString()
+        permissions: defaultPermissions
       };
 
       await axios.post(`${API}/users`, user);
@@ -4238,7 +4237,7 @@ const Users = () => {
       alert('تم إضافة المستخدم بنجاح');
     } catch (error) {
       console.error('Error adding user:', error);
-      alert('حدث خطأ في إضافة المستخدم');
+      alert('حدث خطأ في إضافة المستخدم: ' + (error.response?.data?.detail || error.message));
     }
   };
 
