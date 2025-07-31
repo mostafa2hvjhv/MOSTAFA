@@ -330,8 +330,21 @@ metadata:
   test_sequence: 4
   run_ui: true
 
+  - task: "Multiple Bug Fixes - إصلاح مشاكل متعددة"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py + /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "تم إصلاح 3 مشاكل: 1) صفحة الآجل (تحديث فلتر الفواتير) 2) الخزينة (إضافة APIs لحفظ التحويلات) 3) فحص التوافق (تحسين validation)"
+
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Multiple Bug Fixes - إصلاح مشاكل متعددة"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
