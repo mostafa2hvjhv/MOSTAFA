@@ -4713,14 +4713,16 @@ const Users = () => {
 
 // Main App Component
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('sales'); // Default to sales instead of dashboard
   const { user } = useAuth();
 
   if (!user) return <Login />;
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard': return <Dashboard />;
+      case 'dashboard': 
+        // Only Elsawy can access dashboard
+        return user?.username === 'Elsawy' ? <Dashboard /> : <Sales />;
       case 'sales': return <Sales />;
       case 'inventory': return <Inventory />;
       case 'deferred': return <Deferred />;
@@ -4730,7 +4732,7 @@ const App = () => {
       case 'invoices': return <Invoices />;
       case 'work-orders': return <WorkOrders />;
       case 'users': return <Users />;
-      default: return <Dashboard />;
+      default: return <Sales />; // Default to sales instead of dashboard
     }
   };
 
