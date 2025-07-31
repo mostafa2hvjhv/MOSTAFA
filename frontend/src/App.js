@@ -2831,7 +2831,9 @@ const Invoices = () => {
                 <th className="border border-gray-300 p-2">العميل</th>
                 <th className="border border-gray-300 p-2">التاريخ</th>
                 <th className="border border-gray-300 p-2">طريقة الدفع</th>
-                <th className="border border-gray-300 p-2">الإجمالي</th>
+                <th className="border border-gray-300 p-2">المجموع الفرعي</th>
+                <th className="border border-gray-300 p-2">الخصم</th>  
+                <th className="border border-gray-300 p-2">الإجمالي النهائي</th>
                 <th className="border border-gray-300 p-2">الحالة</th>
                 <th className="border border-gray-300 p-2">الإجراءات</th>
               </tr>
