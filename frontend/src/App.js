@@ -1527,7 +1527,10 @@ const Deferred = () => {
     try {
       const response = await axios.get(`${API}/invoices`);
       const invoices = response.data.filter(invoice => 
-        invoice.status === 'غير مدفوعة' || invoice.status === 'مدفوعة جزئياً'
+        invoice.status === 'غير مدفوعة' || 
+        invoice.status === 'مدفوعة جزئياً' || 
+        invoice.status === 'انتظار' ||
+        invoice.remaining_amount > 0
       );
       setUnpaidInvoices(invoices);
     } catch (error) {
