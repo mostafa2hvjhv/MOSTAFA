@@ -358,6 +358,11 @@ async def update_raw_material(material_id: str, material: RawMaterialCreate):
         raise HTTPException(status_code=404, detail="المادة غير موجودة")
     return {"message": "تم تحديث المادة بنجاح"}
 
+@api_router.delete("/raw-materials/clear-all")
+async def clear_all_raw_materials():
+    result = await db.raw_materials.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} مادة خام", "deleted_count": result.deleted_count}
+
 @api_router.delete("/raw-materials/{material_id}")
 async def delete_raw_material(material_id: str):
     result = await db.raw_materials.delete_one({"id": material_id})
