@@ -2936,6 +2936,12 @@ const WorkOrders = () => {
                   {workOrder.description && (
                     <p><strong>الوصف:</strong> {workOrder.description}</p>
                   )}
+                  {workOrder.supervisor_name && (
+                    <p><strong>المشرف على التصنيع:</strong> {workOrder.supervisor_name}</p>
+                  )}
+                  {workOrder.is_daily && (
+                    <p><strong>نوع الأمر:</strong> <span className="text-green-600">أمر شغل يومي تلقائي</span></p>
+                  )}
                 </div>
               </div>
               
