@@ -1699,6 +1699,10 @@ class MasterSealAPITester:
         print("\n" + "📋" * 20 + " DAILY WORK ORDER TESTS " + "📋" * 20)
         self.test_daily_work_order_functionality()
         
+        # Test material details functionality (Unit Code Fix)
+        print("\n" + "🔧" * 20 + " MATERIAL DETAILS TESTS " + "🔧" * 20)
+        self.test_material_details_functionality()
+        
         # Test delete functionality - the main focus
         print("\n" + "🗑️" * 20 + " DELETE FUNCTIONALITY TESTS " + "🗑️" * 20)
         self.test_individual_delete_apis()
