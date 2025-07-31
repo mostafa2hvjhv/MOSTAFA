@@ -3028,7 +3028,7 @@ const Users = () => {
     alert('تم تحديث المستخدم بنجاح');
   };
 
-  const deleteUser = (userId) => {
+  const deleteUser = async (userId) => {
     if (userId === '1' || userId === '2') {
       alert('لا يمكن حذف المستخدمين الأساسيين');
       return;
@@ -3036,8 +3036,14 @@ const Users = () => {
 
     if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
-    setUsers(users.filter(user => user.id !== userId));
-    alert('تم حذف المستخدم بنجاح');
+    try {
+      await axios.delete(`${API}/users/${userId}`);
+      fetchUsers();
+      alert('تم حذف المستخدم بنجاح');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('حدث خطأ في حذف المستخدم');
+    }
   };
 
   const resetPassword = (userId) => {
