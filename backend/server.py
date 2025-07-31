@@ -275,6 +275,12 @@ async def update_user(user_id: str, user: User):
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     return {"message": "تم تحديث المستخدم بنجاح"}
 
+@api_router.delete("/users/clear-all")
+async def clear_all_users():
+    # Don't delete default users, only custom ones
+    result = await db.users.delete_many({"username": {"$nin": ["Elsawy", "Root"]}})
+    return {"message": f"تم حذف {result.deleted_count} مستخدم", "deleted_count": result.deleted_count}
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str):
     result = await db.users.delete_one({"id": user_id})
