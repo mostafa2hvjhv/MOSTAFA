@@ -1160,7 +1160,7 @@ const Sales = () => {
               </div>
             </div>
             
-            <div className="text-xl font-bold" style="display: none;">
+            <div className="text-xl font-bold" style={{display: 'none'}}>
               الإجمالي: ج.م {items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)}
             </div>
           </div>
