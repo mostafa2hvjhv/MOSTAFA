@@ -388,7 +388,8 @@ metadata:
         comment: "تم إضافة بند الخصم للفواتير مع دعم الخصم الثابت والنسبة المئوية، تحديث الحسابات والطباعة وعرض الفواتير"
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Invoice Discount Feature - بند الخصم في الفواتير"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
