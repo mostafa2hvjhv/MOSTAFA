@@ -828,10 +828,13 @@ async def get_work_orders():
     try:
         orders = await db.work_orders.find().sort("created_at", -1).to_list(1000)
         
-        # Clean up MongoDB ObjectIds
+        # Clean up MongoDB ObjectIds and handle date serialization
         for order in orders:
             if "_id" in order:
                 del order["_id"]
+            # Convert date to string for JSON serialization
+            if "work_date" in order and order["work_date"]:
+                order["work_date"] = order["work_date"] if isinstance(order["work_date"], str) else order["work_date"].isoformat()
                 
         return orders
     except Exception as e:
