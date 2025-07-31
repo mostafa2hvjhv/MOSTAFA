@@ -579,6 +579,11 @@ async def get_expenses():
     expenses = await db.expenses.find().sort("date", -1).to_list(1000)
     return [Expense(**expense) for expense in expenses]
 
+@api_router.delete("/expenses/clear-all")
+async def clear_all_expenses():
+    result = await db.expenses.delete_many({})
+    return {"message": f"تم حذف {result.deleted_count} مصروف", "deleted_count": result.deleted_count}
+
 @api_router.delete("/expenses/{expense_id}")
 async def delete_expense(expense_id: str):
     result = await db.expenses.delete_one({"id": expense_id})
