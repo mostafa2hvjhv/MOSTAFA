@@ -3710,6 +3710,13 @@ const Treasury = () => {
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
             طباعة تقرير
           </button>
+          {user?.username === 'Elsawy' && selectedAccount === 'yad_elsawy' && selectedAccountData?.balance > 0 && (
+            <button 
+              onClick={() => clearAccount(selectedAccount)}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+              تصفير حساب يد الصاوي
+            </button>
+          )}
         </div>
       </div>
 
