@@ -1105,4 +1105,4 @@ if __name__ == "__main__":
     success_rate = tester.run_all_tests()
     
     # Exit with appropriate code
-    sys.exit(0 if success_rate >= 80 else 1)
+    sys.exit(0 if success_rate and success_rate >= 80 else 1)
