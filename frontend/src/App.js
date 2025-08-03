@@ -241,10 +241,8 @@ const Inventory = () => {
     material_type: 'NBR',
     inner_diameter: '',
     outer_diameter: '',
-    available_height: '',
-    min_stock_level: 10,
-    max_stock_level: 1000,
-    unit_code: '',
+    available_pieces: '',  // تغيير من available_height إلى available_pieces
+    min_stock_level: 2,    // الحد الأدنى 2 قطعة
     notes: ''
   });
   const [newTransaction, setNewTransaction] = useState({
@@ -252,7 +250,7 @@ const Inventory = () => {
     inner_diameter: '',
     outer_diameter: '',
     transaction_type: 'in',
-    height_change: '',
+    pieces_change: '',     // تغيير من height_change إلى pieces_change
     reason: '',
     notes: ''
   });
