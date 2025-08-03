@@ -367,8 +367,9 @@ const Inventory = () => {
 
   // Filter items based on search
   const filteredItems = inventoryItems.filter(item =>
-    item.unit_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.inner_diameter.toString().includes(searchTerm.toLowerCase()) ||
+    item.outer_diameter.toString().includes(searchTerm.toLowerCase()) ||
     item.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
