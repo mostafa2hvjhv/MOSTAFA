@@ -2949,6 +2949,18 @@ class MasterSealAPITester:
         self.test_delete_error_handling()
         self.test_clear_all_apis()
         
+        # NEW: Local Products Management APIs Testing
+        print("\n" + "🏪" * 20 + " LOCAL PRODUCTS MANAGEMENT TESTS " + "🏪" * 20)
+        self.test_suppliers_management()
+        self.test_local_products_management()
+        self.test_supplier_transactions()
+        self.test_supplier_payment_integration()
+        self.test_complete_supplier_workflow()
+        
+        # Test the task that needs retesting
+        print("\n" + "🔒" * 20 + " DASHBOARD ACCESS RESTRICTION TEST " + "🔒" * 20)
+        self.test_dashboard_access_restriction()
+        
         # Print summary
         return self.print_summary()
 
