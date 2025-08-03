@@ -1937,13 +1937,24 @@ const Sales = () => {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">اسم المنتج</label>
+                  <label className="block text-sm font-medium mb-1">مقاس المنتج</label>
                   <input
                     type="text"
-                    value={localProduct.name}
-                    onChange={(e) => setLocalProduct({...localProduct, name: e.target.value})}
+                    value={localProduct.product_size}
+                    onChange={(e) => setLocalProduct({...localProduct, product_size: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="اسم المنتج المحلي"
+                    placeholder="مقاس المنتج"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">نوع المنتج</label>
+                  <input
+                    type="text"
+                    value={localProduct.product_type}
+                    onChange={(e) => setLocalProduct({...localProduct, product_type: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="نوع المنتج"
                   />
                 </div>
                 
