@@ -245,6 +245,44 @@ class TreasuryTransaction(BaseModel):
     date: datetime = Field(default_factory=datetime.utcnow)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Supplier and Local Product Models
+class Supplier(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    total_purchases: Optional[float] = 0.0  # إجمالي المشتريات
+    total_paid: Optional[float] = 0.0  # إجمالي المدفوع
+    balance: Optional[float] = 0.0  # الرصيد المستحق
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class LocalProduct(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    supplier_id: str
+    supplier_name: str
+    purchase_price: float
+    selling_price: float
+    current_stock: Optional[int] = 0
+    total_purchased: Optional[int] = 0
+    total_sold: Optional[int] = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SupplierTransaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    supplier_id: str
+    supplier_name: str
+    transaction_type: str  # "purchase" or "payment"
+    amount: float
+    description: str
+    product_name: Optional[str] = None  # للمشتريات
+    quantity: Optional[int] = None  # للمشتريات
+    unit_price: Optional[float] = None  # للمشتريات
+    payment_method: Optional[str] = None  # للدفعات
+    reference_invoice_id: Optional[str] = None  # مرجع الفاتورة إذا كان من بيع منتج محلي
+    date: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class TreasuryTransactionCreate(BaseModel):
     account_id: str
     transaction_type: str
