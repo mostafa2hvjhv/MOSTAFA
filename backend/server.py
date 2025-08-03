@@ -289,10 +289,9 @@ class InventoryItem(BaseModel):
     material_type: MaterialType
     inner_diameter: float
     outer_diameter: float
-    available_height: float  # الارتفاع المتاح في الجرد
-    min_stock_level: Optional[float] = 10.0  # الحد الأدنى للمخزون
-    max_stock_level: Optional[float] = 1000.0  # الحد الأقصى للمخزون
-    unit_code: str  # كود مميز للعنصر
+    available_pieces: int  # تغيير من available_height إلى available_pieces
+    min_stock_level: Optional[int] = 2  # الحد الأدنى 2 قطعة
+    # إزالة max_stock_level و unit_code
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
@@ -304,8 +303,8 @@ class InventoryTransaction(BaseModel):
     inner_diameter: float
     outer_diameter: float
     transaction_type: str  # "in" (إضافة) أو "out" (استهلاك)
-    height_change: float  # التغيير في الارتفاع (موجب للإضافة، سالب للاستهلاك)
-    remaining_height: float  # الارتفاع المتبقي بعد المعاملة
+    pieces_change: int  # التغيير في عدد القطع (موجب للإضافة، سالب للاستهلاك)
+    remaining_pieces: int  # عدد القطع المتبقية بعد المعاملة
     reason: str  # سبب المعاملة
     reference_id: Optional[str] = None  # مرجع المعاملة (فاتورة، طلب خام، إلخ)
     notes: Optional[str] = None
