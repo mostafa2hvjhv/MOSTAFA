@@ -518,13 +518,13 @@ async def create_raw_material(material: RawMaterialCreate):
             material_type=material.material_type,
             inner_diameter=material.inner_diameter,
             outer_diameter=material.outer_diameter,
-            required_height=material.height * material.pieces_count
+            required_pieces=material.pieces_count
         )
         
         if not inventory_check["available"]:
             raise HTTPException(
                 status_code=400, 
-                detail=f"لا يمكن إضافة المادة الخام. {inventory_check['message']}. المطلوب: {material.height * material.pieces_count} مم، المتاح: {inventory_check['available_height']} مم"
+                detail=f"لا يمكن إضافة المادة الخام. {inventory_check['message']}. المطلوب: {material.pieces_count} قطعة، المتاح: {inventory_check['available_pieces']} قطعة"
             )
         
         # Create raw material
