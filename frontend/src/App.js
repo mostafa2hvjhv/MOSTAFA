@@ -630,6 +630,7 @@ const Sales = () => {
         setSelectedCustomer('');
         setNewCustomer('');
         setSupervisorName('');
+        setInvoiceTitle(''); // مسح عنوان الفاتورة
         setPaymentMethod('نقدي');
         setDiscount(0);
         setDiscountType('amount');
