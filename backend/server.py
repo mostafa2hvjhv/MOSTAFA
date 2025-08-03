@@ -1764,7 +1764,25 @@ async def get_inventory_transactions_by_item(item_id: str):
         transactions = await db.inventory_transactions.find(
             {"inventory_item_id": item_id}
         ).sort("date", -1).to_list(None)
-        return transactions
+        
+        # Clean transactions for response - handle old schema compatibility
+        cleaned_transactions = []
+        for transaction in transactions:
+            # Handle old schema fields
+            if "height_change" in transaction and "pieces_change" not in transaction:
+                transaction["pieces_change"] = transaction.get("height_change", 0)
+            if "remaining_height" in transaction and "remaining_pieces" not in transaction:
+                transaction["remaining_pieces"] = transaction.get("remaining_height", 0)
+            
+            # Ensure required fields exist
+            if "pieces_change" not in transaction:
+                transaction["pieces_change"] = 0
+            if "remaining_pieces" not in transaction:
+                transaction["remaining_pieces"] = 0
+                
+            cleaned_transactions.append(transaction)
+            
+        return cleaned_transactions
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
