@@ -3993,6 +3993,12 @@ const Invoices = () => {
                         طباعة
                       </button>
                       <button
+                        onClick={() => startEditInvoice(invoice)}
+                        className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600"
+                      >
+                        تعديل
+                      </button>
+                      <button
                         onClick={() => deleteInvoice(invoice.id)}
                         className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
                       >
