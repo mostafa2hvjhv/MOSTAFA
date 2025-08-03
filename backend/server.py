@@ -680,7 +680,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             discount_amount = invoice.discount_value
     
     total_after_discount = subtotal - discount_amount
-    remaining_amount = total_after_discount if invoice.payment_method == PaymentMethod.DEFERRED else 0
+    remaining_amount = total_after_discount if str(invoice.payment_method) == "آجل" else 0
     status = InvoiceStatus.PENDING  # Always start with PENDING status
     
     invoice_dict = invoice.dict()
