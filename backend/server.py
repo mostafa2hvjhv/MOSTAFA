@@ -849,6 +849,49 @@ async def update_invoice_status(invoice_id: str, request: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.put("/invoices/{invoice_id}")
+async def update_invoice(invoice_id: str, invoice_update: dict):
+    """Update invoice details"""
+    try:
+        # Find existing invoice
+        existing_invoice = await db.invoices.find_one({"id": invoice_id})
+        if not existing_invoice:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+        
+        # Calculate totals if items are provided
+        if 'items' in invoice_update:
+            subtotal = sum(item.get('total_price', 0) for item in invoice_update['items'])
+            discount_amount = invoice_update.get('discount', 0)
+            
+            if 'discount_type' in invoice_update and 'discount_value' in invoice_update:
+                if invoice_update['discount_type'] == 'percentage':
+                    discount_amount = (subtotal * float(invoice_update['discount_value'])) / 100
+                else:
+                    discount_amount = float(invoice_update['discount_value'])
+            
+            total_after_discount = subtotal - discount_amount
+            
+            # Update calculated fields
+            invoice_update.update({
+                'subtotal': subtotal,
+                'discount': discount_amount,
+                'total_after_discount': total_after_discount,
+                'total_amount': total_after_discount
+            })
+        
+        # Update the invoice
+        result = await db.invoices.update_one(
+            {"id": invoice_id},
+            {"$set": invoice_update}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+        
+        return {"message": "تم تحديث الفاتورة بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Payment endpoints
 @api_router.post("/payments", response_model=Payment)
 async def create_payment(payment: PaymentCreate):
