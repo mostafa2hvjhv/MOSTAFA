@@ -549,7 +549,7 @@ const Inventory = () => {
                     <th className="border border-gray-300 p-2">نوع المادة</th>
                     <th className="border border-gray-300 p-2">المقاسات</th>
                     <th className="border border-gray-300 p-2">نوع المعاملة</th>
-                    <th className="border border-gray-300 p-2">مقدار التغيير</th>
+                    <th className="border border-gray-300 p-2">عدد القطع</th>
                     <th className="border border-gray-300 p-2">الرصيد المتبقي</th>
                     <th className="border border-gray-300 p-2">السبب</th>
                     <th className="border border-gray-300 p-2">ملاحظات</th>
@@ -575,12 +575,12 @@ const Inventory = () => {
                         </span>
                       </td>
                       <td className={`border border-gray-300 p-2 font-semibold ${
-                        transaction.height_change > 0 ? 'text-green-600' : 'text-red-600'
+                        transaction.pieces_change > 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {transaction.height_change > 0 ? '+' : ''}{transaction.height_change.toFixed(2)} مم
+                        {transaction.pieces_change > 0 ? '+' : ''}{transaction.pieces_change} قطعة
                       </td>
                       <td className="border border-gray-300 p-2 font-semibold">
-                        {transaction.remaining_height.toFixed(2)} مم
+                        {transaction.remaining_pieces} قطعة
                       </td>
                       <td className="border border-gray-300 p-2">{transaction.reason}</td>
                       <td className="border border-gray-300 p-2">{transaction.notes || '-'}</td>
