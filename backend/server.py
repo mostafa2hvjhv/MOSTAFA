@@ -540,10 +540,10 @@ async def create_raw_material(material: RawMaterialCreate):
             inner_diameter=material.inner_diameter,
             outer_diameter=material.outer_diameter,
             transaction_type="out",
-            height_change=-deduction_amount,
+            pieces_change=-material.pieces_count,
             reason=f"إضافة مادة خام جديدة: {material.unit_code}",
             reference_id=material_obj.id,
-            notes=f"خصم {deduction_amount} مم لإنتاج {material.pieces_count} قطعة بارتفاع {material.height} مم لكل قطعة"
+            notes=f"خصم {material.pieces_count} قطعة لإنتاج {material.pieces_count} قطعة بارتفاع {material.height} مم لكل قطعة"
         )
         
         # Create inventory transaction
