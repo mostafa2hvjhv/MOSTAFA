@@ -927,6 +927,16 @@ async def create_payment(payment: PaymentCreate):
         }}
     )
     
+    # Add treasury transaction for the payment
+    treasury_transaction = TreasuryTransaction(
+        account_id=str(payment.payment_method).lower(),  # Convert payment method to account ID
+        transaction_type="income",
+        amount=payment.amount,
+        description=f"دفع فاتورة {invoice['invoice_number']} - {invoice['customer_name']}",
+        reference=f"payment_{payment_obj.id}"
+    )
+    await db.treasury_transactions.insert_one(treasury_transaction.dict())
+    
     await db.payments.insert_one(payment_obj.dict())
     return payment_obj
 
