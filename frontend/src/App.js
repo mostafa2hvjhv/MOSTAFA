@@ -5281,6 +5281,7 @@ const App = () => {
         return user?.username === 'Elsawy' ? <Dashboard /> : <Sales />;
       case 'sales': return <Sales />;
       case 'inventory': return <Inventory />;
+      case 'local': return <Local />;
       case 'deferred': return <Deferred />;
       case 'expenses': return <Expenses />;
       case 'revenue': return <Revenue />;
