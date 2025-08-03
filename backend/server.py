@@ -938,10 +938,10 @@ async def create_payment(payment: PaymentCreate):
     # Add treasury transaction for the payment
     payment_method_mapping = {
         "نقدي": "cash",
-        "فودافون كاش الصاوي": "vodafone_elsawy", 
-        "فودافون كاش وائل": "vodafone_wael",
-        "انستا باي": "instapay",
-        "Yad_Elsawy": "yad_elsawy"
+        "فودافون كاش محمد الصاوي": "vodafone_elsawy", 
+        "فودافون كاش وائل محمد": "vodafone_wael",
+        "انستاباي": "instapay",
+        "يد الصاوي": "yad_elsawy"
     }
     
     account_id = payment_method_mapping.get(str(payment.payment_method), "cash")
