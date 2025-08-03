@@ -2251,6 +2251,440 @@ const Sales = () => {
 // Simple placeholder components for other pages
 // Inventory Component will be replaced with new advanced version above
 
+// Stock Component (Old Inventory functionality for Raw Materials and Finished Products)
+const Stock = () => {
+  const [rawMaterials, setRawMaterials] = useState([]);
+  const [finishedProducts, setFinishedProducts] = useState([]);
+  const [newRawMaterial, setNewRawMaterial] = useState({
+    material_type: 'NBR',
+    inner_diameter: '',
+    outer_diameter: '',
+    height: '',
+    pieces_count: '',
+    unit_code: '',
+    cost_per_mm: ''
+  });
+  const [newFinishedProduct, setNewFinishedProduct] = useState({
+    seal_type: 'RSL',
+    material_type: 'NBR',
+    inner_diameter: '',
+    outer_diameter: '',
+    height: '',
+    quantity: '',
+    unit_price: ''
+  });
+
+  const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
+  const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
+
+  useEffect(() => {
+    fetchRawMaterials();
+    fetchFinishedProducts();
+  }, []);
+
+  const fetchRawMaterials = async () => {
+    try {
+      const response = await axios.get(`${API}/raw-materials`);
+      setRawMaterials(response.data);
+    } catch (error) {
+      console.error('Error fetching raw materials:', error);
+    }
+  };
+
+  const fetchFinishedProducts = async () => {
+    try {
+      const response = await axios.get(`${API}/finished-products`);
+      setFinishedProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching finished products:', error);
+    }
+  };
+
+  const addRawMaterial = async () => {
+    if (!newRawMaterial.inner_diameter || !newRawMaterial.outer_diameter || !newRawMaterial.height || !newRawMaterial.pieces_count || !newRawMaterial.unit_code || !newRawMaterial.cost_per_mm) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      const rawMaterial = {
+        material_type: newRawMaterial.material_type,
+        inner_diameter: parseFloat(newRawMaterial.inner_diameter),
+        outer_diameter: parseFloat(newRawMaterial.outer_diameter),
+        height: parseFloat(newRawMaterial.height),
+        pieces_count: parseInt(newRawMaterial.pieces_count),
+        unit_code: newRawMaterial.unit_code,
+        cost_per_mm: parseFloat(newRawMaterial.cost_per_mm)
+      };
+
+      await axios.post(`${API}/raw-materials`, rawMaterial);
+      fetchRawMaterials();
+      setNewRawMaterial({
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        height: '',
+        pieces_count: '',
+        unit_code: '',
+        cost_per_mm: ''
+      });
+      alert('تمت إضافة المادة الخام بنجاح');
+    } catch (error) {
+      console.error('Error adding raw material:', error);
+      alert('حدث خطأ في إضافة المادة الخام: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const clearAllRawMaterials = async () => {
+    if (!confirm('هل أنت متأكد من حذف جميع المواد الخام؟')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/raw-materials/clear-all`);
+      fetchRawMaterials();
+      alert('تم حذف جميع المواد الخام');
+    } catch (error) {
+      console.error('Error clearing raw materials:', error);
+      alert('حدث خطأ في حذف المواد الخام');
+    }
+  };
+
+  const deleteRawMaterial = async (materialId) => {
+    if (!confirm('هل أنت متأكد من حذف هذه المادة الخام؟')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/raw-materials/${materialId}`);
+      fetchRawMaterials();
+      alert('تم حذف المادة الخام');
+    } catch (error) {
+      console.error('Error deleting raw material:', error);
+      alert('حدث خطأ في حذف المادة الخام');
+    }
+  };
+
+  const addFinishedProduct = async () => {
+    if (!newFinishedProduct.inner_diameter || !newFinishedProduct.outer_diameter || !newFinishedProduct.height || !newFinishedProduct.quantity || !newFinishedProduct.unit_price) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      const finishedProduct = {
+        seal_type: newFinishedProduct.seal_type,
+        material_type: newFinishedProduct.material_type,
+        inner_diameter: parseFloat(newFinishedProduct.inner_diameter),
+        outer_diameter: parseFloat(newFinishedProduct.outer_diameter),
+        height: parseFloat(newFinishedProduct.height),
+        quantity: parseInt(newFinishedProduct.quantity),
+        unit_price: parseFloat(newFinishedProduct.unit_price)
+      };
+
+      await axios.post(`${API}/finished-products`, finishedProduct);
+      fetchFinishedProducts();
+      setNewFinishedProduct({
+        seal_type: 'RSL',
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        height: '',
+        quantity: '',
+        unit_price: ''
+      });
+      alert('تم إضافة المنتج النهائي بنجاح');
+    } catch (error) {
+      console.error('Error adding finished product:', error);
+      alert('حدث خطأ في إضافة المنتج النهائي');
+    }
+  };
+
+  const deleteFinishedProduct = async (productId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج النهائي؟')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/finished-products/${productId}`);
+      fetchFinishedProducts();
+      alert('تم حذف المنتج النهائي');
+    } catch (error) {
+      console.error('Error deleting finished product:', error);
+      alert('حدث خطأ في حذف المنتج النهائي');
+    }
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <h1 className="text-3xl font-bold mb-6">إدارة المخزون</h1>
+      
+      {/* Raw Materials Section */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">مخزون المواد الخام</h3>
+          <button
+            onClick={clearAllRawMaterials}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+          >
+            حذف الكل
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">نوع الخامة</label>
+            <select
+              value={newRawMaterial.material_type}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, material_type: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              {materialTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">القطر الداخلي</label>
+            <input
+              type="number"
+              value={newRawMaterial.inner_diameter}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, inner_diameter: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">القطر الخارجي</label>
+            <input
+              type="number"
+              value={newRawMaterial.outer_diameter}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, outer_diameter: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">الارتفاع (مم)</label>
+            <input
+              type="number"
+              value={newRawMaterial.height}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, height: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">عدد القطع</label>
+            <input
+              type="number"
+              value={newRawMaterial.pieces_count}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, pieces_count: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">كود الوحدة</label>
+            <input
+              type="text"
+              value={newRawMaterial.unit_code}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, unit_code: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">تكلفة المللي</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newRawMaterial.cost_per_mm}
+              onChange={(e) => setNewRawMaterial({...newRawMaterial, cost_per_mm: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+        </div>
+        
+        <button
+          onClick={addRawMaterial}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+        >
+          إضافة مادة خام
+        </button>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">نوع الخامة</th>
+                <th className="border border-gray-300 p-2">القطر الداخلي</th>
+                <th className="border border-gray-300 p-2">القطر الخارجي</th>
+                <th className="border border-gray-300 p-2">الارتفاع</th>
+                <th className="border border-gray-300 p-2">عدد القطع</th>
+                <th className="border border-gray-300 p-2">كود الوحدة</th>
+                <th className="border border-gray-300 p-2">تكلفة المللي</th>
+                <th className="border border-gray-300 p-2">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rawMaterials.map(material => (
+                <tr key={material.id}>
+                  <td className="border border-gray-300 p-2">{material.material_type}</td>
+                  <td className="border border-gray-300 p-2">{material.inner_diameter}</td>
+                  <td className="border border-gray-300 p-2">{material.outer_diameter}</td>
+                  <td className="border border-gray-300 p-2">{material.height}</td>
+                  <td className="border border-gray-300 p-2">{material.pieces_count}</td>
+                  <td className="border border-gray-300 p-2">{material.unit_code}</td>
+                  <td className="border border-gray-300 p-2">{material.cost_per_mm}</td>
+                  <td className="border border-gray-300 p-2">
+                    <button
+                      onClick={() => deleteRawMaterial(material.id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                    >
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Finished Products Section */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">مخزون الإنتاج التام</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">نوع السيل</label>
+            <select
+              value={newFinishedProduct.seal_type}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, seal_type: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              {sealTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">نوع الخامة</label>
+            <select
+              value={newFinishedProduct.material_type}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, material_type: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              {materialTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">القطر الداخلي</label>
+            <input
+              type="number"
+              value={newFinishedProduct.inner_diameter}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, inner_diameter: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">القطر الخارجي</label>
+            <input
+              type="number"
+              value={newFinishedProduct.outer_diameter}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, outer_diameter: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">ارتفاع السيل</label>
+            <input
+              type="number"
+              value={newFinishedProduct.height}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, height: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">الكمية</label>
+            <input
+              type="number"
+              value={newFinishedProduct.quantity}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, quantity: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">سعر الوحدة</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newFinishedProduct.unit_price}
+              onChange={(e) => setNewFinishedProduct({...newFinishedProduct, unit_price: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+        </div>
+        
+        <button
+          onClick={addFinishedProduct}
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-4"
+        >
+          إضافة منتج نهائي
+        </button>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">نوع السيل</th>
+                <th className="border border-gray-300 p-2">نوع الخامة</th>
+                <th className="border border-gray-300 p-2">القطر الداخلي</th>
+                <th className="border border-gray-300 p-2">القطر الخارجي</th>
+                <th className="border border-gray-300 p-2">الارتفاع</th>
+                <th className="border border-gray-300 p-2">الكمية</th>
+                <th className="border border-gray-300 p-2">سعر الوحدة</th>
+                <th className="border border-gray-300 p-2">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {finishedProducts.map(product => (
+                <tr key={product.id}>
+                  <td className="border border-gray-300 p-2">{product.seal_type}</td>
+                  <td className="border border-gray-300 p-2">{product.material_type}</td>
+                  <td className="border border-gray-300 p-2">{product.inner_diameter}</td>
+                  <td className="border border-gray-300 p-2">{product.outer_diameter}</td>
+                  <td className="border border-gray-300 p-2">{product.height}</td>
+                  <td className="border border-gray-300 p-2">{product.quantity}</td>
+                  <td className="border border-gray-300 p-2">{product.unit_price}</td>
+                  <td className="border border-gray-300 p-2">
+                    <button
+                      onClick={() => deleteFinishedProduct(product.id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                    >
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Deferred Payments Component
 const Deferred = () => {
   const [unpaidInvoices, setUnpaidInvoices] = useState([]);
