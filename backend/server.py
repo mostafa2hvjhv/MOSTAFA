@@ -514,10 +514,49 @@ async def delete_customer(customer_id: str):
 # Raw materials endpoints
 @api_router.post("/raw-materials", response_model=RawMaterial)
 async def create_raw_material(material: RawMaterialCreate):
-    material_dict = material.dict()
-    material_obj = RawMaterial(**material_dict)
-    await db.raw_materials.insert_one(material_obj.dict())
-    return material_obj
+    """Create raw material with inventory check"""
+    try:
+        # Check inventory availability
+        inventory_check = await check_inventory_availability(
+            material_type=material.material_type,
+            inner_diameter=material.inner_diameter,
+            outer_diameter=material.outer_diameter,
+            required_height=material.height * material.pieces_count
+        )
+        
+        if not inventory_check["available"]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لا يمكن إضافة المادة الخام. {inventory_check['message']}. المطلوب: {material.height * material.pieces_count} مم، المتاح: {inventory_check['available_height']} مم"
+            )
+        
+        # Create raw material
+        material_dict = material.dict()
+        material_obj = RawMaterial(**material_dict)
+        await db.raw_materials.insert_one(material_obj.dict())
+        
+        # Deduct from inventory
+        deduction_amount = material.height * material.pieces_count
+        inventory_transaction = InventoryTransactionCreate(
+            inventory_item_id=inventory_check["inventory_item_id"],
+            material_type=material.material_type,
+            inner_diameter=material.inner_diameter,
+            outer_diameter=material.outer_diameter,
+            transaction_type="out",
+            height_change=-deduction_amount,
+            reason=f"إضافة مادة خام جديدة: {material.unit_code}",
+            reference_id=material_obj.id,
+            notes=f"خصم {deduction_amount} مم لإنتاج {material.pieces_count} قطعة بارتفاع {material.height} مم لكل قطعة"
+        )
+        
+        # Create inventory transaction
+        await create_inventory_transaction(inventory_transaction)
+        
+        return material_obj
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/raw-materials", response_model=List[RawMaterial])
 async def get_raw_materials():
