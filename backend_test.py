@@ -4177,6 +4177,14 @@ class MasterSealAPITester:
         self.test_work_orders_management()
         self.test_inventory_update_logic()
         
+        # NEW: Inventory Management System Tests (الجرد)
+        print("\n" + "📦" * 20 + " INVENTORY MANAGEMENT TESTS (الجرد) " + "📦" * 20)
+        self.test_inventory_management()
+        self.test_inventory_transactions()
+        self.test_inventory_availability_check()
+        self.test_raw_materials_inventory_integration()
+        self.test_inventory_end_to_end_workflow()
+        
         # Test new daily work order functionality
         print("\n" + "📋" * 20 + " DAILY WORK ORDER TESTS " + "📋" * 20)
         self.test_daily_work_order_functionality()
