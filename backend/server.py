@@ -236,6 +236,9 @@ class PaymentCreate(BaseModel):
     amount: float
     payment_method: PaymentMethod
     notes: Optional[str] = None
+    
+    class Config:
+        use_enum_values = True
 
 class TreasuryTransaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
