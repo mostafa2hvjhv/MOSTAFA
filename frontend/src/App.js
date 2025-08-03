@@ -608,6 +608,8 @@ const Sales = () => {
       const invoiceData = {
         customer_id: customerId,
         customer_name: customerName,
+        invoice_title: invoiceTitle, // عنوان الفاتورة
+        supervisor_name: supervisorName, // اسم المشرف
         items: items,
         payment_method: paymentMethod,
         subtotal: subtotal,
