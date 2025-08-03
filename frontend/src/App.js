@@ -924,93 +924,157 @@ const Sales = () => {
           {/* Conditional Product Forms */}
           {currentItem.product_type === 'manufactured' ? (
             // Manufacturing Product Form
-            <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">نوع السيل</label>
-              <select
-                value={currentItem.seal_type}
-                onChange={(e) => setCurrentItem({...currentItem, seal_type: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              >
-                {sealTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">نوع الخامة</label>
-              <select
-                value={currentItem.material_type}
-                onChange={(e) => setCurrentItem({...currentItem, material_type: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              >
-                {materialTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">القطر الداخلي</label>
-              <input
-                type="number"
-                value={currentItem.inner_diameter}
-                onChange={(e) => setCurrentItem({...currentItem, inner_diameter: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">القطر الخارجي</label>
-              <input
-                type="number"
-                value={currentItem.outer_diameter}
-                onChange={(e) => setCurrentItem({...currentItem, outer_diameter: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">ارتفاع السيل</label>
-              <input
-                type="number"
-                value={currentItem.height}
-                onChange={(e) => setCurrentItem({...currentItem, height: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">عدد السيل</label>
-              <input
-                type="number"
-                value={currentItem.quantity}
-                onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">سعر السيل الواحد</label>
-              <input
-                type="number"
-                step="0.01"
-                value={currentItem.unit_price}
-                onChange={(e) => setCurrentItem({...currentItem, unit_price: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            
-            <div className="flex items-end">
-              <button
-                onClick={checkCompatibility}
-                className="w-full bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600"
-              >
-                فحص التوافق
-              </button>
-            </div>
-          </div>
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">نوع السيل</label>
+                  <select
+                    value={currentItem.seal_type}
+                    onChange={(e) => setCurrentItem({...currentItem, seal_type: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  >
+                    {sealTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">نوع الخامة</label>
+                  <select
+                    value={currentItem.material_type}
+                    onChange={(e) => setCurrentItem({...currentItem, material_type: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  >
+                    {materialTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">القطر الداخلي</label>
+                  <input
+                    type="number"
+                    value={currentItem.inner_diameter}
+                    onChange={(e) => setCurrentItem({...currentItem, inner_diameter: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">القطر الخارجي</label>
+                  <input
+                    type="number"
+                    value={currentItem.outer_diameter}
+                    onChange={(e) => setCurrentItem({...currentItem, outer_diameter: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">ارتفاع السيل</label>
+                  <input
+                    type="number"
+                    value={currentItem.height}
+                    onChange={(e) => setCurrentItem({...currentItem, height: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">عدد السيل</label>
+                  <input
+                    type="number"
+                    value={currentItem.quantity}
+                    onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">سعر السيل الواحد</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={currentItem.unit_price}
+                    onChange={(e) => setCurrentItem({...currentItem, unit_price: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+                
+                <div className="flex items-end">
+                  <button
+                    onClick={checkCompatibility}
+                    className="w-full bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600"
+                  >
+                    فحص التوافق
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            // Local Product Form
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">اسم المنتج</label>
+                  <input
+                    type="text"
+                    value={localProduct.name}
+                    onChange={(e) => setLocalProduct({...localProduct, name: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="اسم المنتج المحلي"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">المورد</label>
+                  <input
+                    type="text"
+                    value={localProduct.supplier}
+                    onChange={(e) => setLocalProduct({...localProduct, supplier: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="اسم المورد"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">سعر الشراء</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={localProduct.purchase_price}
+                    onChange={(e) => setLocalProduct({...localProduct, purchase_price: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="سعر الشراء"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">سعر البيع</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={localProduct.selling_price}
+                    onChange={(e) => setLocalProduct({...localProduct, selling_price: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="سعر البيع"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">الكمية</label>
+                  <input
+                    type="number"
+                    value={currentItem.quantity}
+                    onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </div>
+              </div>
+            </>
+          )}
           
           <button
             onClick={addItem}
