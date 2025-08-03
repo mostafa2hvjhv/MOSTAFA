@@ -608,7 +608,6 @@ const Inventory = () => {
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
                   <tr className="bg-red-50">
-                    <th className="border border-gray-300 p-2">كود الوحدة</th>
                     <th className="border border-gray-300 p-2">نوع المادة</th>
                     <th className="border border-gray-300 p-2">المقاسات</th>
                     <th className="border border-gray-300 p-2">المخزون الحالي</th>
@@ -619,17 +618,16 @@ const Inventory = () => {
                 <tbody>
                   {lowStockItems.map(item => (
                     <tr key={item.id} className="bg-red-50">
-                      <td className="border border-gray-300 p-2 font-semibold">{item.unit_code}</td>
-                      <td className="border border-gray-300 p-2">{item.material_type}</td>
+                      <td className="border border-gray-300 p-2 font-semibold">{item.material_type}</td>
                       <td className="border border-gray-300 p-2">
                         {item.inner_diameter} × {item.outer_diameter}
                       </td>
                       <td className="border border-gray-300 p-2 font-semibold text-red-600">
-                        {item.available_height.toFixed(2)} مم
+                        {item.available_pieces} قطعة
                       </td>
-                      <td className="border border-gray-300 p-2">{item.min_stock_level} مم</td>
+                      <td className="border border-gray-300 p-2">{item.min_stock_level} قطعة</td>
                       <td className="border border-gray-300 p-2 font-semibold text-red-600">
-                        {(item.min_stock_level - item.available_height).toFixed(2)} مم
+                        {Math.max(0, item.min_stock_level - item.available_pieces)} قطعة
                       </td>
                     </tr>
                   ))}
