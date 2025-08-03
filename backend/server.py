@@ -283,6 +283,35 @@ class SupplierTransaction(BaseModel):
     date: datetime = Field(default_factory=datetime.utcnow)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Inventory Management Models
+class InventoryItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    material_type: MaterialType
+    inner_diameter: float
+    outer_diameter: float
+    available_height: float  # الارتفاع المتاح في الجرد
+    min_stock_level: Optional[float] = 10.0  # الحد الأدنى للمخزون
+    max_stock_level: Optional[float] = 1000.0  # الحد الأقصى للمخزون
+    unit_code: str  # كود مميز للعنصر
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_updated: datetime = Field(default_factory=datetime.utcnow)
+
+class InventoryTransaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    inventory_item_id: str
+    material_type: MaterialType
+    inner_diameter: float
+    outer_diameter: float
+    transaction_type: str  # "in" (إضافة) أو "out" (استهلاك)
+    height_change: float  # التغيير في الارتفاع (موجب للإضافة، سالب للاستهلاك)
+    remaining_height: float  # الارتفاع المتبقي بعد المعاملة
+    reason: str  # سبب المعاملة
+    reference_id: Optional[str] = None  # مرجع المعاملة (فاتورة، طلب خام، إلخ)
+    notes: Optional[str] = None
+    date: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class TreasuryTransactionCreate(BaseModel):
     account_id: str
     transaction_type: str
