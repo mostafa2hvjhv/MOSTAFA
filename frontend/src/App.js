@@ -4110,7 +4110,7 @@ const Invoices = () => {
               />
             </div>
             
-            {/* Items Display */}
+            {/* Items Display with Edit capability */}
             <div className="mb-4">
               <h4 className="text-lg font-medium mb-2">عناصر الفاتورة</h4>
               <div className="overflow-x-auto">
@@ -4121,6 +4121,7 @@ const Invoices = () => {
                       <th className="border border-gray-300 p-2">الكمية</th>
                       <th className="border border-gray-300 p-2">سعر الوحدة</th>
                       <th className="border border-gray-300 p-2">الإجمالي</th>
+                      <th className="border border-gray-300 p-2">إجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4131,9 +4132,47 @@ const Invoices = () => {
                             `${item.seal_type || ''} - ${item.material_type || ''} (${item.inner_diameter}×${item.outer_diameter}×${item.height})`
                           }
                         </td>
-                        <td className="border border-gray-300 p-2">{item.quantity}</td>
-                        <td className="border border-gray-300 p-2">ج.م {item.unit_price?.toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2">ج.م {item.total_price?.toFixed(2)}</td>
+                        <td className="border border-gray-300 p-2">
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newItems = [...editForm.items];
+                              newItems[index].quantity = parseInt(e.target.value) || 0;
+                              newItems[index].total_price = newItems[index].unit_price * newItems[index].quantity;
+                              setEditForm({...editForm, items: newItems});
+                            }}
+                            className="w-full p-1 border border-gray-300 rounded"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={item.unit_price}
+                            onChange={(e) => {
+                              const newItems = [...editForm.items];
+                              newItems[index].unit_price = parseFloat(e.target.value) || 0;
+                              newItems[index].total_price = newItems[index].unit_price * newItems[index].quantity;
+                              setEditForm({...editForm, items: newItems});
+                            }}
+                            className="w-full p-1 border border-gray-300 rounded"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-2 font-semibold">
+                          ج.م {(item.total_price || 0).toFixed(2)}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          <button
+                            onClick={() => {
+                              const newItems = editForm.items.filter((_, i) => i !== index);
+                              setEditForm({...editForm, items: newItems});
+                            }}
+                            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                          >
+                            حذف
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
