@@ -1657,7 +1657,7 @@ async def create_inventory_item(item: InventoryItemCreate):
             )
         
         inventory_item = InventoryItem(**item.dict())
-        await db.inventory.insert_one(inventory_item.dict())
+        await db.inventory_items.insert_one(inventory_item.dict())
         
         # Create initial transaction
         initial_transaction = InventoryTransaction(
