@@ -140,7 +140,8 @@ const Navigation = ({ currentPage, onPageChange }) => {
   const elsawyPages = [
     { key: 'dashboard', label: 'لوحة التحكم' },
     { key: 'sales', label: 'المبيعات' },
-    { key: 'inventory', label: 'المخزون' },
+    { key: 'inventory', label: 'الجرد' },
+    { key: 'stock', label: 'المخزون' },
     { key: 'local', label: 'محلي' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
@@ -153,7 +154,8 @@ const Navigation = ({ currentPage, onPageChange }) => {
   
   const adminPages = [
     { key: 'sales', label: 'المبيعات' },
-    { key: 'inventory', label: 'المخزون' },
+    { key: 'inventory', label: 'الجرد' },
+    { key: 'stock', label: 'المخزون' },
     { key: 'local', label: 'محلي' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
@@ -166,7 +168,8 @@ const Navigation = ({ currentPage, onPageChange }) => {
   
   const userPages = [
     { key: 'sales', label: 'المبيعات' },
-    { key: 'inventory', label: 'المخزون' },
+    { key: 'inventory', label: 'الجرد' },
+    { key: 'stock', label: 'المخزون' },
     { key: 'local', label: 'محلي' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
