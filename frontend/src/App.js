@@ -254,6 +254,8 @@ const Inventory = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
+  const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
+
   // Fetch functions
   const fetchInventoryItems = async () => {
     try {
