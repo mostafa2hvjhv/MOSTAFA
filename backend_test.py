@@ -3635,8 +3635,8 @@ class MasterSealAPITester:
 if __name__ == "__main__":
     tester = MasterSealAPITester()
     
-    # Run only user management tests as requested
-    passed, failed = tester.run_user_management_tests_only()
+    # Run all tests including new Local Products Management APIs
+    passed, failed = tester.run_all_tests()
     
     # Exit with appropriate code
     sys.exit(0 if failed == 0 else 1)
