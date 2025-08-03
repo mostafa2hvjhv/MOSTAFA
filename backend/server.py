@@ -171,6 +171,9 @@ class Payment(BaseModel):
     payment_method: PaymentMethod
     date: datetime = Field(default_factory=datetime.utcnow)
     notes: Optional[str] = None
+    
+    class Config:
+        use_enum_values = True
 
 class Expense(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
