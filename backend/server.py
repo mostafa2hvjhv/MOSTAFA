@@ -753,8 +753,19 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     
     # Add treasury transaction for non-deferred payments
     if invoice.payment_method != PaymentMethod.DEFERRED:
+        # Map payment methods to treasury account IDs
+        payment_method_mapping = {
+            "نقدي": "cash",
+            "فودافون كاش الصاوي": "vodafone_elsawy", 
+            "فودافون كاش وائل": "vodafone_wael",
+            "انستا باي": "instapay",
+            "Yad_Elsawy": "yad_elsawy"
+        }
+        
+        account_id = payment_method_mapping.get(str(invoice.payment_method), "cash")
+        
         treasury_transaction = TreasuryTransaction(
-            account_id=str(invoice.payment_method).lower(),  # Convert payment method to account ID
+            account_id=account_id,
             transaction_type="income",
             amount=total_after_discount,
             description=f"فاتورة {invoice_number} - {invoice.customer_name}",
