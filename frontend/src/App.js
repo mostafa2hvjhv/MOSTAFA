@@ -329,7 +329,7 @@ const Inventory = () => {
   // Add inventory transaction
   const addInventoryTransaction = async () => {
     if (!newTransaction.material_type || !newTransaction.inner_diameter || 
-        !newTransaction.outer_diameter || !newTransaction.height_change || !newTransaction.reason) {
+        !newTransaction.outer_diameter || !newTransaction.pieces_change || !newTransaction.reason) {
       alert('الرجاء إدخال جميع البيانات المطلوبة');
       return;
     }
@@ -339,9 +339,9 @@ const Inventory = () => {
         ...newTransaction,
         inner_diameter: parseFloat(newTransaction.inner_diameter),
         outer_diameter: parseFloat(newTransaction.outer_diameter),
-        height_change: newTransaction.transaction_type === 'out' 
-          ? -Math.abs(parseFloat(newTransaction.height_change))
-          : Math.abs(parseFloat(newTransaction.height_change))
+        pieces_change: newTransaction.transaction_type === 'out' 
+          ? -Math.abs(parseInt(newTransaction.pieces_change))
+          : Math.abs(parseInt(newTransaction.pieces_change))
       };
 
       await axios.post(`${API}/inventory-transactions`, transactionData);
@@ -354,7 +354,7 @@ const Inventory = () => {
         inner_diameter: '',
         outer_diameter: '',
         transaction_type: 'in',
-        height_change: '',
+        pieces_change: '',
         reason: '',
         notes: ''
       });
