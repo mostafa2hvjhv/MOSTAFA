@@ -939,8 +939,18 @@ async def create_payment(payment: PaymentCreate):
     )
     
     # Add treasury transaction for the payment
+    payment_method_mapping = {
+        "نقدي": "cash",
+        "فودافون كاش الصاوي": "vodafone_elsawy", 
+        "فودافون كاش وائل": "vodafone_wael",
+        "انستا باي": "instapay",
+        "Yad_Elsawy": "yad_elsawy"
+    }
+    
+    account_id = payment_method_mapping.get(str(payment.payment_method), "cash")
+    
     treasury_transaction = TreasuryTransaction(
-        account_id=str(payment.payment_method).lower(),  # Convert payment method to account ID
+        account_id=account_id,
         transaction_type="income",
         amount=payment.amount,
         description=f"دفع فاتورة {invoice['invoice_number']} - {invoice['customer_name']}",
