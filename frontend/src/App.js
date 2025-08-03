@@ -224,6 +224,397 @@ const Navigation = ({ currentPage, onPageChange }) => {
   );
 };
 
+// Local Products Management Component
+const Local = () => {
+  const [suppliers, setSuppliers] = useState([]);
+  const [localProducts, setLocalProducts] = useState([]);
+  const [supplierTransactions, setSupplierTransactions] = useState([]);
+  const [currentView, setCurrentView] = useState('suppliers'); // suppliers, products, transactions
+  const [newSupplier, setNewSupplier] = useState({ name: '', phone: '', address: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', supplier_id: '', purchase_price: '', selling_price: '', current_stock: 0 });
+  const [newTransaction, setNewTransaction] = useState({ supplier_id: '', transaction_type: 'purchase', amount: '', description: '', product_name: '', quantity: '', unit_price: '', payment_method: 'cash' });
+  const [selectedSupplier, setSelectedSupplier] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+
+  // Fetch data functions
+  const fetchSuppliers = async () => {
+    try {
+      const response = await axios.get(`${API}/suppliers`);
+      setSuppliers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+    }
+  };
+
+  const fetchLocalProducts = async () => {
+    try {
+      const response = await axios.get(`${API}/local-products`);
+      setLocalProducts(response.data || []);
+    } catch (error) {
+      console.error('Error fetching local products:', error);
+    }
+  };
+
+  const fetchSupplierTransactions = async () => {
+    try {
+      const response = await axios.get(`${API}/supplier-transactions`);
+      setSupplierTransactions(response.data || []);
+    } catch (error) {
+      console.error('Error fetching supplier transactions:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSuppliers();
+    fetchLocalProducts();
+    fetchSupplierTransactions();
+  }, []);
+
+  // Add supplier
+  const addSupplier = async () => {
+    if (!newSupplier.name.trim()) {
+      alert('الرجاء إدخال اسم المورد');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/suppliers`, newSupplier);
+      fetchSuppliers();
+      setNewSupplier({ name: '', phone: '', address: '' });
+      alert('تم إضافة المورد بنجاح');
+    } catch (error) {
+      console.error('Error adding supplier:', error);
+      alert('حدث خطأ في إضافة المورد');
+    }
+  };
+
+  // Add local product
+  const addLocalProduct = async () => {
+    if (!newProduct.name.trim() || !newProduct.supplier_id || !newProduct.purchase_price || !newProduct.selling_price) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/local-products`, {
+        ...newProduct,
+        purchase_price: parseFloat(newProduct.purchase_price),
+        selling_price: parseFloat(newProduct.selling_price),
+        current_stock: parseInt(newProduct.current_stock || 0)
+      });
+      fetchLocalProducts();
+      setNewProduct({ name: '', supplier_id: '', purchase_price: '', selling_price: '', current_stock: 0 });
+      alert('تم إضافة المنتج بنجاح');
+    } catch (error) {
+      console.error('Error adding local product:', error);
+      alert('حدث خطأ في إضافة المنتج');
+    }
+  };
+
+  // Pay supplier
+  const paySupplier = async () => {
+    if (!selectedSupplier || !paymentAmount) {
+      alert('الرجاء اختيار المورد وإدخال المبلغ');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/supplier-payment?supplier_id=${selectedSupplier}&amount=${paymentAmount}&payment_method=${paymentMethod}`);
+      fetchSuppliers();
+      fetchSupplierTransactions();
+      setSelectedSupplier('');
+      setPaymentAmount('');
+      alert('تم دفع المبلغ للمورد بنجاح');
+    } catch (error) {
+      console.error('Error paying supplier:', error);
+      alert('حدث خطأ في دفع المبلغ');
+    }
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">إدارة المنتجات المحلية</h1>
+        <div className="flex space-x-4 space-x-reverse">
+          <button
+            onClick={() => setCurrentView('suppliers')}
+            className={`px-4 py-2 rounded ${currentView === 'suppliers' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            الموردين
+          </button>
+          <button
+            onClick={() => setCurrentView('products')}
+            className={`px-4 py-2 rounded ${currentView === 'products' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            المنتجات
+          </button>
+          <button
+            onClick={() => setCurrentView('transactions')}
+            className={`px-4 py-2 rounded ${currentView === 'transactions' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            المعاملات
+          </button>
+          <button
+            onClick={() => setCurrentView('payments')}
+            className={`px-4 py-2 rounded ${currentView === 'payments' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            سداد الموردين
+          </button>
+        </div>
+      </div>
+
+      {/* Suppliers View */}
+      {currentView === 'suppliers' && (
+        <div>
+          {/* Add New Supplier */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 className="text-lg font-semibold mb-4">إضافة مورد جديد</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <input
+                type="text"
+                value={newSupplier.name}
+                onChange={(e) => setNewSupplier({...newSupplier, name: e.target.value})}
+                placeholder="اسم المورد"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                value={newSupplier.phone}
+                onChange={(e) => setNewSupplier({...newSupplier, phone: e.target.value})}
+                placeholder="رقم الهاتف (اختياري)"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                value={newSupplier.address}
+                onChange={(e) => setNewSupplier({...newSupplier, address: e.target.value})}
+                placeholder="العنوان (اختياري)"
+                className="p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <button
+              onClick={addSupplier}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              إضافة المورد
+            </button>
+          </div>
+
+          {/* Suppliers List */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-4">قائمة الموردين</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2">اسم المورد</th>
+                    <th className="border border-gray-300 p-2">الهاتف</th>
+                    <th className="border border-gray-300 p-2">العنوان</th>
+                    <th className="border border-gray-300 p-2">إجمالي المشتريات</th>
+                    <th className="border border-gray-300 p-2">إجمالي المدفوع</th>
+                    <th className="border border-gray-300 p-2">الرصيد المستحق</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {suppliers.map(supplier => (
+                    <tr key={supplier.id}>
+                      <td className="border border-gray-300 p-2 font-semibold">{supplier.name}</td>
+                      <td className="border border-gray-300 p-2">{supplier.phone || '-'}</td>
+                      <td className="border border-gray-300 p-2">{supplier.address || '-'}</td>
+                      <td className="border border-gray-300 p-2">ج.م {(supplier.total_purchases || 0).toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">ج.م {(supplier.total_paid || 0).toFixed(2)}</td>
+                      <td className={`border border-gray-300 p-2 font-semibold ${(supplier.balance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        ج.م {(supplier.balance || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Products View */}
+      {currentView === 'products' && (
+        <div>
+          {/* Add New Product */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 className="text-lg font-semibold mb-4">إضافة منتج محلي جديد</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                placeholder="اسم المنتج"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <select
+                value={newProduct.supplier_id}
+                onChange={(e) => setNewProduct({...newProduct, supplier_id: e.target.value})}
+                className="p-2 border border-gray-300 rounded"
+              >
+                <option value="">اختر المورد</option>
+                {suppliers.map(supplier => (
+                  <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                value={newProduct.purchase_price}
+                onChange={(e) => setNewProduct({...newProduct, purchase_price: e.target.value})}
+                placeholder="سعر الشراء"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={newProduct.selling_price}
+                onChange={(e) => setNewProduct({...newProduct, selling_price: e.target.value})}
+                placeholder="سعر البيع"
+                className="p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <button
+              onClick={addLocalProduct}
+              className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              إضافة المنتج
+            </button>
+          </div>
+
+          {/* Products List */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-4">قائمة المنتجات المحلية</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2">اسم المنتج</th>
+                    <th className="border border-gray-300 p-2">المورد</th>
+                    <th className="border border-gray-300 p-2">سعر الشراء</th>
+                    <th className="border border-gray-300 p-2">سعر البيع</th>
+                    <th className="border border-gray-300 p-2">المخزون الحالي</th>
+                    <th className="border border-gray-300 p-2">إجمالي المباع</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {localProducts.map(product => (
+                    <tr key={product.id}>
+                      <td className="border border-gray-300 p-2 font-semibold">{product.name}</td>
+                      <td className="border border-gray-300 p-2">{product.supplier_name}</td>
+                      <td className="border border-gray-300 p-2">ج.م {product.purchase_price.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">ج.م {product.selling_price.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">{product.current_stock || 0}</td>
+                      <td className="border border-gray-300 p-2">{product.total_sold || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transactions View */}
+      {currentView === 'transactions' && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">معاملات الموردين</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2">التاريخ</th>
+                  <th className="border border-gray-300 p-2">المورد</th>
+                  <th className="border border-gray-300 p-2">نوع المعاملة</th>
+                  <th className="border border-gray-300 p-2">المبلغ</th>
+                  <th className="border border-gray-300 p-2">الوصف</th>
+                  <th className="border border-gray-300 p-2">المنتج</th>
+                  <th className="border border-gray-300 p-2">الكمية</th>
+                </tr>
+              </thead>
+              <tbody>
+                {supplierTransactions.map(transaction => (
+                  <tr key={transaction.id}>
+                    <td className="border border-gray-300 p-2">
+                      {new Date(transaction.date).toLocaleDateString('ar-EG')}
+                    </td>
+                    <td className="border border-gray-300 p-2">{transaction.supplier_name}</td>
+                    <td className="border border-gray-300 p-2">
+                      <span className={`px-2 py-1 rounded text-sm ${
+                        transaction.transaction_type === 'purchase' 
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {transaction.transaction_type === 'purchase' ? 'شراء' : 'دفع'}
+                      </span>
+                    </td>
+                    <td className={`border border-gray-300 p-2 font-semibold ${
+                      transaction.transaction_type === 'purchase' ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      ج.م {transaction.amount.toFixed(2)}
+                    </td>
+                    <td className="border border-gray-300 p-2">{transaction.description}</td>
+                    <td className="border border-gray-300 p-2">{transaction.product_name || '-'}</td>
+                    <td className="border border-gray-300 p-2">{transaction.quantity || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Payments View */}
+      {currentView === 'payments' && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">سداد حسابات الموردين</h3>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <select
+              value={selectedSupplier}
+              onChange={(e) => setSelectedSupplier(e.target.value)}
+              className="p-2 border border-gray-300 rounded"
+            >
+              <option value="">اختر المورد</option>
+              {suppliers.filter(s => (s.balance || 0) > 0).map(supplier => (
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name} - مستحق: ج.م {(supplier.balance || 0).toFixed(2)}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              step="0.01"
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              placeholder="المبلغ المدفوع"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="p-2 border border-gray-300 rounded"
+            >
+              <option value="cash">نقدي</option>
+              <option value="vodafone_elsawy">فودافون كاش الصاوي</option>
+              <option value="vodafone_wael">فودافون كاش وائل</option>
+              <option value="instapay">انستا باي</option>
+            </select>
+          </div>
+          <button
+            onClick={paySupplier}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            دفع المبلغ
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Dashboard Component
 const Dashboard = () => {
   const { user } = useAuth();
