@@ -295,7 +295,7 @@ const Inventory = () => {
   // Add inventory item
   const addInventoryItem = async () => {
     if (!newItem.material_type || !newItem.inner_diameter || !newItem.outer_diameter || 
-        !newItem.available_height || !newItem.unit_code) {
+        !newItem.available_pieces) {
       alert('الرجاء إدخال جميع البيانات المطلوبة');
       return;
     }
@@ -305,9 +305,8 @@ const Inventory = () => {
         ...newItem,
         inner_diameter: parseFloat(newItem.inner_diameter),
         outer_diameter: parseFloat(newItem.outer_diameter),
-        available_height: parseFloat(newItem.available_height),
-        min_stock_level: parseFloat(newItem.min_stock_level || 10),
-        max_stock_level: parseFloat(newItem.max_stock_level || 1000)
+        available_pieces: parseInt(newItem.available_pieces),
+        min_stock_level: parseInt(newItem.min_stock_level || 2)
       });
       
       fetchInventoryItems();
@@ -316,10 +315,8 @@ const Inventory = () => {
         material_type: 'NBR',
         inner_diameter: '',
         outer_diameter: '',
-        available_height: '',
-        min_stock_level: 10,
-        max_stock_level: 1000,
-        unit_code: '',
+        available_pieces: '',
+        min_stock_level: 2,
         notes: ''
       });
       alert('تم إضافة عنصر الجرد بنجاح');
