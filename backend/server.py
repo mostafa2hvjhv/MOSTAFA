@@ -1605,7 +1605,7 @@ async def pay_supplier(supplier_id: str, amount: float, payment_method: str = "c
 async def get_inventory():
     """Get all inventory items"""
     try:
-        items = await db.inventory.find({}).to_list(None)
+        items = await db.inventory_items.find({}).to_list(None)
         return items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
