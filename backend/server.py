@@ -609,14 +609,56 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
         **invoice_dict
     )
     
-    # Update inventory
+    # Update inventory and handle local products
     for item in invoice.items:
-        if item.material_used:
-            # Deduct from raw materials (height - (seal_height + 2mm))
-            await db.raw_materials.update_one(
-                {"unit_code": item.material_used},
-                {"$inc": {"height": -(item.height + 2) * item.quantity}}
-            )
+        if hasattr(item, 'product_type') and item.product_type == 'local':
+            # Handle local product sale
+            if hasattr(item, 'local_product_details') and item.local_product_details:
+                # Update local product stock
+                await db.local_products.update_one(
+                    {"name": item.local_product_details.get("name"), 
+                     "supplier": item.local_product_details.get("supplier")},
+                    {"$inc": {"total_sold": item.quantity}}
+                )
+                
+                # Create supplier transaction for purchase cost
+                supplier_transaction = SupplierTransaction(
+                    supplier_id="", # We'll need to find this based on supplier name
+                    supplier_name=item.local_product_details.get("supplier", ""),
+                    transaction_type="purchase",
+                    amount=item.local_product_details.get("purchase_price", 0) * item.quantity,
+                    description=f"شراء {item.local_product_details.get('name')} من فاتورة {invoice_number}",
+                    product_name=item.local_product_details.get("name", ""),
+                    quantity=item.quantity,
+                    unit_price=item.local_product_details.get("purchase_price", 0),
+                    reference_invoice_id=invoice_obj.id
+                )
+                
+                # Find supplier by name to get ID
+                supplier = await db.suppliers.find_one({"name": item.local_product_details.get("supplier", "")})
+                if supplier:
+                    supplier_transaction.supplier_id = supplier["id"]
+                    await db.supplier_transactions.insert_one(supplier_transaction.dict())
+                    
+                    # Update supplier balance
+                    purchase_amount = item.local_product_details.get("purchase_price", 0) * item.quantity
+                    await db.suppliers.update_one(
+                        {"id": supplier["id"]},
+                        {
+                            "$inc": {
+                                "total_purchases": purchase_amount,
+                                "balance": purchase_amount
+                            }
+                        }
+                    )
+        else:
+            # Handle manufactured products (existing logic)
+            if item.material_used:
+                # Deduct from raw materials (height - (seal_height + 2mm))
+                await db.raw_materials.update_one(
+                    {"unit_code": item.material_used},
+                    {"$inc": {"height": -(item.height + 2) * item.quantity}}
+                )
     
     await db.invoices.insert_one(invoice_obj.dict())
     
