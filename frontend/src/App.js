@@ -653,13 +653,6 @@ const Inventory = () => {
               ))}
             </select>
             <input
-              type="text"
-              value={newItem.unit_code}
-              onChange={(e) => setNewItem({...newItem, unit_code: e.target.value})}
-              placeholder="كود الوحدة"
-              className="p-2 border border-gray-300 rounded"
-            />
-            <input
               type="number"
               value={newItem.inner_diameter}
               onChange={(e) => setNewItem({...newItem, inner_diameter: e.target.value})}
@@ -675,10 +668,10 @@ const Inventory = () => {
             />
             <input
               type="number"
-              step="0.01"
-              value={newItem.available_height}
-              onChange={(e) => setNewItem({...newItem, available_height: e.target.value})}
-              placeholder="الارتفاع المتاح (مم)"
+              step="1"
+              value={newItem.available_pieces}
+              onChange={(e) => setNewItem({...newItem, available_pieces: e.target.value})}
+              placeholder="عدد القطع المتاحة"
               className="p-2 border border-gray-300 rounded"
             />
             <input
@@ -686,13 +679,6 @@ const Inventory = () => {
               value={newItem.min_stock_level}
               onChange={(e) => setNewItem({...newItem, min_stock_level: e.target.value})}
               placeholder="الحد الأدنى للمخزون"
-              className="p-2 border border-gray-300 rounded"
-            />
-            <input
-              type="number"
-              value={newItem.max_stock_level}
-              onChange={(e) => setNewItem({...newItem, max_stock_level: e.target.value})}
-              placeholder="الحد الأقصى للمخزون"
               className="p-2 border border-gray-300 rounded"
             />
             <input
