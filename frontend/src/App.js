@@ -480,40 +480,87 @@ const Sales = () => {
   };
 
   const addItem = () => {
-    if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height || !currentItem.unit_price) {
-      alert('الرجاء إدخال جميع البيانات المطلوبة');
-      return;
+    if (currentItem.product_type === 'manufactured') {
+      // Validation for manufactured products
+      if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height || !currentItem.unit_price) {
+        alert('الرجاء إدخال جميع البيانات المطلوبة');
+        return;
+      }
+
+      const item = {
+        ...currentItem,
+        inner_diameter: parseFloat(currentItem.inner_diameter),
+        outer_diameter: parseFloat(currentItem.outer_diameter),
+        height: parseFloat(currentItem.height),
+        quantity: parseInt(currentItem.quantity),
+        unit_price: parseFloat(currentItem.unit_price),
+        total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
+        material_used: selectedMaterial ? selectedMaterial.unit_code : null,
+        material_details: selectedMaterial ? {
+          unit_code: selectedMaterial.unit_code,
+          inner_diameter: selectedMaterial.inner_diameter,
+          outer_diameter: selectedMaterial.outer_diameter,
+          height: selectedMaterial.height,
+          material_type: selectedMaterial.material_type,
+          is_finished_product: selectedMaterial.is_finished_product || false
+        } : null
+      };
+
+      setItems([...items, item]);
+      setCurrentItem({
+        seal_type: 'RSL',
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        height: '',
+        quantity: 1,
+        unit_price: '',
+        product_type: 'manufactured'
+      });
+    } else {
+      // Validation for local products
+      if (!localProduct.name || !localProduct.selling_price || !localProduct.supplier || !localProduct.purchase_price) {
+        alert('الرجاء إدخال جميع بيانات المنتج المحلي');
+        return;
+      }
+
+      const item = {
+        product_type: 'local',
+        product_name: localProduct.name,
+        supplier: localProduct.supplier,
+        purchase_price: parseFloat(localProduct.purchase_price),
+        selling_price: parseFloat(localProduct.selling_price),
+        quantity: parseInt(currentItem.quantity),
+        unit_price: parseFloat(localProduct.selling_price), // Use selling price as unit price
+        total_price: parseFloat(localProduct.selling_price) * parseInt(currentItem.quantity),
+        // Store local product details
+        local_product_details: {
+          name: localProduct.name,
+          supplier: localProduct.supplier,
+          purchase_price: parseFloat(localProduct.purchase_price),
+          selling_price: parseFloat(localProduct.selling_price)
+        }
+      };
+
+      setItems([...items, item]);
+      setLocalProduct({
+        name: '',
+        purchase_price: '',
+        selling_price: '',
+        supplier: ''
+      });
+      setCurrentItem({
+        seal_type: 'RSL',
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        height: '',
+        quantity: 1,
+        unit_price: '',
+        product_type: 'manufactured'
+      });
     }
-
-    const item = {
-      ...currentItem,
-      inner_diameter: parseFloat(currentItem.inner_diameter),
-      outer_diameter: parseFloat(currentItem.outer_diameter),
-      height: parseFloat(currentItem.height),
-      quantity: parseInt(currentItem.quantity),
-      unit_price: parseFloat(currentItem.unit_price),
-      total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
-      material_used: selectedMaterial ? selectedMaterial.unit_code : null,
-      material_details: selectedMaterial ? {
-        unit_code: selectedMaterial.unit_code,
-        inner_diameter: selectedMaterial.inner_diameter,
-        outer_diameter: selectedMaterial.outer_diameter,
-        height: selectedMaterial.height,
-        material_type: selectedMaterial.material_type,
-        is_finished_product: selectedMaterial.is_finished_product || false
-      } : null
-    };
-
-    setItems([...items, item]);
-    setCurrentItem({
-      seal_type: 'RSL',
-      material_type: 'NBR',
-      inner_diameter: '',
-      outer_diameter: '',
-      height: '',
-      quantity: 1,
-      unit_price: ''
-    });
+    
     setCompatibilityResults(null);
     setSelectedMaterial(null);
   };
