@@ -507,10 +507,10 @@ const Inventory = () => {
               </select>
               <input
                 type="number"
-                step="0.01"
-                value={newTransaction.height_change}
-                onChange={(e) => setNewTransaction({...newTransaction, height_change: e.target.value})}
-                placeholder="مقدار التغيير (مم)"
+                step="1"
+                value={newTransaction.pieces_change}
+                onChange={(e) => setNewTransaction({...newTransaction, pieces_change: e.target.value})}
+                placeholder="عدد القطع"
                 className="p-2 border border-gray-300 rounded"
               />
               <input
