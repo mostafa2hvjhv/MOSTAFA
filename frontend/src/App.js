@@ -4895,6 +4895,7 @@ const Treasury = () => {
   });
   
   const [showManualForm, setShowManualForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(''); // إضافة البحث
 
   useEffect(() => {
     fetchTreasuryData();
