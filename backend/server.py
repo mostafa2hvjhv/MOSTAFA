@@ -965,6 +965,7 @@ async def create_payment(payment: PaymentCreate):
     print(f"DEBUG: Payment method received: '{payment_method_str}'")
     print(f"DEBUG: Available mapping keys: {list(payment_method_mapping.keys())}")
     
+    payment_method_str = str(payment.payment_method)
     account_id = payment_method_mapping.get(payment_method_str, "cash")
     print(f"DEBUG: Mapped to account: {account_id}")
     
