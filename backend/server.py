@@ -753,10 +753,10 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
         # Map payment methods to treasury account IDs
         payment_method_mapping = {
             "نقدي": "cash",
-            "فودافون كاش الصاوي": "vodafone_elsawy", 
-            "فودافون كاش وائل": "vodafone_wael",
-            "انستا باي": "instapay",
-            "Yad_Elsawy": "yad_elsawy"
+            "فودافون كاش محمد الصاوي": "vodafone_elsawy", 
+            "فودافون كاش وائل محمد": "vodafone_wael",
+            "انستاباي": "instapay",
+            "يد الصاوي": "yad_elsawy"
         }
         
         account_id = payment_method_mapping.get(str(invoice.payment_method), "cash")
