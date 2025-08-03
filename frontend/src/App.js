@@ -227,6 +227,502 @@ const Navigation = ({ currentPage, onPageChange }) => {
   );
 };
 
+// Inventory Management Component
+const Inventory = () => {
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [inventoryTransactions, setInventoryTransactions] = useState([]);
+  const [lowStockItems, setLowStockItems] = useState([]);
+  const [currentView, setCurrentView] = useState('items'); // items, transactions, low-stock, add-item
+  const [newItem, setNewItem] = useState({
+    material_type: 'NBR',
+    inner_diameter: '',
+    outer_diameter: '',
+    available_height: '',
+    min_stock_level: 10,
+    max_stock_level: 1000,
+    unit_code: '',
+    notes: ''
+  });
+  const [newTransaction, setNewTransaction] = useState({
+    material_type: 'NBR',
+    inner_diameter: '',
+    outer_diameter: '',
+    transaction_type: 'in',
+    height_change: '',
+    reason: '',
+    notes: ''
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch functions
+  const fetchInventoryItems = async () => {
+    try {
+      const response = await axios.get(`${API}/inventory`);
+      setInventoryItems(response.data || []);
+    } catch (error) {
+      console.error('Error fetching inventory items:', error);
+    }
+  };
+
+  const fetchInventoryTransactions = async () => {
+    try {
+      const response = await axios.get(`${API}/inventory-transactions`);
+      setInventoryTransactions(response.data || []);
+    } catch (error) {
+      console.error('Error fetching inventory transactions:', error);
+    }
+  };
+
+  const fetchLowStockItems = async () => {
+    try {
+      const response = await axios.get(`${API}/inventory/low-stock`);
+      setLowStockItems(response.data || []);
+    } catch (error) {
+      console.error('Error fetching low stock items:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchInventoryItems();
+    fetchInventoryTransactions();
+    fetchLowStockItems();
+  }, []);
+
+  // Add inventory item
+  const addInventoryItem = async () => {
+    if (!newItem.material_type || !newItem.inner_diameter || !newItem.outer_diameter || 
+        !newItem.available_height || !newItem.unit_code) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/inventory`, {
+        ...newItem,
+        inner_diameter: parseFloat(newItem.inner_diameter),
+        outer_diameter: parseFloat(newItem.outer_diameter),
+        available_height: parseFloat(newItem.available_height),
+        min_stock_level: parseFloat(newItem.min_stock_level || 10),
+        max_stock_level: parseFloat(newItem.max_stock_level || 1000)
+      });
+      
+      fetchInventoryItems();
+      fetchLowStockItems();
+      setNewItem({
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        available_height: '',
+        min_stock_level: 10,
+        max_stock_level: 1000,
+        unit_code: '',
+        notes: ''
+      });
+      alert('تم إضافة عنصر الجرد بنجاح');
+    } catch (error) {
+      console.error('Error adding inventory item:', error);
+      alert('حدث خطأ في إضافة عنصر الجرد: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Add inventory transaction
+  const addInventoryTransaction = async () => {
+    if (!newTransaction.material_type || !newTransaction.inner_diameter || 
+        !newTransaction.outer_diameter || !newTransaction.height_change || !newTransaction.reason) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      const transactionData = {
+        ...newTransaction,
+        inner_diameter: parseFloat(newTransaction.inner_diameter),
+        outer_diameter: parseFloat(newTransaction.outer_diameter),
+        height_change: newTransaction.transaction_type === 'out' 
+          ? -Math.abs(parseFloat(newTransaction.height_change))
+          : Math.abs(parseFloat(newTransaction.height_change))
+      };
+
+      await axios.post(`${API}/inventory-transactions`, transactionData);
+      
+      fetchInventoryItems();
+      fetchInventoryTransactions();
+      fetchLowStockItems();
+      setNewTransaction({
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        transaction_type: 'in',
+        height_change: '',
+        reason: '',
+        notes: ''
+      });
+      alert('تم تسجيل معاملة الجرد بنجاح');
+    } catch (error) {
+      console.error('Error adding inventory transaction:', error);
+      alert('حدث خطأ في تسجيل معاملة الجرد: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Filter items based on search
+  const filteredItems = inventoryItems.filter(item =>
+    item.unit_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredTransactions = inventoryTransactions.filter(transaction =>
+    transaction.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    transaction.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    transaction.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">إدارة الجرد</h1>
+        <div className="flex space-x-4 space-x-reverse">
+          <button
+            onClick={() => setCurrentView('items')}
+            className={`px-4 py-2 rounded ${currentView === 'items' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            عناصر الجرد
+          </button>
+          <button
+            onClick={() => setCurrentView('transactions')}
+            className={`px-4 py-2 rounded ${currentView === 'transactions' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            معاملات الجرد
+          </button>
+          <button
+            onClick={() => setCurrentView('low-stock')}
+            className={`px-4 py-2 rounded ${currentView === 'low-stock' ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+          >
+            مخزون منخفض ({lowStockItems.length})
+          </button>
+          <button
+            onClick={() => setCurrentView('add-item')}
+            className={`px-4 py-2 rounded ${currentView === 'add-item' ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
+          >
+            إضافة عنصر جديد
+          </button>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="البحث في الجرد..."
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      {/* Inventory Items View */}
+      {currentView === 'items' && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">عناصر الجرد</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2">كود الوحدة</th>
+                  <th className="border border-gray-300 p-2">نوع المادة</th>
+                  <th className="border border-gray-300 p-2">القطر الداخلي</th>
+                  <th className="border border-gray-300 p-2">القطر الخارجي</th>
+                  <th className="border border-gray-300 p-2">الارتفاع المتاح</th>
+                  <th className="border border-gray-300 p-2">الحد الأدنى</th>
+                  <th className="border border-gray-300 p-2">الحد الأقصى</th>
+                  <th className="border border-gray-300 p-2">الحالة</th>
+                  <th className="border border-gray-300 p-2">ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map(item => (
+                  <tr key={item.id}>
+                    <td className="border border-gray-300 p-2 font-semibold">{item.unit_code}</td>
+                    <td className="border border-gray-300 p-2">{item.material_type}</td>
+                    <td className="border border-gray-300 p-2">{item.inner_diameter}</td>
+                    <td className="border border-gray-300 p-2">{item.outer_diameter}</td>
+                    <td className={`border border-gray-300 p-2 font-semibold ${
+                      item.available_height <= item.min_stock_level ? 'text-red-600' : 
+                      item.available_height >= item.max_stock_level ? 'text-blue-600' : 'text-green-600'
+                    }`}>
+                      {item.available_height.toFixed(2)} مم
+                    </td>
+                    <td className="border border-gray-300 p-2">{item.min_stock_level}</td>
+                    <td className="border border-gray-300 p-2">{item.max_stock_level}</td>
+                    <td className="border border-gray-300 p-2">
+                      <span className={`px-2 py-1 rounded text-sm ${
+                        item.available_height <= item.min_stock_level ? 'bg-red-100 text-red-800' :
+                        item.available_height >= item.max_stock_level ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {item.available_height <= item.min_stock_level ? 'منخفض' :
+                         item.available_height >= item.max_stock_level ? 'مرتفع' : 'طبيعي'}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 p-2">{item.notes || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Transactions View */}
+      {currentView === 'transactions' && (
+        <div>
+          {/* Add Transaction Form */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 className="text-lg font-semibold mb-4">إضافة معاملة جرد</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <select
+                value={newTransaction.material_type}
+                onChange={(e) => setNewTransaction({...newTransaction, material_type: e.target.value})}
+                className="p-2 border border-gray-300 rounded"
+              >
+                {materialTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={newTransaction.inner_diameter}
+                onChange={(e) => setNewTransaction({...newTransaction, inner_diameter: e.target.value})}
+                placeholder="القطر الداخلي"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="number"
+                value={newTransaction.outer_diameter}
+                onChange={(e) => setNewTransaction({...newTransaction, outer_diameter: e.target.value})}
+                placeholder="القطر الخارجي"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <select
+                value={newTransaction.transaction_type}
+                onChange={(e) => setNewTransaction({...newTransaction, transaction_type: e.target.value})}
+                className="p-2 border border-gray-300 rounded"
+              >
+                <option value="in">إضافة للمخزون</option>
+                <option value="out">خصم من المخزون</option>
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                value={newTransaction.height_change}
+                onChange={(e) => setNewTransaction({...newTransaction, height_change: e.target.value})}
+                placeholder="مقدار التغيير (مم)"
+                className="p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                value={newTransaction.reason}
+                onChange={(e) => setNewTransaction({...newTransaction, reason: e.target.value})}
+                placeholder="سبب المعاملة"
+                className="p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <div className="mt-4">
+              <input
+                type="text"
+                value={newTransaction.notes}
+                onChange={(e) => setNewTransaction({...newTransaction, notes: e.target.value})}
+                placeholder="ملاحظات (اختياري)"
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
+            <button
+              onClick={addInventoryTransaction}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              تسجيل المعاملة
+            </button>
+          </div>
+
+          {/* Transactions List */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-4">سجل معاملات الجرد</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2">التاريخ</th>
+                    <th className="border border-gray-300 p-2">نوع المادة</th>
+                    <th className="border border-gray-300 p-2">المقاسات</th>
+                    <th className="border border-gray-300 p-2">نوع المعاملة</th>
+                    <th className="border border-gray-300 p-2">مقدار التغيير</th>
+                    <th className="border border-gray-300 p-2">الرصيد المتبقي</th>
+                    <th className="border border-gray-300 p-2">السبب</th>
+                    <th className="border border-gray-300 p-2">ملاحظات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTransactions.map(transaction => (
+                    <tr key={transaction.id}>
+                      <td className="border border-gray-300 p-2">
+                        {new Date(transaction.date).toLocaleDateString('ar-EG')}
+                      </td>
+                      <td className="border border-gray-300 p-2">{transaction.material_type}</td>
+                      <td className="border border-gray-300 p-2">
+                        {transaction.inner_diameter} × {transaction.outer_diameter}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        <span className={`px-2 py-1 rounded text-sm ${
+                          transaction.transaction_type === 'in' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {transaction.transaction_type === 'in' ? 'إضافة' : 'خصم'}
+                        </span>
+                      </td>
+                      <td className={`border border-gray-300 p-2 font-semibold ${
+                        transaction.height_change > 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {transaction.height_change > 0 ? '+' : ''}{transaction.height_change.toFixed(2)} مم
+                      </td>
+                      <td className="border border-gray-300 p-2 font-semibold">
+                        {transaction.remaining_height.toFixed(2)} مم
+                      </td>
+                      <td className="border border-gray-300 p-2">{transaction.reason}</td>
+                      <td className="border border-gray-300 p-2">{transaction.notes || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Low Stock Items View */}
+      {currentView === 'low-stock' && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4 text-red-600">
+            عناصر بمخزون منخفض ({lowStockItems.length})
+          </h3>
+          {lowStockItems.length === 0 ? (
+            <p className="text-green-600 text-center py-8">
+              ✅ جميع عناصر الجرد في المستوى الطبيعي
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-red-50">
+                    <th className="border border-gray-300 p-2">كود الوحدة</th>
+                    <th className="border border-gray-300 p-2">نوع المادة</th>
+                    <th className="border border-gray-300 p-2">المقاسات</th>
+                    <th className="border border-gray-300 p-2">المخزون الحالي</th>
+                    <th className="border border-gray-300 p-2">الحد الأدنى</th>
+                    <th className="border border-gray-300 p-2">نقص المخزون</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lowStockItems.map(item => (
+                    <tr key={item.id} className="bg-red-50">
+                      <td className="border border-gray-300 p-2 font-semibold">{item.unit_code}</td>
+                      <td className="border border-gray-300 p-2">{item.material_type}</td>
+                      <td className="border border-gray-300 p-2">
+                        {item.inner_diameter} × {item.outer_diameter}
+                      </td>
+                      <td className="border border-gray-300 p-2 font-semibold text-red-600">
+                        {item.available_height.toFixed(2)} مم
+                      </td>
+                      <td className="border border-gray-300 p-2">{item.min_stock_level} مم</td>
+                      <td className="border border-gray-300 p-2 font-semibold text-red-600">
+                        {(item.min_stock_level - item.available_height).toFixed(2)} مم
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add Item View */}
+      {currentView === 'add-item' && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">إضافة عنصر جرد جديد</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <select
+              value={newItem.material_type}
+              onChange={(e) => setNewItem({...newItem, material_type: e.target.value})}
+              className="p-2 border border-gray-300 rounded"
+            >
+              {materialTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={newItem.unit_code}
+              onChange={(e) => setNewItem({...newItem, unit_code: e.target.value})}
+              placeholder="كود الوحدة"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="number"
+              value={newItem.inner_diameter}
+              onChange={(e) => setNewItem({...newItem, inner_diameter: e.target.value})}
+              placeholder="القطر الداخلي"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="number"
+              value={newItem.outer_diameter}
+              onChange={(e) => setNewItem({...newItem, outer_diameter: e.target.value})}
+              placeholder="القطر الخارجي"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="number"
+              step="0.01"
+              value={newItem.available_height}
+              onChange={(e) => setNewItem({...newItem, available_height: e.target.value})}
+              placeholder="الارتفاع المتاح (مم)"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="number"
+              value={newItem.min_stock_level}
+              onChange={(e) => setNewItem({...newItem, min_stock_level: e.target.value})}
+              placeholder="الحد الأدنى للمخزون"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="number"
+              value={newItem.max_stock_level}
+              onChange={(e) => setNewItem({...newItem, max_stock_level: e.target.value})}
+              placeholder="الحد الأقصى للمخزون"
+              className="p-2 border border-gray-300 rounded"
+            />
+            <input
+              type="text"
+              value={newItem.notes}
+              onChange={(e) => setNewItem({...newItem, notes: e.target.value})}
+              placeholder="ملاحظات (اختياري)"
+              className="p-2 border border-gray-300 rounded"
+            />
+          </div>
+          <button
+            onClick={addInventoryItem}
+            className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            إضافة عنصر الجرد
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Local Products Management Component
 const Local = () => {
   const [suppliers, setSuppliers] = useState([]);
