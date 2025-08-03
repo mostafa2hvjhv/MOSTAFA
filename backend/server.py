@@ -289,6 +289,28 @@ class TreasuryTransactionCreate(BaseModel):
     amount: float
     description: str
     reference: Optional[str] = None
+
+class SupplierCreate(BaseModel):
+    name: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
+class LocalProductCreate(BaseModel):
+    name: str
+    supplier_id: str
+    purchase_price: float
+    selling_price: float
+    current_stock: Optional[int] = 0
+
+class SupplierTransactionCreate(BaseModel):
+    supplier_id: str
+    transaction_type: str
+    amount: float
+    description: str
+    product_name: Optional[str] = None
+    quantity: Optional[int] = None
+    unit_price: Optional[float] = None
+    payment_method: Optional[str] = None
     related_transaction_id: Optional[str] = None
 
 class TransferRequest(BaseModel):
