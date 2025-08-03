@@ -1528,11 +1528,16 @@ async def get_inventory():
 async def get_low_stock_items():
     """Get items with stock below minimum level"""
     try:
-        items = await db.inventory.find({
-            "$expr": {
-                "$lt": ["$available_height", "$min_stock_level"]
+        pipeline = [
+            {
+                "$match": {
+                    "$expr": {
+                        "$lt": ["$available_height", "$min_stock_level"]
+                    }
+                }
             }
-        }).to_list(None)
+        ]
+        items = await db.inventory.aggregate(pipeline).to_list(None)
         return items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
