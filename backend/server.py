@@ -227,6 +227,9 @@ class InvoiceCreate(BaseModel):
     discount_type: Optional[str] = "amount"  # نوع الخصم: amount أو percentage
     discount_value: Optional[float] = 0.0  # القيمة المدخلة للخصم
     notes: Optional[str] = None
+    
+    class Config:
+        use_enum_values = True
 
 class PaymentCreate(BaseModel):
     invoice_id: str
