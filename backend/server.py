@@ -209,6 +209,8 @@ class FinishedProductCreate(BaseModel):
 class InvoiceCreate(BaseModel):
     customer_id: Optional[str] = None
     customer_name: str
+    invoice_title: Optional[str] = None  # عنوان الفاتورة
+    supervisor_name: Optional[str] = None  # اسم المشرف
     items: List[InvoiceItem]
     payment_method: PaymentMethod
     discount_type: Optional[str] = "amount"  # نوع الخصم: amount أو percentage
