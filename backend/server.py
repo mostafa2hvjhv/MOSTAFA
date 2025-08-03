@@ -1150,6 +1150,239 @@ async def get_account_balances():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Suppliers endpoints
+@api_router.get("/suppliers", response_model=List[Supplier])
+async def get_suppliers():
+    """Get all suppliers"""
+    try:
+        suppliers = await db.suppliers.find({}).to_list(None)
+        return suppliers
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/suppliers", response_model=Supplier)
+async def create_supplier(supplier: SupplierCreate):
+    """Create a new supplier"""
+    try:
+        supplier_obj = Supplier(**supplier.dict())
+        await db.suppliers.insert_one(supplier_obj.dict())
+        
+        supplier_dict = supplier_obj.dict()
+        if "_id" in supplier_dict:
+            del supplier_dict["_id"]
+        return supplier_dict
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/suppliers/{supplier_id}")
+async def update_supplier(supplier_id: str, supplier: SupplierCreate):
+    """Update supplier information"""
+    try:
+        result = await db.suppliers.update_one(
+            {"id": supplier_id},
+            {"$set": supplier.dict()}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="المورد غير موجود")
+        return {"message": "تم تحديث بيانات المورد بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/suppliers/{supplier_id}")
+async def delete_supplier(supplier_id: str):
+    """Delete a supplier"""
+    try:
+        result = await db.suppliers.delete_one({"id": supplier_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="المورد غير موجود")
+        return {"message": "تم حذف المورد بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Local Products endpoints
+@api_router.get("/local-products", response_model=List[LocalProduct])
+async def get_local_products():
+    """Get all local products"""
+    try:
+        products = await db.local_products.find({}).to_list(None)
+        return products
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/local-products/supplier/{supplier_id}", response_model=List[LocalProduct])
+async def get_products_by_supplier(supplier_id: str):
+    """Get products by supplier"""
+    try:
+        products = await db.local_products.find({"supplier_id": supplier_id}).to_list(None)
+        return products
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/local-products", response_model=LocalProduct)
+async def create_local_product(product: LocalProductCreate):
+    """Create a new local product"""
+    try:
+        # Get supplier name
+        supplier = await db.suppliers.find_one({"id": product.supplier_id})
+        if not supplier:
+            raise HTTPException(status_code=404, detail="المورد غير موجود")
+        
+        product_obj = LocalProduct(
+            **product.dict(),
+            supplier_name=supplier["name"]
+        )
+        await db.local_products.insert_one(product_obj.dict())
+        
+        product_dict = product_obj.dict()
+        if "_id" in product_dict:
+            del product_dict["_id"]
+        return product_dict
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/local-products/{product_id}")
+async def update_local_product(product_id: str, product: LocalProductCreate):
+    """Update local product"""
+    try:
+        # Get supplier name
+        supplier = await db.suppliers.find_one({"id": product.supplier_id})
+        if not supplier:
+            raise HTTPException(status_code=404, detail="المورد غير موجود")
+        
+        update_data = product.dict()
+        update_data["supplier_name"] = supplier["name"]
+        
+        result = await db.local_products.update_one(
+            {"id": product_id},
+            {"$set": update_data}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود")
+        return {"message": "تم تحديث المنتج بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/local-products/{product_id}")
+async def delete_local_product(product_id: str):
+    """Delete a local product"""
+    try:
+        result = await db.local_products.delete_one({"id": product_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود")
+        return {"message": "تم حذف المنتج بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Supplier Transactions endpoints
+@api_router.get("/supplier-transactions", response_model=List[SupplierTransaction])
+async def get_supplier_transactions():
+    """Get all supplier transactions"""
+    try:
+        transactions = await db.supplier_transactions.find({}).sort("date", -1).to_list(None)
+        return transactions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/supplier-transactions/{supplier_id}", response_model=List[SupplierTransaction])
+async def get_supplier_transactions_by_id(supplier_id: str):
+    """Get transactions for a specific supplier"""
+    try:
+        transactions = await db.supplier_transactions.find({"supplier_id": supplier_id}).sort("date", -1).to_list(None)
+        return transactions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/supplier-transactions", response_model=SupplierTransaction)
+async def create_supplier_transaction(transaction: SupplierTransactionCreate):
+    """Create a supplier transaction (purchase or payment)"""
+    try:
+        # Get supplier name
+        supplier = await db.suppliers.find_one({"id": transaction.supplier_id})
+        if not supplier:
+            raise HTTPException(status_code=404, detail="المورد غير موجود")
+        
+        transaction_obj = SupplierTransaction(
+            **transaction.dict(),
+            supplier_name=supplier["name"]
+        )
+        await db.supplier_transactions.insert_one(transaction_obj.dict())
+        
+        # Update supplier balance
+        if transaction.transaction_type == "purchase":
+            # Increase supplier balance (we owe them)
+            await db.suppliers.update_one(
+                {"id": transaction.supplier_id},
+                {
+                    "$inc": {
+                        "total_purchases": transaction.amount,
+                        "balance": transaction.amount
+                    }
+                }
+            )
+        elif transaction.transaction_type == "payment":
+            # Decrease supplier balance (we paid them)
+            await db.suppliers.update_one(
+                {"id": transaction.supplier_id},
+                {
+                    "$inc": {
+                        "total_paid": transaction.amount,
+                        "balance": -transaction.amount
+                    }
+                }
+            )
+        
+        transaction_dict = transaction_obj.dict()
+        if "_id" in transaction_dict:
+            del transaction_dict["_id"]
+        return transaction_dict
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/supplier-payment")
+async def pay_supplier(supplier_id: str, amount: float, payment_method: str = "cash"):
+    """Pay a supplier and deduct from treasury"""
+    try:
+        # Get supplier
+        supplier = await db.suppliers.find_one({"id": supplier_id})
+        if not supplier:
+            raise HTTPException(status_code=404, detail="المورد غير موجود")
+        
+        # Create supplier payment transaction
+        supplier_transaction = SupplierTransaction(
+            supplier_id=supplier_id,
+            supplier_name=supplier["name"],
+            transaction_type="payment",
+            amount=amount,
+            description=f"دفع للمورد {supplier['name']}",
+            payment_method=payment_method
+        )
+        await db.supplier_transactions.insert_one(supplier_transaction.dict())
+        
+        # Update supplier balance
+        await db.suppliers.update_one(
+            {"id": supplier_id},
+            {
+                "$inc": {
+                    "total_paid": amount,
+                    "balance": -amount
+                }
+            }
+        )
+        
+        # Create treasury transaction (expense)
+        treasury_transaction = TreasuryTransaction(
+            account_id=payment_method,
+            transaction_type="expense",
+            amount=amount,
+            description=f"دفع للمورد {supplier['name']}",
+            reference=f"supplier_payment_{supplier_transaction.id}"
+        )
+        await db.treasury_transactions.insert_one(treasury_transaction.dict())
+        
+        return {"message": "تم دفع المبلغ للمورد بنجاح", "payment_id": supplier_transaction.id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
