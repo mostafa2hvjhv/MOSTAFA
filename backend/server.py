@@ -751,6 +751,17 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     
     await db.invoices.insert_one(invoice_obj.dict())
     
+    # Add treasury transaction for non-deferred payments
+    if invoice.payment_method != PaymentMethod.DEFERRED:
+        treasury_transaction = TreasuryTransaction(
+            account_id=str(invoice.payment_method).lower(),  # Convert payment method to account ID
+            transaction_type="income",
+            amount=total_after_discount,
+            description=f"فاتورة {invoice_number} - {invoice.customer_name}",
+            reference=f"invoice_{invoice_obj.id}"
+        )
+        await db.treasury_transactions.insert_one(treasury_transaction.dict())
+    
     # Add to daily work order automatically
     try:
         today = datetime.now().date()
