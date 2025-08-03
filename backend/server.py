@@ -344,10 +344,8 @@ class InventoryItemCreate(BaseModel):
     material_type: MaterialType
     inner_diameter: float
     outer_diameter: float
-    available_height: float
-    min_stock_level: Optional[float] = 10.0
-    max_stock_level: Optional[float] = 1000.0
-    unit_code: str
+    available_pieces: int  # تغيير من available_height إلى available_pieces
+    min_stock_level: Optional[int] = 2  # الحد الأدنى 2 قطعة
     notes: Optional[str] = None
 
 class InventoryTransactionCreate(BaseModel):
@@ -356,7 +354,7 @@ class InventoryTransactionCreate(BaseModel):
     inner_diameter: float
     outer_diameter: float
     transaction_type: str
-    height_change: float
+    pieces_change: int  # التغيير في عدد القطع
     reason: str
     reference_id: Optional[str] = None
     notes: Optional[str] = None
