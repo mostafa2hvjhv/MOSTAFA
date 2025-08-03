@@ -749,7 +749,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     await db.invoices.insert_one(invoice_obj.dict())
     
     # Add treasury transaction for non-deferred payments
-    if invoice.payment_method != PaymentMethod.DEFERRED:
+    if str(invoice.payment_method) != "آجل":  # التحقق من النص العربي
         # Map payment methods to treasury account IDs
         payment_method_mapping = {
             "نقدي": "cash",
