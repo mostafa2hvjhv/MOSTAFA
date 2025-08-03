@@ -174,6 +174,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
     { key: 'treasury', label: 'الخزينة' },
+    { key: 'invoices', label: 'الفواتير' },
     { key: 'work-orders', label: 'أمر شغل' }
   ];
   
