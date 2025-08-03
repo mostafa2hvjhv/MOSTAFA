@@ -890,6 +890,17 @@ const Sales = () => {
                 className="w-full p-2 border border-gray-300 rounded"
               />
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">عنوان الفاتورة</label>
+              <input
+                type="text"
+                value={invoiceTitle}
+                onChange={(e) => setInvoiceTitle(e.target.value)}
+                placeholder="عنوان الفاتورة (اختياري)"
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
           </div>
         </div>
 
