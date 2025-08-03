@@ -1685,7 +1685,7 @@ async def create_inventory_item(item: InventoryItemCreate):
 async def update_inventory_item(item_id: str, item: InventoryItemCreate):
     """Update inventory item"""
     try:
-        result = await db.inventory.update_one(
+        result = await db.inventory_items.update_one(
             {"id": item_id},
             {
                 "$set": {
