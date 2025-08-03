@@ -1800,7 +1800,7 @@ async def check_inventory_availability(
 ):
     """Check if material is available in inventory with required pieces"""
     try:
-        inventory_item = await db.inventory.find_one({
+        inventory_item = await db.inventory_items.find_one({
             "material_type": material_type,
             "inner_diameter": inner_diameter,
             "outer_diameter": outer_diameter
