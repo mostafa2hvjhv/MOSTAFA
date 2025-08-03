@@ -1737,6 +1737,63 @@ async def get_inventory_transactions_by_item(item_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Business logic function for inventory transactions
+async def create_inventory_transaction(transaction: InventoryTransactionCreate):
+    """Create inventory transaction (in/out) - Business logic"""
+    # Find inventory item by specifications if item_id not provided
+    if not transaction.inventory_item_id:
+        inventory_item = await db.inventory_items.find_one({
+            "material_type": transaction.material_type,
+            "inner_diameter": transaction.inner_diameter,
+            "outer_diameter": transaction.outer_diameter
+        })
+        
+        if not inventory_item:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"لا يوجد عنصر في الجرد بالمواصفات المطلوبة: {transaction.material_type} - {transaction.inner_diameter}x{transaction.outer_diameter}"
+            )
+        transaction.inventory_item_id = inventory_item["id"]
+    else:
+        inventory_item = await db.inventory_items.find_one({"id": transaction.inventory_item_id})
+        if not inventory_item:
+            raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
+    
+    # Check if there's enough stock for "out" transactions
+    if transaction.transaction_type == "out" and abs(transaction.pieces_change) > inventory_item["available_pieces"]:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"المخزون غير كافي. المتاح: {inventory_item['available_pieces']} قطعة، المطلوب: {abs(transaction.pieces_change)} قطعة"
+        )
+    
+    # Calculate new remaining pieces
+    new_pieces = inventory_item["available_pieces"] + transaction.pieces_change
+    if new_pieces < 0:
+        new_pieces = 0
+    
+    # Create transaction
+    transaction_obj = InventoryTransaction(
+        **transaction.dict(),
+        remaining_pieces=new_pieces
+    )
+    await db.inventory_transactions.insert_one(transaction_obj.dict())
+    
+    # Update inventory item
+    await db.inventory_items.update_one(
+        {"id": transaction.inventory_item_id},
+        {
+            "$set": {
+                "available_pieces": new_pieces,
+                "last_updated": datetime.utcnow()
+            }
+        }
+    )
+    
+    transaction_dict = transaction_obj.dict()
+    if "_id" in transaction_dict:
+        del transaction_dict["_id"]
+    return transaction_dict
+
 @api_router.post("/inventory-transactions", response_model=InventoryTransaction)
 async def create_inventory_transaction(transaction: InventoryTransactionCreate):
     """Create inventory transaction (in/out)"""
