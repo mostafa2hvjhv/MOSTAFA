@@ -410,6 +410,7 @@ const Sales = () => {
   const [newCustomer, setNewCustomer] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [supervisorName, setSupervisorName] = useState(''); // اسم المشرف على التصنيع
+  const [invoiceTitle, setInvoiceTitle] = useState(''); // عنوان الفاتورة
   const [currentItem, setCurrentItem] = useState({
     seal_type: 'RSL',
     material_type: 'NBR',
@@ -417,7 +418,14 @@ const Sales = () => {
     outer_diameter: '',
     height: '',
     quantity: 1,
-    unit_price: ''
+    unit_price: '',
+    product_type: 'manufactured' // manufactured أو local
+  });
+  const [localProduct, setLocalProduct] = useState({
+    name: '',
+    purchase_price: '',
+    selling_price: '',
+    supplier: ''
   });
   const [items, setItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('نقدي');
