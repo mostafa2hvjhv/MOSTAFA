@@ -5149,6 +5149,17 @@ const Treasury = () => {
             تفاصيل حساب: {selectedAccountData.name}
           </h3>
           
+          {/* Search Bar */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="البحث في المعاملات..."
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
               <thead>
@@ -5161,7 +5172,13 @@ const Treasury = () => {
                 </tr>
               </thead>
               <tbody>
-                {selectedAccountData.transactions.map((transaction, index) => (
+                {selectedAccountData.transactions
+                  .filter(transaction => 
+                    transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (transaction.reference && transaction.reference.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (transaction.category && transaction.category.toLowerCase().includes(searchTerm.toLowerCase()))
+                  )
+                  .map((transaction, index) => (
                   <tr key={transaction.id || index}>
                     <td className="border border-gray-300 p-2">
                       {new Date(transaction.date).toLocaleDateString('ar-EG')}
