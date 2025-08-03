@@ -1623,7 +1623,7 @@ async def get_low_stock_items():
                 }
             }
         ]
-        items = await db.inventory.aggregate(pipeline).to_list(None)
+        items = await db.inventory_items.aggregate(pipeline).to_list(None)
         return items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
