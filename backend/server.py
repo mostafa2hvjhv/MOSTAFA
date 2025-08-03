@@ -1751,21 +1751,21 @@ async def create_inventory_transaction(transaction: InventoryTransactionCreate):
                 raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
         
         # Check if there's enough stock for "out" transactions
-        if transaction.transaction_type == "out" and abs(transaction.height_change) > inventory_item["available_height"]:
+        if transaction.transaction_type == "out" and abs(transaction.pieces_change) > inventory_item["available_pieces"]:
             raise HTTPException(
                 status_code=400, 
-                detail=f"المخزون غير كافي. المتاح: {inventory_item['available_height']}، المطلوب: {abs(transaction.height_change)}"
+                detail=f"المخزون غير كافي. المتاح: {inventory_item['available_pieces']} قطعة، المطلوب: {abs(transaction.pieces_change)} قطعة"
             )
         
-        # Calculate new remaining height
-        new_height = inventory_item["available_height"] + transaction.height_change
-        if new_height < 0:
-            new_height = 0
+        # Calculate new remaining pieces
+        new_pieces = inventory_item["available_pieces"] + transaction.pieces_change
+        if new_pieces < 0:
+            new_pieces = 0
         
         # Create transaction
         transaction_obj = InventoryTransaction(
             **transaction.dict(),
-            remaining_height=new_height
+            remaining_pieces=new_pieces
         )
         await db.inventory_transactions.insert_one(transaction_obj.dict())
         
@@ -1774,7 +1774,7 @@ async def create_inventory_transaction(transaction: InventoryTransactionCreate):
             {"id": transaction.inventory_item_id},
             {
                 "$set": {
-                    "available_height": new_height,
+                    "available_pieces": new_pieces,
                     "last_updated": datetime.utcnow()
                 }
             }
@@ -1792,9 +1792,9 @@ async def check_inventory_availability(
     material_type: MaterialType, 
     inner_diameter: float, 
     outer_diameter: float, 
-    required_height: float
+    required_pieces: int
 ):
-    """Check if material is available in inventory with required height"""
+    """Check if material is available in inventory with required pieces"""
     try:
         inventory_item = await db.inventory.find_one({
             "material_type": material_type,
@@ -1806,20 +1806,19 @@ async def check_inventory_availability(
             return {
                 "available": False,
                 "message": f"المادة الخام غير متوفرة في الجرد: {material_type} - {inner_diameter}x{outer_diameter}",
-                "available_height": 0,
-                "required_height": required_height
+                "available_pieces": 0,
+                "required_pieces": required_pieces
             }
         
-        available_height = inventory_item.get("available_height", 0)
-        is_available = available_height >= required_height
+        available_pieces = inventory_item.get("available_pieces", 0)
+        is_available = available_pieces >= required_pieces
         
         return {
             "available": is_available,
             "message": f"{'المادة متوفرة' if is_available else 'المادة غير متوفرة بالكمية المطلوبة'}",
-            "available_height": available_height,
-            "required_height": required_height,
-            "inventory_item_id": inventory_item["id"],
-            "unit_code": inventory_item.get("unit_code", "")
+            "available_pieces": available_pieces,
+            "required_pieces": required_pieces,
+            "inventory_item_id": inventory_item["id"]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
