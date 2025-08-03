@@ -340,6 +340,27 @@ class SupplierTransactionCreate(BaseModel):
     quantity: Optional[int] = None
     unit_price: Optional[float] = None
     payment_method: Optional[str] = None
+
+class InventoryItemCreate(BaseModel):
+    material_type: MaterialType
+    inner_diameter: float
+    outer_diameter: float
+    available_height: float
+    min_stock_level: Optional[float] = 10.0
+    max_stock_level: Optional[float] = 1000.0
+    unit_code: str
+    notes: Optional[str] = None
+
+class InventoryTransactionCreate(BaseModel):
+    inventory_item_id: Optional[str] = None  # يمكن أن يكون فارغ للإضافة التلقائية
+    material_type: MaterialType
+    inner_diameter: float
+    outer_diameter: float
+    transaction_type: str
+    height_change: float
+    reason: str
+    reference_id: Optional[str] = None
+    notes: Optional[str] = None
     related_transaction_id: Optional[str] = None
 
 class TransferRequest(BaseModel):
