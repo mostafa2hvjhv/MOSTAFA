@@ -606,11 +606,11 @@ agent_communication:
 
   - task: "Latest Improvements Bug Fixes - إصلاح أخطاء التحسينات الأخيرة"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
@@ -618,6 +618,9 @@ agent_communication:
       - working: true
         agent: "main"
         comment: "تم إصلاح جميع المشاكل الحرجة: 1) نظام الجرد: إصلاح استخدام pieces_change بدلاً من height_change، تصحيح collection names من inventory إلى inventory_items، 2) تكامل الخزينة: إصلاح مطابقة طرق الدفع مع القيم العربية الصحيحة، إصلاح شرط الفواتير الآجلة، 3) تحرير الفواتير: تحسين منطق حساب الخصم مع معالجة أفضل للقيم الفارغة، 4) تصحيح استدعاء check_inventory_availability لاستخدام required_pieces بدلاً من required_height"
+      - working: false
+        agent: "testing"
+        comment: "❌ اختبار التحسينات الأخيرة كشف مشاكل حرجة مستمرة! نسبة النجاح: 86.7% (26/30 اختبار). **المشاكل المحلولة:** 1) **نظام الجرد الأساسي:** POST /api/inventory يعمل بشكل مثالي - إنشاء 3 عناصر جرد بنجاح، GET /api/inventory يعمل، GET /api/inventory/low-stock تم إصلاحه ولا يعطي خطأ 500، إنشاء معاملات الجرد يعمل، 2) **تحرير الفواتير:** يعمل بشكل مثالي - حساب الخصم النسبي (15%) والثابت (25 ج.م) يعمل بدقة، total_after_discount يُحسب بشكل صحيح، 3) **الفواتير الآجلة:** تعمل بشكل صحيح ولا تنشئ معاملات خزينة. **المشاكل الحرجة المستمرة:** 1) **تطابق طرق الدفع في الخزينة:** جميع الفواتير تُسجل في حساب 'cash' بدلاً من الحسابات الصحيحة (فودافون كاش محمد الصاوي → vodafone_elsawy، انستاباي → instapay)، 2) **تكامل الجرد مع المواد الخام:** عند إنشاء مادة خام بـ2 قطعة، الجرد يزيد بدلاً من النقصان (من 10 إلى 13 بدلاً من 8)، 3) **معاملات الجرد:** GET /api/inventory-transactions يعطي خطأ HTTP 500. هذه المشاكل تؤثر على دقة النظام المالي وإدارة المخزون."
 
 agent_communication:
   - agent: "main"
