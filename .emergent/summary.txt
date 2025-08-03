@@ -1,21 +1,22 @@
 <analysis>
-The previous AI engineer successfully brought the Master Seal application from conception to a functional MVP, implementing a full-stack solution using FastAPI, React, and MongoDB. The initial phase focused on core modules and expanding functionality according to detailed Arabic product requirements, including RTL support and complex business logic for oil seal manufacturing.
-
-The development trajectory highlights a continuous cycle of feature implementation, bug identification, and meticulous resolution. Key challenges addressed included persistent delete functionalities (frontend state vs. backend persistence), ensuring correct data display in work orders (especially unit codes and material details), implementing new features like daily automatic work orders, a comprehensive treasury system with financial transactions, and a robust invoice discount mechanism. The engineer demonstrated strong debugging skills, iteratively refining the application based on user feedback and in-depth code analysis for both frontend and backend components. Current work focuses on resolving a frontend rendering error in the sales module.
+The previous AI engineer successfully transitioned the Master Seal application from an MVP to a feature-rich system. The development trajectory illustrates an iterative process of implementing complex Arabic-specific product requirements, including RTL support and intricate business logic for oil seal manufacturing. Key functionalities added or refined include a comprehensive treasury system, automated daily work orders, and a robust invoice discount mechanism. The engineer demonstrated strong debugging capabilities, addressing persistent issues like frontend state synchronization and backend data persistence. The work involved extensive modifications to both the FastAPI backend and React frontend, focusing on expanding core modules and meticulously resolving reported bugs, such as initial JSX syntax errors and issues within the user management module. The most recent efforts have concentrated on further refining inventory logic, local product handling, invoice editing, and resolving a recurring treasury issue, indicating a continuous cycle of enhancement and stabilization.
 </analysis>
 
 <product_requirements>
-The Master Seal application is a comprehensive management system for an oil seal manufacturing and supply company, designed to manage sales, inventory, production, expenses, revenues, and detailed settings. Key features include:
-
-*   **Sales:** Recording customer orders, linking to inventory for raw material deduction based on oil seal dimensions (inner/outer/height), issuing immediate/deferred invoices, and generating reports. Supports multiple products per invoice. A recent addition is a discount field (fixed or percentage) on invoices.
-*   **Inventory:** Managing raw materials (cylindrical stock by dimensions, material type) with low-stock alerts, and finished goods inventory.
-*   **Accounts Payable (Deferred Invoices):** Tracking unpaid invoices, customer ledgers, payment reminders, and partial/full payments.
-*   **Revenues & Expenses:** Recording income/expenses, categorization, and generating financial reports (monthly, weekly, daily profit/loss).
-*   **Work Order (امر شغل):** Selecting multiple invoices for a single work order, displaying used material and unit codes, and tracking manufacturing status. Recently enhanced with an automatic daily work order creation and a supervisor name field.
-*   **Treasury:** A newly implemented module managing 6 financial accounts (Cash, Vodafone Cash Elsawy, Vodafone Cash Wael, Deferred, InstaPay, and 'Yad Elsawy'). It tracks automatic transactions from invoices/expenses, allows manual income/expense entries, and facilitates transfers between accounts. The 'Yad Elsawy' account can be zeroed only by the admin user 'Elsawy'.
-*   **User Management:** Multiple user roles (admin, sub) with configurable permissions.
-*   **Reporting:** Various sales, inventory, expense, and profit/loss reports.
-*   **Technical Details:** Full Arabic UI with RTL support, Tailwind CSS, MongoDB, FastAPI APIs, direct invoice printing (now unified and improved with company logo and updated address), automatic inventory/payment updates, and various payment methods. The compatibility check feature ensures correct material usage.
+The Master Seal application is a comprehensive management system for an oil seal manufacturing and supply company. It manages sales, inventory, production, expenses, revenues, and user settings.
+Key features include:
+*   **Sales:** Recording customer orders, linking to inventory for raw material deduction, immediate/deferred invoicing, multiple products per invoice, and a discount field (fixed/percentage). It now supports local products with separate size and type fields, linked to suppliers. Invoice creation now includes an editable title field.
+*   **Inventory (Jard):** A new dedicated section for raw material stock management, tracking by number of pieces instead of height. It performs availability checks and automatic deduction upon adding raw materials, with error messages if stock is insufficient. Minimum stock limit is 2 pieces, no maximum.
+*   **Accounts Payable (Deferred Invoices):** Tracks unpaid invoices, customer ledgers, payment reminders, and partial/full payments.
+*   **Revenues & Expenses:** Recording income/expenses, categorization, and generating financial reports.
+*   **Work Order (امر شغل):** Selecting multiple invoices for work orders, displaying material and unit codes, and tracking manufacturing status. Enhanced with automatic daily work order creation and a supervisor name field.
+*   **Treasury:** Manages 6 financial accounts, tracks automatic transactions from invoices/expenses, allows manual entries and transfers. The 'Yad Elsawy' account can be cleared by admin 'Elsawy'. A recurring issue with deferred payments not correctly affecting the treasury is being addressed.
+*   **User Management:** Multiple user roles with configurable permissions. Initially had issues with edits not persisting and new user registration, which have been fixed. Dashboard access is restricted to 'Elsawy' only.
+*   **Local Page:** A new section for managing suppliers (name, phone, address), local products (name, buy/sell price per supplier), recording purchases, tracking supplier accounts, and a payment system linked to the Treasury for settlement.
+*   **Invoices (General):** Invoices are now visible to all users. A new feature has been added to allow editing saved invoices, including the ability to modify invoice items.
+*   **Search/Filtering:** General search filtering has been requested for Suppliers, Inventory, Jard, Expenses, and Treasury pages.
+*   **Excel Integration:** Future request to import/export raw materials and Jard data via Excel sheets.
+*   **Technical Details:** Full Arabic UI with RTL support, Tailwind CSS, MongoDB, FastAPI APIs, direct invoice printing (now unified, improved with company logo/address), automatic inventory/payment updates, and various payment methods. UUIDs are used for IDs.
 </product_requirements>
 
 <key_technical_concepts>
@@ -23,61 +24,60 @@ The Master Seal application is a comprehensive management system for an oil seal
 -   **Database:** MongoDB with  (async driver).
 -   **UI/UX:** Tailwind CSS for styling, Arabic UI with RTL support.
 -   **API Design:** RESTful APIs using  prefix for Kubernetes ingress.
--   **Business Logic:** Complex calculations for oil seal dimensions, raw material deduction, invoice processing (including discounts), and financial ledger management.
+-   **Data Management:** Complex business logic for oil seal dimensions, raw material deduction, invoice processing (including discounts, local products), and financial ledger management (Treasury, Suppliers, Inventory).
 -   **State Management:** React's  and  for frontend data,  for API interactions.
--   **Authentication & Authorization:** Role-based access control.
--   **UUIDs:** Used for IDs instead of MongoDB ObjectIDs for better JSON serialization.
+-   **Authentication & Authorization:** Role-based access control (e.g., Elsawy for Dashboard).
+-   **UUIDs:** Used for IDs for better JSON serialization.
 </key_technical_concepts>
 
 <code_architecture>
 
 
 -   ****:
-    -   **Summary**: This file encapsulates the entire FastAPI backend, defining API endpoints, handling business logic, and interacting with MongoDB. It manages data models for all application modules.
-    -   **Changes Made**:
-        *   **Extensive CRUD operations** for all entities (sales, inventory, customers, expenses, revenues, invoices, work orders, users, finished products, treasury transactions).
-        *   **Added clear all APIs** for various modules (inventory, expenses, invoices, work orders) and individual  APIs for customers, payments, work orders, users, and finished products.
-        *   **Refined  and  models**:  now includes , , , . Crucially,  now includes  (a dictionary) to persist full raw material information.
-        *   **Work Order Logic**: Modified to support automatic daily work order creation, including  and  fields in the  model.
-        *   **Treasury APIs**: Introduced  model and corresponding APIs (, , , ).
-        *   **Payment Methods**: Updated  enum to include .
-        *   **Compatibility Check**: Logic enhanced with better validation.
-        *   **Error Handling**: Improvements for MongoDB ObjectId serialization and data parsing.
+    -   **Summary**: The core FastAPI backend. It defines all API endpoints, houses business logic, and interacts directly with MongoDB. It contains  definitions for all application entities.
+    -   **Changes Made**: This file has undergone extensive modifications throughout the project.
+        *   **CRUD Operations:** Implemented for all modules (sales, inventory, customers, expenses, revenues, invoices, work orders, users, finished products, treasury transactions, *newly added: suppliers, local products, inventory items, supplier transactions*).
+        *   **Model Refinements:**  and  models now include fields for , , , , , .  also stores  and now handles  with  and .  includes  and .  model now has . New models , , , ,  were added with their respective fields (e.g.,  for  instead of ).
+        *   **New APIs:** Introduced APIs for Treasury (balances, transactions, transfer, clear-account), Suppliers, Local Products, and Inventory Management (, ). A new  for full invoice updates was added.
+        *   **Business Logic Integration:** Updated  to handle  and  creation. Modified raw material addition API to check  stock () and deduct quantities. Fixed  enum comparison for deferred payments.
+        *   **Error Handling:** Improved for MongoDB ObjectId serialization and data parsing, ensuring UUID usage.
 
 -   ****:
-    -   **Summary**: This is the main React component managing the application's routing, user authentication, data fetching from backend APIs, and rendering of UI components for all modules.
-    -   **Changes Made**: This file has been heavily modified to support new features and bug fixes.
-        *   **Authentication & Navigation**: Implemented login, user context, and dynamic navigation based on user roles.
-        *   **Module Components**: Developed and integrated all module-specific components (Dashboard, Sales, Inventory, Accounts Payable, Expenses, Revenues, Invoices, Work Orders, User Management, and the newly added Treasury).
-        *   **API Integration**: Utilizes  for all backend interactions.
-        *   **State Management**: Manages complex form inputs, data display, and UI interactions (tables, modals, dynamic buttons).
-        *   **Delete Functionality**: Updated  functions and individual  functions to correctly call backend APIs and refresh state, fixing persistence issues.  added for user list refresh.
-        *   **Work Order Display & Print**: Corrected unit code display logic to show raw material details (e.g., ) instead of finished seal dimensions, and added logic for Finished Goods Inventory.  now passed to invoices correctly for persistence.
-        *   **Invoice Printing**: Unified  function across Sales and Invoices pages, adding company logo (base64 encoded), updated address, and improved font sizes.
-        *   **Daily Work Order**: Added input for  in sales form, updated logic to send it to the backend.
-        *   **Treasury Module**: Integrated the new Treasury component, linking its manual transactions and transfers to new backend APIs. Added the 'Yad Elsawy' account and a conditional Clear button visible only to admin.
-        *   **Discount Feature**: Added discount type (fixed/percentage) and value inputs to sales form, calculated and displayed discount breakdown, and updated invoice display tables.
-        *   **Compatibility Check**: Added  validation to prevent  issues.
-        *   **Minor Fixes**: Corrected JSX  attribute usage (from string to object).
+    -   **Summary**: The main React component responsible for routing, authentication, data fetching, and rendering all UI components. It acts as the central hub for user interaction.
+    -   **Changes Made**: Heavily modified to integrate new features and fix numerous bugs.
+        *   **Core Logic:** Implemented login, user context, and dynamic navigation. Utilizes  for all backend interactions. Manages complex form inputs, data display, and UI interactions.
+        *   **Bug Fixes:** Corrected JSX  attribute usage (e.g.,  to ). Fixed user management issues: , ,  now correctly persist data to backend; default users are created in DB on first run;  now allows backend to generate UUIDs/timestamps.
+        *   **New Module Integration:** Developed and integrated new components for Treasury, Local (Supplier/Local Product management), and Jard (Inventory management).
+        *   **Invoice Enhancements:** Added ,  input to sales form. Implemented logic to differentiate between manufacturing and local products (,  fields).  unified. Implemented  for editing saved invoices, including invoice items.
+        *   **Dashboard Access Control:** Restricted Dashboard visibility and access to 'Elsawy' user only via navigation,  logic, and within the  component itself.
+        *   **Local Page UI:** Implemented UI for Supplier and Local Product CRUD, including supplier balance tracking, payment system linked to Treasury.
+        *   **Jard Page UI:** Implemented UI for inventory item and transaction management, displaying stock , low-stock alerts, and search functionality. Unit code display/input removed.
+        *   **Search Filters:** Added search functionality to Treasury and Jard pages.
 
 -   ****:
-    -   **Summary**: Contains global and component-specific CSS, primarily for Tailwind CSS directives and custom styles.
-    -   **Changes Made**: Likely minor adjustments to accommodate new components and ensure consistent visual theme and RTL support.
+    -   **Summary**: Contains global and component-specific CSS styles, leveraging Tailwind CSS.
+    -   **Changes Made**: Likely minor adjustments to accommodate new components and maintain visual consistency and RTL support.
 
 -   ** & **:
-    -   **Summary**: These files contain environment variables for backend (MongoDB URL) and frontend (backend API URL).
-    -   **Changes Made**: None, as per strict instructions against modifying these protected files.
-
+    -   **Summary**: These files store critical environment variables (MongoDB URL for backend, backend API URL for frontend).
+    -   **Changes Made**: None, as per strict instructions against modifying these protected configuration files.
 </code_architecture>
 
 <pending_tasks>
--   **Fix Frontend Error on Add to Invoice**: Resolve the JavaScript error () occurring when clicking the Add to Invoice button in the Sales module.
+-   **Excel Import/Export:** Implement functionality to import/export raw materials and Jard data via Excel sheets.
+-   **Resolve Current Bugs:** Debug and fix the remaining issues found during the latest round of testing, specifically related to the Jard system's quantity updates, local product splitting, invoice item editing, and the recurring deferred payment/treasury interaction.
 </pending_tasks>
 
 <current_work>
-The current work focuses on resolving a frontend bug reported by the user: في المبيعات عند الضغط علي اضاغة للفاتورة يعطي هذا الرساله (In sales, when clicking 'add to invoice', an error message appears). The AI engineer has identified that the issue is likely due to incorrect JSX syntax, specifically using  as a string instead of an object. The last action was to search for the specific problematic line () within  to begin the fix. The goal is to correct this syntax error to ensure the sales form's Add to Invoice functionality works without visual or functional errors.
+The AI engineer is currently in the process of rectifying issues that arose from the most recent round of feature implementations and bug fixes. The work immediately before this summary involved addressing the user's latest feedback:
+1.  **Jard System Refinement:** The backend models (, ) and corresponding APIs in  were updated to track raw material inventory by  (number of pieces) instead of , and the  field was removed, with a minimum threshold of 2 pieces. The frontend  (Jard) component in  was also updated to reflect these changes in its UI, input fields, and display tables.
+2.  **Local Product Name Split:** The  model in  was modified to split the  field into  and . The Sales page's Add Product section in  was updated to include separate input fields for these new attributes, and the  function was adjusted to send this segmented data.
+3.  **Invoice Item Editing:** Functionality was added to the  in  to allow users to modify individual items within a saved invoice.
+4.  **Treasury & Deferred Payment Fix Re-attempt:** The issue where deferred payments were not correctly reflected in the Treasury was re-investigated. The previous fix involved adding logic to the  and  APIs in  to correctly handle Treasury transactions based on payment method ( vs. others). A specific fix was applied to correct  enum comparison logic.
+
+The last action recorded () was اكتشفت المشاكل في التحسينات. دعني أصلحها بسرعة (Discovered problems in improvements. Let me fix them quickly), indicating that the features listed above were implemented but are currently exhibiting bugs that the engineer is actively trying to resolve. Therefore, the product state reflects these changes, but they are not yet fully functional or stable.
 </current_work>
 
 <optional_next_step>
-Correct the JSX  attribute from a string to an object in  to resolve the reported error.
+Continue debugging and resolving the issues identified in the recently implemented Jard, local product, invoice editing, and deferred payment/treasury features.
 </optional_next_step>

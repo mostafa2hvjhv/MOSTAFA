@@ -6,7 +6,7 @@ Focused test to verify specific issues found in latest improvements testing
 import requests
 import json
 
-BACKEND_URL = "https://7194fb5a-e781-47eb-a7a7-f1f4c1a30a57.preview.emergentagent.com/api"
+BACKEND_URL = "https://599daaea-1291-4db2-8599-f00a6cfcd246.preview.emergentagent.com/api"
 
 def test_treasury_integration():
     """Test treasury integration with different payment methods"""
