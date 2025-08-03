@@ -3438,6 +3438,17 @@ const Invoices = () => {
   const [customers, setCustomers] = useState([]);
   const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [editForm, setEditForm] = useState({
+    invoice_title: '',
+    supervisor_name: '',
+    customer_name: '',
+    payment_method: 'نقدي',
+    discount_type: 'amount',
+    discount_value: 0,
+    items: [],
+    notes: ''
+  });
 
   useEffect(() => {
     fetchInvoices();
@@ -3472,6 +3483,71 @@ const Invoices = () => {
     } catch (error) {
       console.error('Error deleting invoice:', error);
       alert('حدث خطأ في حذف الفاتورة');
+    }
+  };
+
+  const startEditInvoice = (invoice) => {
+    setEditingInvoice(invoice.id);
+    setEditForm({
+      invoice_title: invoice.invoice_title || '',
+      supervisor_name: invoice.supervisor_name || '',
+      customer_name: invoice.customer_name || '',
+      payment_method: invoice.payment_method || 'نقدي',
+      discount_type: invoice.discount_type || 'amount',
+      discount_value: invoice.discount_value || 0,
+      items: invoice.items || [],
+      notes: invoice.notes || ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingInvoice(null);
+    setEditForm({
+      invoice_title: '',
+      supervisor_name: '',
+      customer_name: '',
+      payment_method: 'نقدي',
+      discount_type: 'amount',
+      discount_value: 0,
+      items: [],
+      notes: ''
+    });
+  };
+
+  const saveInvoiceEdit = async () => {
+    if (!editForm.customer_name.trim()) {
+      alert('الرجاء إدخال اسم العميل');
+      return;
+    }
+
+    try {
+      // Calculate totals
+      const subtotal = editForm.items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+      let discountAmount = 0;
+      
+      if (editForm.discount_type === 'percentage') {
+        discountAmount = (subtotal * parseFloat(editForm.discount_value || 0)) / 100;
+      } else {
+        discountAmount = parseFloat(editForm.discount_value || 0);
+      }
+      
+      const totalAfterDiscount = subtotal - discountAmount;
+
+      const updatedInvoice = {
+        ...editForm,
+        subtotal: subtotal,
+        discount: discountAmount,
+        total_after_discount: totalAfterDiscount,
+        total_amount: totalAfterDiscount
+      };
+
+      await axios.put(`${API}/invoices/${editingInvoice}`, updatedInvoice);
+      fetchInvoices();
+      cancelEdit();
+      alert('تم تحديث الفاتورة بنجاح');
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      alert('حدث خطأ في تحديث الفاتورة: ' + (error.response?.data?.detail || error.message));
     }
   };
 
