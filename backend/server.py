@@ -118,14 +118,25 @@ class FinishedProduct(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class InvoiceItem(BaseModel):
-    seal_type: SealType
-    material_type: MaterialType
-    inner_diameter: float
-    outer_diameter: float
-    height: float
+    # Fields for manufactured products
+    seal_type: Optional[SealType] = None
+    material_type: Optional[MaterialType] = None
+    inner_diameter: Optional[float] = None
+    outer_diameter: Optional[float] = None
+    height: Optional[float] = None
+    # Common fields
     quantity: int
     unit_price: float
     total_price: float
+    # Product type
+    product_type: Optional[str] = "manufactured"  # "manufactured" or "local"
+    # Fields for local products
+    product_name: Optional[str] = None
+    supplier: Optional[str] = None
+    purchase_price: Optional[float] = None
+    selling_price: Optional[float] = None
+    local_product_details: Optional[Dict[str, Any]] = None
+    # Fields for manufactured products
     material_used: Optional[str] = None  # كود الوحدة للخامة المستخدمة
     material_details: Optional[Dict[str, Any]] = None  # تفاصيل الخامة المختارة
 
