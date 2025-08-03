@@ -141,6 +141,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'dashboard', label: 'لوحة التحكم' },
     { key: 'sales', label: 'المبيعات' },
     { key: 'inventory', label: 'المخزون' },
+    { key: 'local', label: 'محلي' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
     { key: 'revenue', label: 'الإيرادات' },
@@ -153,6 +154,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
   const adminPages = [
     { key: 'sales', label: 'المبيعات' },
     { key: 'inventory', label: 'المخزون' },
+    { key: 'local', label: 'محلي' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
     { key: 'revenue', label: 'الإيرادات' },
@@ -165,6 +167,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
   const userPages = [
     { key: 'sales', label: 'المبيعات' },
     { key: 'inventory', label: 'المخزون' },
+    { key: 'local', label: 'محلي' },
     { key: 'deferred', label: 'الآجل' },
     { key: 'expenses', label: 'المصروفات' },
     { key: 'treasury', label: 'الخزينة' },
