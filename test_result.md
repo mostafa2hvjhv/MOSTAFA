@@ -436,10 +436,12 @@ metadata:
         comment: "✅ تم اختبار وظيفة الخصم في الفواتير بنجاح بنسبة 100%! جميع الاختبارات الـ7 نجحت بشكل مثالي. تم التأكد من جميع المتطلبات: 1) **نموذج Invoice المحدث:** جميع حقول الخصم (subtotal, discount, discount_type, discount_value, total_after_discount, total_amount) تُحفظ وتُسترجع بشكل صحيح، 2) **إنشاء فواتير مع خصم:** اختبار خصم ثابت 50 ج.م على 500 ج.م، خصم نسبة 15% على 1000 ج.م، فاتورة بدون خصم، وخصم كامل 100% - جميعها تعمل بدقة، 3) **الحسابات الصحيحة:** subtotal = مجموع أسعار العناصر، discount يُحسب بشكل صحيح حسب النوع (amount/percentage)، total_after_discount = subtotal - discount، total_amount = total_after_discount للتوافق، 4) **التكامل مع أمر الشغل اليومي:** أمر الشغل يستخدم total_after_discount وليس subtotal، المجاميع تعكس المبالغ بعد الخصم، 5) **اختبار الحسابات العشرية:** خصم 12.5% يُحسب بدقة، 6) **الفواتير الآجلة:** remaining_amount تستخدم total_after_discount بشكل صحيح. تم إصلاح مشكلة InvoiceCreate model لتشمل حقول الخصم وجعل customer_id اختياري. النظام جاهز للاستخدام الإنتاجي مع وظيفة الخصم الكاملة."
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus: 
+    - "Latest Improvements Bug Fixes - إصلاح أخطاء التحسينات الأخيرة"
+  stuck_tasks:
+    - "Latest Improvements Bug Fixes - إصلاح أخطاء التحسينات الأخيرة"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
 
   - task: "Work Order Print functionality - طباعة أمر الشغل"
     implemented: true
