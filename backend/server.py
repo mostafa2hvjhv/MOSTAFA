@@ -1475,6 +1475,229 @@ async def pay_supplier(supplier_id: str, amount: float, payment_method: str = "c
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Inventory Management endpoints
+@api_router.get("/inventory", response_model=List[InventoryItem])
+async def get_inventory():
+    """Get all inventory items"""
+    try:
+        items = await db.inventory.find({}).to_list(None)
+        return items
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/inventory/low-stock")
+async def get_low_stock_items():
+    """Get items with stock below minimum level"""
+    try:
+        items = await db.inventory.find({
+            "$expr": {
+                "$lt": ["$available_height", "$min_stock_level"]
+            }
+        }).to_list(None)
+        return items
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/inventory/{item_id}", response_model=InventoryItem)
+async def get_inventory_item(item_id: str):
+    """Get specific inventory item"""
+    try:
+        item = await db.inventory.find_one({"id": item_id})
+        if not item:
+            raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
+        return item
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/inventory", response_model=InventoryItem)
+async def create_inventory_item(item: InventoryItemCreate):
+    """Create a new inventory item"""
+    try:
+        # Check if item with same specifications already exists
+        existing_item = await db.inventory.find_one({
+            "material_type": item.material_type,
+            "inner_diameter": item.inner_diameter,
+            "outer_diameter": item.outer_diameter
+        })
+        
+        if existing_item:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"عنصر بنفس المواصفات موجود بالفعل: {existing_item['unit_code']}"
+            )
+        
+        inventory_item = InventoryItem(**item.dict())
+        await db.inventory.insert_one(inventory_item.dict())
+        
+        # Create initial transaction
+        initial_transaction = InventoryTransaction(
+            inventory_item_id=inventory_item.id,
+            material_type=item.material_type,
+            inner_diameter=item.inner_diameter,
+            outer_diameter=item.outer_diameter,
+            transaction_type="in",
+            height_change=item.available_height,
+            remaining_height=item.available_height,
+            reason="إضافة عنصر جديد للجرد",
+            reference_id=inventory_item.id,
+            notes=f"إنشاء عنصر جديد: {item.unit_code}"
+        )
+        await db.inventory_transactions.insert_one(initial_transaction.dict())
+        
+        item_dict = inventory_item.dict()
+        if "_id" in item_dict:
+            del item_dict["_id"]
+        return item_dict
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/inventory/{item_id}")
+async def update_inventory_item(item_id: str, item: InventoryItemCreate):
+    """Update inventory item"""
+    try:
+        result = await db.inventory.update_one(
+            {"id": item_id},
+            {
+                "$set": {
+                    **item.dict(),
+                    "last_updated": datetime.utcnow()
+                }
+            }
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
+        return {"message": "تم تحديث عنصر الجرد بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/inventory/{item_id}")
+async def delete_inventory_item(item_id: str):
+    """Delete inventory item"""
+    try:
+        result = await db.inventory.delete_one({"id": item_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
+        return {"message": "تم حذف عنصر الجرد بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/inventory-transactions", response_model=List[InventoryTransaction])
+async def get_inventory_transactions():
+    """Get all inventory transactions"""
+    try:
+        transactions = await db.inventory_transactions.find({}).sort("date", -1).to_list(None)
+        return transactions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/inventory-transactions/{item_id}", response_model=List[InventoryTransaction])
+async def get_inventory_transactions_by_item(item_id: str):
+    """Get transactions for a specific inventory item"""
+    try:
+        transactions = await db.inventory_transactions.find(
+            {"inventory_item_id": item_id}
+        ).sort("date", -1).to_list(None)
+        return transactions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/inventory-transactions", response_model=InventoryTransaction)
+async def create_inventory_transaction(transaction: InventoryTransactionCreate):
+    """Create inventory transaction (in/out)"""
+    try:
+        # Find inventory item by specifications if item_id not provided
+        if not transaction.inventory_item_id:
+            inventory_item = await db.inventory.find_one({
+                "material_type": transaction.material_type,
+                "inner_diameter": transaction.inner_diameter,
+                "outer_diameter": transaction.outer_diameter
+            })
+            
+            if not inventory_item:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"لا يوجد عنصر في الجرد بالمواصفات المطلوبة: {transaction.material_type} - {transaction.inner_diameter}x{transaction.outer_diameter}"
+                )
+            transaction.inventory_item_id = inventory_item["id"]
+        else:
+            inventory_item = await db.inventory.find_one({"id": transaction.inventory_item_id})
+            if not inventory_item:
+                raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
+        
+        # Check if there's enough stock for "out" transactions
+        if transaction.transaction_type == "out" and abs(transaction.height_change) > inventory_item["available_height"]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"المخزون غير كافي. المتاح: {inventory_item['available_height']}، المطلوب: {abs(transaction.height_change)}"
+            )
+        
+        # Calculate new remaining height
+        new_height = inventory_item["available_height"] + transaction.height_change
+        if new_height < 0:
+            new_height = 0
+        
+        # Create transaction
+        transaction_obj = InventoryTransaction(
+            **transaction.dict(),
+            remaining_height=new_height
+        )
+        await db.inventory_transactions.insert_one(transaction_obj.dict())
+        
+        # Update inventory item
+        await db.inventory.update_one(
+            {"id": transaction.inventory_item_id},
+            {
+                "$set": {
+                    "available_height": new_height,
+                    "last_updated": datetime.utcnow()
+                }
+            }
+        )
+        
+        transaction_dict = transaction_obj.dict()
+        if "_id" in transaction_dict:
+            del transaction_dict["_id"]
+        return transaction_dict
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/inventory/check-availability")
+async def check_inventory_availability(
+    material_type: MaterialType, 
+    inner_diameter: float, 
+    outer_diameter: float, 
+    required_height: float
+):
+    """Check if material is available in inventory with required height"""
+    try:
+        inventory_item = await db.inventory.find_one({
+            "material_type": material_type,
+            "inner_diameter": inner_diameter,
+            "outer_diameter": outer_diameter
+        })
+        
+        if not inventory_item:
+            return {
+                "available": False,
+                "message": f"المادة الخام غير متوفرة في الجرد: {material_type} - {inner_diameter}x{outer_diameter}",
+                "available_height": 0,
+                "required_height": required_height
+            }
+        
+        available_height = inventory_item.get("available_height", 0)
+        is_available = available_height >= required_height
+        
+        return {
+            "available": is_available,
+            "message": f"{'المادة متوفرة' if is_available else 'المادة غير متوفرة بالكمية المطلوبة'}",
+            "available_height": available_height,
+            "required_height": required_height,
+            "inventory_item_id": inventory_item["id"],
+            "unit_code": inventory_item.get("unit_code", "")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
