@@ -1737,7 +1737,7 @@ async def create_inventory_transaction(transaction: InventoryTransactionCreate):
     try:
         # Find inventory item by specifications if item_id not provided
         if not transaction.inventory_item_id:
-            inventory_item = await db.inventory.find_one({
+            inventory_item = await db.inventory_items.find_one({
                 "material_type": transaction.material_type,
                 "inner_diameter": transaction.inner_diameter,
                 "outer_diameter": transaction.outer_diameter
@@ -1750,7 +1750,7 @@ async def create_inventory_transaction(transaction: InventoryTransactionCreate):
                 )
             transaction.inventory_item_id = inventory_item["id"]
         else:
-            inventory_item = await db.inventory.find_one({"id": transaction.inventory_item_id})
+            inventory_item = await db.inventory_items.find_one({"id": transaction.inventory_item_id})
             if not inventory_item:
                 raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
         
