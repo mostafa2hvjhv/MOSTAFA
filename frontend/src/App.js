@@ -1290,7 +1290,8 @@ const Sales = () => {
     product_type: 'manufactured' // manufactured أو local
   });
   const [localProduct, setLocalProduct] = useState({
-    name: '',
+    product_size: '',      // مقاس المنتج
+    product_type: '',      // نوع المنتج
     purchase_price: '',
     selling_price: '',
     supplier: ''
