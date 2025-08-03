@@ -4026,6 +4026,149 @@ const Invoices = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Invoice Modal */}
+      {editingInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto" dir="rtl">
+            <h3 className="text-xl font-semibold mb-4">تعديل الفاتورة</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">عنوان الفاتورة</label>
+                <input
+                  type="text"
+                  value={editForm.invoice_title}
+                  onChange={(e) => setEditForm({...editForm, invoice_title: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="عنوان الفاتورة (اختياري)"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">اسم المشرف</label>
+                <input
+                  type="text"
+                  value={editForm.supervisor_name}
+                  onChange={(e) => setEditForm({...editForm, supervisor_name: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="اسم المشرف (اختياري)"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">اسم العميل</label>
+                <input
+                  type="text"
+                  value={editForm.customer_name}
+                  onChange={(e) => setEditForm({...editForm, customer_name: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="اسم العميل"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">طريقة الدفع</label>
+                <select
+                  value={editForm.payment_method}
+                  onChange={(e) => setEditForm({...editForm, payment_method: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="نقدي">نقدي</option>
+                  <option value="فودافون كاش الصاوي">فودافون كاش الصاوي</option>
+                  <option value="فودافون كاش وائل">فودافون كاش وائل</option>
+                  <option value="آجل">آجل</option>
+                  <option value="انستا باي">انستا باي</option>
+                  <option value="Yad_Elsawy">Yad Elsawy</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">نوع الخصم</label>
+                <select
+                  value={editForm.discount_type}
+                  onChange={(e) => setEditForm({...editForm, discount_type: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="amount">مبلغ ثابت</option>
+                  <option value="percentage">نسبة مئوية</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">قيمة الخصم</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editForm.discount_value}
+                  onChange={(e) => setEditForm({...editForm, discount_value: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder={editForm.discount_type === 'percentage' ? '0-100' : '0.00'}
+                />
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">ملاحظات</label>
+              <textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded"
+                rows="3"
+                placeholder="ملاحظات إضافية (اختياري)"
+              />
+            </div>
+            
+            {/* Items Display */}
+            <div className="mb-4">
+              <h4 className="text-lg font-medium mb-2">عناصر الفاتورة</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-2">المنتج</th>
+                      <th className="border border-gray-300 p-2">الكمية</th>
+                      <th className="border border-gray-300 p-2">سعر الوحدة</th>
+                      <th className="border border-gray-300 p-2">الإجمالي</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editForm.items.map((item, index) => (
+                      <tr key={index}>
+                        <td className="border border-gray-300 p-2">
+                          {item.product_type === 'local' ? item.product_name : 
+                            `${item.seal_type || ''} - ${item.material_type || ''} (${item.inner_diameter}×${item.outer_diameter}×${item.height})`
+                          }
+                        </td>
+                        <td className="border border-gray-300 p-2">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2">ج.م {item.unit_price?.toFixed(2)}</td>
+                        <td className="border border-gray-300 p-2">ج.م {item.total_price?.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-4 space-x-reverse">
+              <button
+                onClick={cancelEdit}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={saveInvoiceEdit}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                حفظ التعديلات
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
