@@ -1704,7 +1704,7 @@ async def update_inventory_item(item_id: str, item: InventoryItemCreate):
 async def delete_inventory_item(item_id: str):
     """Delete inventory item"""
     try:
-        result = await db.inventory.delete_one({"id": item_id})
+        result = await db.inventory_items.delete_one({"id": item_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
         return {"message": "تم حذف عنصر الجرد بنجاح"}
