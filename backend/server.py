@@ -1632,7 +1632,7 @@ async def get_low_stock_items():
 async def get_inventory_item(item_id: str):
     """Get specific inventory item"""
     try:
-        item = await db.inventory.find_one({"id": item_id})
+        item = await db.inventory_items.find_one({"id": item_id})
         if not item:
             raise HTTPException(status_code=404, detail="العنصر غير موجود في الجرد")
         return item
