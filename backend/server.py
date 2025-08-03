@@ -134,6 +134,8 @@ class Invoice(BaseModel):
     invoice_number: str
     customer_id: Optional[str] = None
     customer_name: str
+    invoice_title: Optional[str] = None  # عنوان الفاتورة
+    supervisor_name: Optional[str] = None  # اسم المشرف
     items: List[InvoiceItem]
     subtotal: Optional[float] = None  # المجموع الفرعي قبل الخصم
     discount: Optional[float] = 0.0  # مبلغ الخصم
