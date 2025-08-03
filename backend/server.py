@@ -1614,7 +1614,7 @@ async def get_low_stock_items():
             {
                 "$match": {
                     "$expr": {
-                        "$lt": ["$available_height", "$min_stock_level"]
+                        "$lt": ["$available_pieces", "$min_stock_level"]
                     }
                 }
             }
@@ -1649,7 +1649,7 @@ async def create_inventory_item(item: InventoryItemCreate):
         if existing_item:
             raise HTTPException(
                 status_code=400, 
-                detail=f"عنصر بنفس المواصفات موجود بالفعل: {existing_item['unit_code']}"
+                detail=f"عنصر بنفس المواصفات موجود بالفعل: {item.material_type} - {item.inner_diameter}x{item.outer_diameter}"
             )
         
         inventory_item = InventoryItem(**item.dict())
@@ -1662,11 +1662,11 @@ async def create_inventory_item(item: InventoryItemCreate):
             inner_diameter=item.inner_diameter,
             outer_diameter=item.outer_diameter,
             transaction_type="in",
-            height_change=item.available_height,
-            remaining_height=item.available_height,
+            pieces_change=item.available_pieces,
+            remaining_pieces=item.available_pieces,
             reason="إضافة عنصر جديد للجرد",
             reference_id=inventory_item.id,
-            notes=f"إنشاء عنصر جديد: {item.unit_code}"
+            notes=f"إنشاء عنصر جديد: {item.material_type} - {item.inner_diameter}x{item.outer_diameter}"
         )
         await db.inventory_transactions.insert_one(initial_transaction.dict())
         
