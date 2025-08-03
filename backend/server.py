@@ -1644,7 +1644,7 @@ async def create_inventory_item(item: InventoryItemCreate):
     """Create a new inventory item"""
     try:
         # Check if item with same specifications already exists
-        existing_item = await db.inventory.find_one({
+        existing_item = await db.inventory_items.find_one({
             "material_type": item.material_type,
             "inner_diameter": item.inner_diameter,
             "outer_diameter": item.outer_diameter
