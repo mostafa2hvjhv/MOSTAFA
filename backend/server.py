@@ -750,7 +750,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     
     # Add treasury transaction for non-deferred payments
     if str(invoice.payment_method) != "آجل":  # التحقق من النص العربي
-        # Map payment methods to treasury account IDs
+        # Map payment methods to treasury account IDs  
         payment_method_mapping = {
             "نقدي": "cash",
             "فودافون كاش محمد الصاوي": "vodafone_elsawy", 
@@ -759,7 +759,13 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             "يد الصاوي": "yad_elsawy"
         }
         
-        account_id = payment_method_mapping.get(str(invoice.payment_method), "cash")
+        # Debug: print the actual payment method value
+        payment_method_str = str(invoice.payment_method)
+        print(f"DEBUG: Payment method received: '{payment_method_str}'")
+        print(f"DEBUG: Available mapping keys: {list(payment_method_mapping.keys())}")
+        
+        account_id = payment_method_mapping.get(payment_method_str, "cash")
+        print(f"DEBUG: Mapped to account: {account_id}")
         
         treasury_transaction = TreasuryTransaction(
             account_id=account_id,
