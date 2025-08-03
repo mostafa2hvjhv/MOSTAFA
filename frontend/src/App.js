@@ -908,7 +908,23 @@ const Sales = () => {
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-lg font-semibold mb-4">إضافة منتج</h3>
           
-          <div className="grid grid-cols-2 gap-4">
+          {/* Product Type Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">نوع المنتج</label>
+            <select
+              value={currentItem.product_type}
+              onChange={(e) => setCurrentItem({...currentItem, product_type: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              <option value="manufactured">منتج تصنيع</option>
+              <option value="local">منتج محلي</option>
+            </select>
+          </div>
+          
+          {/* Conditional Product Forms */}
+          {currentItem.product_type === 'manufactured' ? (
+            // Manufacturing Product Form
+            <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">نوع السيل</label>
               <select
