@@ -880,13 +880,17 @@ async def update_invoice(invoice_id: str, invoice_update: dict):
         # Calculate totals if items are provided
         if 'items' in invoice_update:
             subtotal = sum(item.get('total_price', 0) for item in invoice_update['items'])
-            discount_amount = invoice_update.get('discount', 0)
+            discount_amount = 0.0
             
+            # Handle discount calculation
             if 'discount_type' in invoice_update and 'discount_value' in invoice_update:
+                discount_value = float(invoice_update.get('discount_value', 0))
                 if invoice_update['discount_type'] == 'percentage':
-                    discount_amount = (subtotal * float(invoice_update['discount_value'])) / 100
+                    discount_amount = (subtotal * discount_value) / 100
                 else:
-                    discount_amount = float(invoice_update['discount_value'])
+                    discount_amount = discount_value
+            elif 'discount' in invoice_update:
+                discount_amount = float(invoice_update.get('discount', 0))
             
             total_after_discount = subtotal - discount_amount
             
