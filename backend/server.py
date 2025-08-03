@@ -1774,7 +1774,7 @@ async def create_inventory_transaction(transaction: InventoryTransactionCreate):
         await db.inventory_transactions.insert_one(transaction_obj.dict())
         
         # Update inventory item
-        await db.inventory.update_one(
+        await db.inventory_items.update_one(
             {"id": transaction.inventory_item_id},
             {
                 "$set": {
