@@ -430,13 +430,11 @@ const Inventory = () => {
             <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-2">كود الوحدة</th>
                   <th className="border border-gray-300 p-2">نوع المادة</th>
                   <th className="border border-gray-300 p-2">القطر الداخلي</th>
                   <th className="border border-gray-300 p-2">القطر الخارجي</th>
-                  <th className="border border-gray-300 p-2">الارتفاع المتاح</th>
+                  <th className="border border-gray-300 p-2">عدد القطع المتاحة</th>
                   <th className="border border-gray-300 p-2">الحد الأدنى</th>
-                  <th className="border border-gray-300 p-2">الحد الأقصى</th>
                   <th className="border border-gray-300 p-2">الحالة</th>
                   <th className="border border-gray-300 p-2">ملاحظات</th>
                 </tr>
@@ -444,26 +442,20 @@ const Inventory = () => {
               <tbody>
                 {filteredItems.map(item => (
                   <tr key={item.id}>
-                    <td className="border border-gray-300 p-2 font-semibold">{item.unit_code}</td>
-                    <td className="border border-gray-300 p-2">{item.material_type}</td>
+                    <td className="border border-gray-300 p-2 font-semibold">{item.material_type}</td>
                     <td className="border border-gray-300 p-2">{item.inner_diameter}</td>
                     <td className="border border-gray-300 p-2">{item.outer_diameter}</td>
                     <td className={`border border-gray-300 p-2 font-semibold ${
-                      item.available_height <= item.min_stock_level ? 'text-red-600' : 
-                      item.available_height >= item.max_stock_level ? 'text-blue-600' : 'text-green-600'
+                      item.available_pieces <= item.min_stock_level ? 'text-red-600' : 'text-green-600'
                     }`}>
-                      {item.available_height.toFixed(2)} مم
+                      {item.available_pieces} قطعة
                     </td>
-                    <td className="border border-gray-300 p-2">{item.min_stock_level}</td>
-                    <td className="border border-gray-300 p-2">{item.max_stock_level}</td>
+                    <td className="border border-gray-300 p-2">{item.min_stock_level} قطعة</td>
                     <td className="border border-gray-300 p-2">
                       <span className={`px-2 py-1 rounded text-sm ${
-                        item.available_height <= item.min_stock_level ? 'bg-red-100 text-red-800' :
-                        item.available_height >= item.max_stock_level ? 'bg-blue-100 text-blue-800' :
-                        'bg-green-100 text-green-800'
+                        item.available_pieces <= item.min_stock_level ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
                       }`}>
-                        {item.available_height <= item.min_stock_level ? 'منخفض' :
-                         item.available_height >= item.max_stock_level ? 'مرتفع' : 'طبيعي'}
+                        {item.available_pieces <= item.min_stock_level ? 'منخفض' : 'طبيعي'}
                       </span>
                     </td>
                     <td className="border border-gray-300 p-2">{item.notes || '-'}</td>
