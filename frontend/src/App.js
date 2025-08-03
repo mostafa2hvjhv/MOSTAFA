@@ -1388,14 +1388,18 @@ const Sales = () => {
       });
     } else {
       // Validation for local products
-      if (!localProduct.name || !localProduct.selling_price || !localProduct.supplier || !localProduct.purchase_price) {
+      if (!localProduct.product_size || !localProduct.product_type || !localProduct.selling_price || !localProduct.supplier || !localProduct.purchase_price) {
         alert('الرجاء إدخال جميع بيانات المنتج المحلي');
         return;
       }
 
+      const product_name = `${localProduct.product_size} - ${localProduct.product_type}`;
+
       const item = {
         product_type: 'local',
-        product_name: localProduct.name,
+        product_name: product_name,
+        product_size: localProduct.product_size,
+        product_type_name: localProduct.product_type,
         supplier: localProduct.supplier,
         purchase_price: parseFloat(localProduct.purchase_price),
         selling_price: parseFloat(localProduct.selling_price),
@@ -1404,7 +1408,8 @@ const Sales = () => {
         total_price: parseFloat(localProduct.selling_price) * parseInt(currentItem.quantity),
         // Store local product details
         local_product_details: {
-          name: localProduct.name,
+          product_size: localProduct.product_size,
+          product_type: localProduct.product_type,
           supplier: localProduct.supplier,
           purchase_price: parseFloat(localProduct.purchase_price),
           selling_price: parseFloat(localProduct.selling_price)
@@ -1413,7 +1418,8 @@ const Sales = () => {
 
       setItems([...items, item]);
       setLocalProduct({
-        name: '',
+        product_size: '',
+        product_type: '',
         purchase_price: '',
         selling_price: '',
         supplier: ''
