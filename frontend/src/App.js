@@ -2733,16 +2733,6 @@ const Stock = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">كود الوحدة</label>
-            <input
-              type="text"
-              value={newRawMaterial.unit_code}
-              onChange={(e) => setNewRawMaterial({...newRawMaterial, unit_code: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-          </div>
-          
-          <div>
             <label className="block text-sm font-medium mb-1">تكلفة المللي</label>
             <input
               type="number"
@@ -2753,6 +2743,10 @@ const Stock = () => {
             />
           </div>
         </div>
+        
+        <p className="text-sm text-gray-600 mt-4">
+          ملاحظة: سيتم توليد كود الوحدة تلقائياً حسب نوع الخامة والمواصفات
+        </p>
         
         <button
           onClick={addRawMaterial}
