@@ -3938,7 +3938,7 @@ const Invoices = () => {
             <img src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
                  alt="Master Seal Logo" 
                  style="max-width: 120px; max-height: 80px; margin-bottom: 10px;">
-            <div class="invoice-title">عرض سعر</div>
+            <div class="invoice-title">${invoice.invoice_title || 'عرض سعر'}</div>
             <div class="invoice-number">${invoice.invoice_number}</div>
           </div>
         </div>
