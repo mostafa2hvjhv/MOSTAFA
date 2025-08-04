@@ -1928,6 +1928,7 @@ const Sales = () => {
                 <td>${index + 1}</td>
                 <td>${item.quantity}</td>
                 <td style="text-align: right;">
+                <!-- UNIQUE_MARKER_FOR_SALES_COMPONENT -->
                   ${item.seal_type} - ${item.material_type}<br>
                   <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>
                 </td>
