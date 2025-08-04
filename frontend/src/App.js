@@ -495,6 +495,7 @@ const Inventory = () => {
                               min_stock_level: item.min_stock_level,
                               notes: item.notes || ''
                             });
+                            setCurrentView('add-item');
                           }}
                           className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
                         >
