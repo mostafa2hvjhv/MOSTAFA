@@ -773,14 +773,20 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
         
         account_id = payment_method_mapping.get(str(invoice.payment_method), "cash")
         
-        treasury_transaction = TreasuryTransaction(
-            account_id=account_id,
-            transaction_type="income",
-            amount=total_after_discount,
-            description=f"فاتورة {invoice_number} - {invoice.customer_name}",
-            reference=f"invoice_{invoice_obj.id}"
-        )
-        await db.treasury_transactions.insert_one(treasury_transaction.dict())
+        # Check if treasury transaction already exists for this invoice
+        existing_transaction = await db.treasury_transactions.find_one({
+            "reference": f"invoice_{invoice_obj.id}"
+        })
+        
+        if not existing_transaction:
+            treasury_transaction = TreasuryTransaction(
+                account_id=account_id,
+                transaction_type="income",
+                amount=total_after_discount,
+                description=f"فاتورة {invoice_number} - {invoice.customer_name}",
+                reference=f"invoice_{invoice_obj.id}"
+            )
+            await db.treasury_transactions.insert_one(treasury_transaction.dict())
     
     # Add to daily work order automatically
     try:
