@@ -698,10 +698,12 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Add Item View */}
+      {/* Add/Edit Item View */}
       {currentView === 'add-item' && (
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">إضافة عنصر جرد جديد</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {editingItem ? 'تعديل عنصر الجرد' : 'إضافة عنصر جرد جديد'}
+          </h3>
           <div className="grid grid-cols-2 gap-4">
             <select
               value={newItem.material_type}
