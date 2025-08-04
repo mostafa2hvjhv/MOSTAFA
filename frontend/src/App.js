@@ -4711,12 +4711,14 @@ const WorkOrders = () => {
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.material_used || 'غير محدد'}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
-                    ${item.material_details ? 
-                      (item.material_details.is_finished_product ? 
-                        'مخزن انتاج تام' : 
-                        `${item.material_details.unit_code} / ${item.material_details.inner_diameter}-${item.material_details.outer_diameter}`
-                      ) : 
-                      `${item.material_used || 'غير محدد'} / معلومات غير متوفرة`
+                    ${item.local_product_details ? 
+                      'محلي' :
+                      item.material_details ? 
+                        (item.material_details.is_finished_product ? 
+                          'مخزن انتاج تام' : 
+                          `${item.material_details.unit_code} / ${item.material_details.inner_diameter}-${item.material_details.outer_diameter}`
+                        ) : 
+                        `${item.material_used || 'غير محدد'} / معلومات غير متوفرة`
                     }
                   </td>
                 </tr>
