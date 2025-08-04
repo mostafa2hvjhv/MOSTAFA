@@ -1644,6 +1644,11 @@ const Sales = () => {
       const product_name = `${localProduct.product_size} - ${localProduct.product_type}`;
 
       const item = {
+        seal_type: localProduct.product_type, // نوع المنتج في نوع السيل
+        material_type: "محلي", // نوع الخامة محلي
+        inner_diameter: localProduct.product_size, // مقاس المنتج في المقاس
+        outer_diameter: localProduct.product_size, // نفس المقاس
+        height: localProduct.product_size, // نفس المقاس
         product_type: 'local',
         product_name: product_name,
         product_size: localProduct.product_size,
