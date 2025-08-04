@@ -293,25 +293,41 @@ const Inventory = () => {
     fetchLowStockItems();
   }, []);
 
-  // Add inventory item
+  // Add or Update inventory item
   const addInventoryItem = async () => {
-    if (!newItem.material_type || !newItem.inner_diameter || !newItem.outer_diameter || 
-        !newItem.available_pieces) {
+    if (!newItem.material_type || !newItem.inner_diameter || 
+        !newItem.outer_diameter || !newItem.available_pieces) {
       alert('الرجاء إدخال جميع البيانات المطلوبة');
       return;
     }
 
     try {
-      await axios.post(`${API}/inventory`, {
-        ...newItem,
-        inner_diameter: parseFloat(newItem.inner_diameter),
-        outer_diameter: parseFloat(newItem.outer_diameter),
-        available_pieces: parseInt(newItem.available_pieces),
-        min_stock_level: parseInt(newItem.min_stock_level || 2)
-      });
+      if (editingItem) {
+        // Update existing item
+        await axios.put(`${API}/inventory/${editingItem.id}`, {
+          ...newItem,
+          inner_diameter: parseFloat(newItem.inner_diameter),
+          outer_diameter: parseFloat(newItem.outer_diameter),
+          available_pieces: parseInt(newItem.available_pieces),
+          min_stock_level: parseInt(newItem.min_stock_level || 2)
+        });
+        alert('تم تحديث عنصر الجرد بنجاح');
+        setEditingItem(null);
+      } else {
+        // Add new item
+        await axios.post(`${API}/inventory`, {
+          ...newItem,
+          inner_diameter: parseFloat(newItem.inner_diameter),
+          outer_diameter: parseFloat(newItem.outer_diameter),
+          available_pieces: parseInt(newItem.available_pieces),
+          min_stock_level: parseInt(newItem.min_stock_level || 2)
+        });
+        alert('تم إضافة عنصر الجرد بنجاح');
+      }
       
       fetchInventoryItems();
       fetchLowStockItems();
+      setCurrentView('items');
       setNewItem({
         material_type: 'NBR',
         inner_diameter: '',
@@ -320,10 +336,9 @@ const Inventory = () => {
         min_stock_level: 2,
         notes: ''
       });
-      alert('تم إضافة عنصر الجرد بنجاح');
     } catch (error) {
-      console.error('Error adding inventory item:', error);
-      alert('حدث خطأ في إضافة عنصر الجرد: ' + (error.response?.data?.detail || error.message));
+      console.error('Error saving inventory item:', error);
+      alert('حدث خطأ في حفظ عنصر الجرد: ' + (error.response?.data?.detail || error.message));
     }
   };
 
