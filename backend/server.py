@@ -966,23 +966,23 @@ async def create_payment(payment: PaymentCreate):
         "يد الصاوي": "yad_elsawy"
     }
     
-    # Debug: print the actual payment method value
-    payment_method_str = str(payment.payment_method)
-    print(f"DEBUG: Payment method received: '{payment_method_str}'")
-    print(f"DEBUG: Available mapping keys: {list(payment_method_mapping.keys())}")
-    
     payment_method_str = str(payment.payment_method)
     account_id = payment_method_mapping.get(payment_method_str, "cash")
-    print(f"DEBUG: Mapped to account: {account_id}")
     
-    treasury_transaction = TreasuryTransaction(
-        account_id=account_id,
-        transaction_type="income",
-        amount=payment.amount,
-        description=f"دفع فاتورة {invoice['invoice_number']} - {invoice['customer_name']}",
-        reference=f"payment_{payment_obj.id}"
-    )
-    await db.treasury_transactions.insert_one(treasury_transaction.dict())
+    # Check if treasury transaction already exists for this payment
+    existing_transaction = await db.treasury_transactions.find_one({
+        "reference": f"payment_{payment_obj.id}"
+    })
+    
+    if not existing_transaction:
+        treasury_transaction = TreasuryTransaction(
+            account_id=account_id,
+            transaction_type="income",
+            amount=payment.amount,
+            description=f"دفع فاتورة {invoice['invoice_number']} - {invoice['customer_name']}",
+            reference=f"payment_{payment_obj.id}"
+        )
+        await db.treasury_transactions.insert_one(treasury_transaction.dict())
     
     await db.payments.insert_one(payment_obj.dict())
     return payment_obj
