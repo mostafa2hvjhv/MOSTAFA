@@ -703,6 +703,172 @@ const Inventory = () => {
           </button>
         </div>
       )}
+
+      {/* Excel Management View */}
+      {currentView === 'excel' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Inventory Excel Management */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-4">إدارة ملفات الجرد - Excel</h3>
+            
+            {/* Export Inventory */}
+            <div className="mb-6">
+              <h4 className="font-medium mb-2">تصدير بيانات الجرد</h4>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await axios.get(`${API}/excel/export/inventory`, {
+                      responseType: 'blob'
+                    });
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `inventory_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    alert('تم تصدير ملف الجرد بنجاح');
+                  } catch (error) {
+                    console.error('Error exporting inventory:', error);
+                    alert('حدث خطأ في تصدير الملف');
+                  }
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                تصدير جرد Excel
+              </button>
+            </div>
+
+            {/* Import Inventory */}
+            <div>
+              <h4 className="font-medium mb-2">استيراد بيانات الجرد</h4>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  
+                  try {
+                    const response = await axios.post(`${API}/excel/import/inventory`, formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    alert(`تم استيراد ${response.data.imported_count} عنصر بنجاح`);
+                    if (response.data.errors.length > 0) {
+                      console.warn('Import errors:', response.data.errors);
+                    }
+                    fetchInventoryItems();
+                  } catch (error) {
+                    console.error('Error importing inventory:', error);
+                    alert('حدث خطأ في استيراد الملف');
+                  }
+                  
+                  e.target.value = '';
+                }}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                الأعمدة المطلوبة: material_type, inner_diameter, outer_diameter, available_pieces
+              </p>
+            </div>
+          </div>
+
+          {/* Raw Materials Excel Management */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-4">إدارة المواد الخام - Excel</h3>
+            
+            {/* Export Raw Materials */}
+            <div className="mb-6">
+              <h4 className="font-medium mb-2">تصدير المواد الخام</h4>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await axios.get(`${API}/excel/export/raw-materials`, {
+                      responseType: 'blob'
+                    });
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `raw_materials_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    alert('تم تصدير ملف المواد الخام بنجاح');
+                  } catch (error) {
+                    console.error('Error exporting raw materials:', error);
+                    alert('حدث خطأ في تصدير الملف');
+                  }
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                تصدير مواد خام Excel
+              </button>
+            </div>
+
+            {/* Import Raw Materials */}
+            <div>
+              <h4 className="font-medium mb-2">استيراد المواد الخام</h4>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  
+                  try {
+                    const response = await axios.post(`${API}/excel/import/raw-materials`, formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    alert(`تم استيراد ${response.data.imported_count} مادة خام بنجاح`);
+                    if (response.data.errors.length > 0) {
+                      console.warn('Import errors:', response.data.errors);
+                    }
+                  } catch (error) {
+                    console.error('Error importing raw materials:', error);
+                    alert('حدث خطأ في استيراد الملف');
+                  }
+                  
+                  e.target.value = '';
+                }}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                الأعمدة المطلوبة: material_type, inner_diameter, outer_diameter, height, pieces_count, unit_code, cost_per_mm
+              </p>
+            </div>
+          </div>
+
+          {/* Instructions */}
+          <div className="bg-yellow-50 p-6 rounded-lg shadow-md md:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">تعليمات استخدام الإكسل</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-medium mb-2">تصدير البيانات:</h4>
+                <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+                  <li>يتم تصدير جميع البيانات الحالية</li>
+                  <li>الملف يحتوي على تنسيق جاهز للتعديل</li>
+                  <li>يمكن فتح الملف في Excel أو Google Sheets</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">استيراد البيانات:</h4>
+                <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+                  <li>يجب أن يكون الملف من نوع .xlsx أو .xls</li>
+                  <li>الأعمدة المطلوبة يجب أن تكون موجودة</li>
+                  <li>البيانات الموجودة لن تتأثر (يتم التحديث أو الإضافة)</li>
+                  <li>سيتم عرض رسالة تأكيد مع عدد العناصر المستوردة</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
