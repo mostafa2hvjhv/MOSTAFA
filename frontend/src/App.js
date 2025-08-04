@@ -1929,8 +1929,11 @@ const Sales = () => {
                 <td>${item.quantity}</td>
                 <td style="text-align: right;">
                 <!-- UNIQUE_MARKER_FOR_SALES_COMPONENT -->
-                  ${item.seal_type} - ${item.material_type}<br>
-                  <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>
+                  ${item.local_product_details ? 
+                    `${item.local_product_details.product_type} - ${item.local_product_details.product_size}` : 
+                    `${item.seal_type} - ${item.material_type}<br>
+                    <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>`
+                  }
                 </td>
                 <td>ج.م ${item.unit_price.toFixed(2)}</td>
                 <td>ج.م ${item.total_price.toFixed(2)}</td>
