@@ -2508,7 +2508,6 @@ const Stock = () => {
     outer_diameter: '',
     height: '',
     pieces_count: '',
-    unit_code: '',
     cost_per_mm: ''
   });
   const [newFinishedProduct, setNewFinishedProduct] = useState({
