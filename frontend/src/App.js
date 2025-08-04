@@ -753,8 +753,27 @@ const Inventory = () => {
             onClick={addInventoryItem}
             className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
-            إضافة عنصر الجرد
+            {editingItem ? 'تحديث عنصر الجرد' : 'إضافة عنصر الجرد'}
           </button>
+          {editingItem && (
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setNewItem({
+                  material_type: 'NBR',
+                  inner_diameter: '',
+                  outer_diameter: '',
+                  available_pieces: '',
+                  min_stock_level: 2,
+                  notes: ''
+                });
+                setCurrentView('items');
+              }}
+              className="mt-4 mr-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              إلغاء التعديل
+            </button>
+          )}
         </div>
       )}
 
