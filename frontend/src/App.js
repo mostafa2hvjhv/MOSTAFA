@@ -4676,9 +4676,9 @@ const WorkOrders = () => {
               invoice.items?.map(item => `
                 <tr>
                   <td style="border: 1px solid #ddd; padding: 8px;">${invoice.invoice_number}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.seal_type}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.material_type}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.inner_diameter} × ${item.outer_diameter} × ${item.height}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? item.local_product_details.product_type : item.seal_type}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? item.local_product_details.product_size : item.material_type}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? 'منتج محلي' : `${item.inner_diameter} × ${item.outer_diameter} × ${item.height}`}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.material_used || 'غير محدد'}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
