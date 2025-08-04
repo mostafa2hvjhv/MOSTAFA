@@ -978,6 +978,7 @@ async def create_payment(payment: PaymentCreate):
     })
     
     if not existing_transaction:
+        # Add income transaction to the payment account
         treasury_transaction = TreasuryTransaction(
             account_id=account_id,
             transaction_type="income",
@@ -986,6 +987,17 @@ async def create_payment(payment: PaymentCreate):
             reference=f"payment_{payment_obj.id}"
         )
         await db.treasury_transactions.insert_one(treasury_transaction.dict())
+        
+        # For deferred invoices, also create a deduction from deferred account
+        if invoice.get("payment_method") == "آجل":
+            deferred_transaction = TreasuryTransaction(
+                account_id="deferred",
+                transaction_type="expense",
+                amount=payment.amount,
+                description=f"تسديد آجل فاتورة {invoice['invoice_number']} - {invoice['customer_name']}",
+                reference=f"payment_{payment_obj.id}_deferred"
+            )
+            await db.treasury_transactions.insert_one(deferred_transaction.dict())
     
     await db.payments.insert_one(payment_obj.dict())
     return payment_obj
