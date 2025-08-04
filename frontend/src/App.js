@@ -2572,7 +2572,6 @@ const Stock = () => {
         outer_diameter: '',
         height: '',
         pieces_count: '',
-        unit_code: '',
         cost_per_mm: ''
       });
       alert('تمت إضافة المادة الخام بنجاح');
