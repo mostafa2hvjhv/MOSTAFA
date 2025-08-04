@@ -466,6 +466,43 @@ const Inventory = () => {
                       </span>
                     </td>
                     <td className="border border-gray-300 p-2">{item.notes || '-'}</td>
+                    <td className="border border-gray-300 p-2">
+                      <div className="flex space-x-2 space-x-reverse">
+                        <button
+                          onClick={() => {
+                            setEditingItem(item);
+                            setNewItem({
+                              material_type: item.material_type,
+                              inner_diameter: item.inner_diameter,
+                              outer_diameter: item.outer_diameter,
+                              available_pieces: item.available_pieces,
+                              min_stock_level: item.min_stock_level,
+                              notes: item.notes || ''
+                            });
+                          }}
+                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                        >
+                          تعديل
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+                              try {
+                                await axios.delete(`${API}/inventory/${item.id}`);
+                                alert('تم حذف العنصر بنجاح');
+                                fetchInventoryItems();
+                              } catch (error) {
+                                console.error('Error deleting item:', error);
+                                alert('حدث خطأ في حذف العنصر');
+                              }
+                            }
+                          }}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
