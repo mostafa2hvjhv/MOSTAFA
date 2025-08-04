@@ -237,6 +237,7 @@ const Inventory = () => {
   const [inventoryTransactions, setInventoryTransactions] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [currentView, setCurrentView] = useState('items'); // items, transactions, low-stock, add-item
+  const [editingItem, setEditingItem] = useState(null); // للتعديل
   const [newItem, setNewItem] = useState({
     material_type: 'NBR',
     inner_diameter: '',
