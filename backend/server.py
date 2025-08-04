@@ -1897,6 +1897,247 @@ async def check_inventory_availability(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Excel Import/Export endpoints
+@api_router.post("/excel/import/inventory")
+async def import_inventory_excel(file: UploadFile = File(...)):
+    """Import inventory items from Excel file"""
+    try:
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="يجب أن يكون الملف من نوع Excel (.xlsx أو .xls)")
+        
+        # Read Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Validate required columns
+        required_columns = ['material_type', 'inner_diameter', 'outer_diameter', 'available_pieces']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise HTTPException(status_code=400, detail=f"أعمدة مفقودة: {', '.join(missing_columns)}")
+        
+        imported_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Check if item already exists
+                existing_item = await db.inventory_items.find_one({
+                    "material_type": row['material_type'],
+                    "inner_diameter": float(row['inner_diameter']),
+                    "outer_diameter": float(row['outer_diameter'])
+                })
+                
+                if existing_item:
+                    # Update existing item
+                    await db.inventory_items.update_one(
+                        {"id": existing_item["id"]},
+                        {
+                            "$set": {
+                                "available_pieces": int(row['available_pieces']),
+                                "min_stock_level": int(row.get('min_stock_level', 2)),
+                                "notes": str(row.get('notes', '')),
+                                "last_updated": datetime.utcnow()
+                            }
+                        }
+                    )
+                else:
+                    # Create new item
+                    inventory_item = InventoryItem(
+                        material_type=row['material_type'],
+                        inner_diameter=float(row['inner_diameter']),
+                        outer_diameter=float(row['outer_diameter']),
+                        available_pieces=int(row['available_pieces']),
+                        min_stock_level=int(row.get('min_stock_level', 2)),
+                        notes=str(row.get('notes', ''))
+                    )
+                    await db.inventory_items.insert_one(inventory_item.dict())
+                
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"صف {index + 2}: {str(e)}")
+        
+        return {
+            "message": f"تم استيراد {imported_count} عنصر بنجاح",
+            "imported_count": imported_count,
+            "errors": errors
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد الملف: {str(e)}")
+
+@api_router.get("/excel/export/inventory")
+async def export_inventory_excel():
+    """Export inventory items to Excel file"""
+    try:
+        # Get all inventory items
+        items = await db.inventory_items.find({}).to_list(None)
+        
+        if not items:
+            raise HTTPException(status_code=404, detail="لا توجد عناصر جرد للتصدير")
+        
+        # Convert to DataFrame
+        df_data = []
+        for item in items:
+            df_data.append({
+                'material_type': item.get('material_type', ''),
+                'inner_diameter': item.get('inner_diameter', 0),
+                'outer_diameter': item.get('outer_diameter', 0),
+                'available_pieces': item.get('available_pieces', 0),
+                'min_stock_level': item.get('min_stock_level', 2),
+                'notes': item.get('notes', ''),
+                'created_at': item.get('created_at', ''),
+                'last_updated': item.get('last_updated', '')
+            })
+        
+        df = pd.DataFrame(df_data)
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Inventory', index=False)
+            
+            # Get the workbook and worksheet objects
+            workbook = writer.book
+            worksheet = writer.sheets['Inventory']
+            
+            # Add some formatting
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#D7E4BC',
+                'border': 1
+            })
+            
+            # Write the column headers with the defined format
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+        
+        output.seek(0)
+        
+        # Return as streaming response
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        filename = f"inventory_export_{current_date}.xlsx"
+        
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في تصدير الملف: {str(e)}")
+
+@api_router.post("/excel/import/raw-materials")
+async def import_raw_materials_excel(file: UploadFile = File(...)):
+    """Import raw materials from Excel file"""
+    try:
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="يجب أن يكون الملف من نوع Excel (.xlsx أو .xls)")
+        
+        # Read Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Validate required columns
+        required_columns = ['material_type', 'inner_diameter', 'outer_diameter', 'height', 'pieces_count', 'unit_code', 'cost_per_mm']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise HTTPException(status_code=400, detail=f"أعمدة مفقودة: {', '.join(missing_columns)}")
+        
+        imported_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                raw_material = RawMaterial(
+                    material_type=row['material_type'],
+                    inner_diameter=float(row['inner_diameter']),
+                    outer_diameter=float(row['outer_diameter']),
+                    height=float(row['height']),
+                    pieces_count=int(row['pieces_count']),
+                    unit_code=str(row['unit_code']),
+                    cost_per_mm=float(row['cost_per_mm'])
+                )
+                await db.raw_materials.insert_one(raw_material.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"صف {index + 2}: {str(e)}")
+        
+        return {
+            "message": f"تم استيراد {imported_count} مادة خام بنجاح",
+            "imported_count": imported_count,
+            "errors": errors
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد الملف: {str(e)}")
+
+@api_router.get("/excel/export/raw-materials")
+async def export_raw_materials_excel():
+    """Export raw materials to Excel file"""
+    try:
+        # Get all raw materials
+        materials = await db.raw_materials.find({}).to_list(None)
+        
+        if not materials:
+            raise HTTPException(status_code=404, detail="لا توجد مواد خام للتصدير")
+        
+        # Convert to DataFrame
+        df_data = []
+        for material in materials:
+            df_data.append({
+                'material_type': material.get('material_type', ''),
+                'inner_diameter': material.get('inner_diameter', 0),
+                'outer_diameter': material.get('outer_diameter', 0),
+                'height': material.get('height', 0),
+                'pieces_count': material.get('pieces_count', 0),
+                'unit_code': material.get('unit_code', ''),
+                'cost_per_mm': material.get('cost_per_mm', 0),
+                'created_at': material.get('created_at', '')
+            })
+        
+        df = pd.DataFrame(df_data)
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Raw Materials', index=False)
+            
+            # Get the workbook and worksheet objects
+            workbook = writer.book
+            worksheet = writer.sheets['Raw Materials']
+            
+            # Add some formatting
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#D7E4BC',
+                'border': 1
+            })
+            
+            # Write the column headers with the defined format
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+        
+        output.seek(0)
+        
+        # Return as streaming response
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        filename = f"raw_materials_export_{current_date}.xlsx"
+        
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في تصدير الملف: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
