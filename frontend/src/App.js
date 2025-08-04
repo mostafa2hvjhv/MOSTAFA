@@ -443,6 +443,7 @@ const Inventory = () => {
                   <th className="border border-gray-300 p-2">الحد الأدنى</th>
                   <th className="border border-gray-300 p-2">الحالة</th>
                   <th className="border border-gray-300 p-2">ملاحظات</th>
+                  <th className="border border-gray-300 p-2">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
