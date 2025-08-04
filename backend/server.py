@@ -524,6 +524,42 @@ async def delete_customer(customer_id: str):
     return {"message": "تم حذف العميل بنجاح"}
 
 # Raw materials endpoints
+# Material code generation helper
+async def generate_unit_code(material_type: str, inner_diameter: float, outer_diameter: float):
+    """Generate automatic unit code based on material type and specifications"""
+    # Material type to prefix mapping
+    type_prefix = {
+        "BUR": "B",
+        "NBR": "N", 
+        "BT": "T",
+        "VT": "V",
+        "BOOM": "M"
+    }
+    
+    prefix = type_prefix.get(material_type, "X")  # Default to X if type not found
+    
+    # Find existing materials with same specifications
+    existing_materials = await db.raw_materials.find({
+        "material_type": material_type,
+        "inner_diameter": inner_diameter,
+        "outer_diameter": outer_diameter
+    }).to_list(None)
+    
+    # Get the highest sequence number
+    max_sequence = 0
+    for mat in existing_materials:
+        unit_code = mat.get("unit_code", "")
+        if unit_code.startswith(f"{prefix}-"):
+            try:
+                sequence = int(unit_code.split("-")[1])
+                max_sequence = max(max_sequence, sequence)
+            except (IndexError, ValueError):
+                continue
+    
+    # Generate new code with next sequence number
+    new_sequence = max_sequence + 1
+    return f"{prefix}-{new_sequence}"
+
 @api_router.post("/raw-materials", response_model=RawMaterial)
 async def create_raw_material(material: RawMaterialCreate):
     """Create raw material with inventory check"""
