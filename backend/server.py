@@ -562,8 +562,15 @@ async def generate_unit_code(material_type: str, inner_diameter: float, outer_di
 
 @api_router.post("/raw-materials", response_model=RawMaterial)
 async def create_raw_material(material: RawMaterialCreate):
-    """Create raw material with inventory check"""
+    """Create raw material with inventory check and automatic unit code"""
     try:
+        # Generate automatic unit code
+        auto_unit_code = await generate_unit_code(
+            material.material_type,
+            material.inner_diameter, 
+            material.outer_diameter
+        )
+        
         # Check inventory availability
         inventory_check = await check_inventory_availability(
             material_type=material.material_type,
@@ -578,8 +585,9 @@ async def create_raw_material(material: RawMaterialCreate):
                 detail=f"لا يمكن إضافة المادة الخام. {inventory_check['message']}. المطلوب: {material.pieces_count} قطعة، المتاح: {inventory_check['available_pieces']} قطعة"
             )
         
-        # Create raw material
+        # Create raw material with auto-generated unit code
         material_dict = material.dict()
+        material_dict["unit_code"] = auto_unit_code  # Override with auto-generated code
         material_obj = RawMaterial(**material_dict)
         await db.raw_materials.insert_one(material_obj.dict())
         
@@ -592,7 +600,7 @@ async def create_raw_material(material: RawMaterialCreate):
             outer_diameter=material.outer_diameter,
             transaction_type="out",
             pieces_change=-material.pieces_count,
-            reason=f"إضافة مادة خام جديدة: {material.unit_code}",
+            reason=f"إضافة مادة خام جديدة: {auto_unit_code}",
             reference_id=material_obj.id,
             notes=f"خصم {material.pieces_count} قطعة لإنتاج {material.pieces_count} قطعة بارتفاع {material.height} مم لكل قطعة"
         )
