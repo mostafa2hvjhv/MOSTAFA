@@ -2548,7 +2548,7 @@ const Stock = () => {
   };
 
   const addRawMaterial = async () => {
-    if (!newRawMaterial.inner_diameter || !newRawMaterial.outer_diameter || !newRawMaterial.height || !newRawMaterial.pieces_count || !newRawMaterial.unit_code || !newRawMaterial.cost_per_mm) {
+    if (!newRawMaterial.inner_diameter || !newRawMaterial.outer_diameter || !newRawMaterial.height || !newRawMaterial.pieces_count || !newRawMaterial.cost_per_mm) {
       alert('الرجاء إدخال جميع البيانات المطلوبة');
       return;
     }
@@ -2560,11 +2560,12 @@ const Stock = () => {
         outer_diameter: parseFloat(newRawMaterial.outer_diameter),
         height: parseFloat(newRawMaterial.height),
         pieces_count: parseInt(newRawMaterial.pieces_count),
-        unit_code: newRawMaterial.unit_code,
         cost_per_mm: parseFloat(newRawMaterial.cost_per_mm)
+        // unit_code will be generated automatically by backend
       };
 
-      await axios.post(`${API}/raw-materials`, rawMaterial);
+      const response = await axios.post(`${API}/raw-materials`, rawMaterial);
+      alert(`تم إضافة المادة الخام بنجاح. كود الوحدة: ${response.data.unit_code}`);
       fetchRawMaterials();
       setNewRawMaterial({
         material_type: 'NBR',
