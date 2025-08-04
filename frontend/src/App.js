@@ -4429,6 +4429,30 @@ const Invoices = () => {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Add Product Button */}
+              <button
+                onClick={() => {
+                  // Add a new empty item for editing
+                  const newItem = {
+                    seal_type: '',
+                    material_type: '',
+                    inner_diameter: '',
+                    outer_diameter: '',
+                    height: '',
+                    quantity: 1,
+                    unit_price: 0,
+                    total_price: 0
+                  };
+                  setEditForm({
+                    ...editForm,
+                    items: [...editForm.items, newItem]
+                  });
+                }}
+                className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                إضافة منتج جديد
+              </button>
             </div>
             
             {/* Action Buttons */}
