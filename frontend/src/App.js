@@ -403,6 +403,12 @@ const Inventory = () => {
             مخزون منخفض ({lowStockItems.length})
           </button>
           <button
+            onClick={() => setCurrentView('excel')}
+            className={`px-4 py-2 rounded ${currentView === 'excel' ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
+          >
+            إدارة الإكسل
+          </button>
+          <button
             onClick={() => setCurrentView('add-item')}
             className={`px-4 py-2 rounded ${currentView === 'add-item' ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
           >
