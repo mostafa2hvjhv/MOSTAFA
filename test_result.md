@@ -437,11 +437,10 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Latest Improvements Bug Fixes - إصلاح أخطاء التحسينات الأخيرة"
-  stuck_tasks:
-    - "Latest Improvements Bug Fixes - إصلاح أخطاء التحسينات الأخيرة"
+    - "Bug Fixes Based on User Feedback - إصلاح المشاكل بناءً على ملاحظات المستخدم"
+  stuck_tasks: []
   test_all: false
-  test_priority: "stuck_first"
+  test_priority: "high_first"
 
   - task: "Work Order Print functionality - طباعة أمر الشغل"
     implemented: true
