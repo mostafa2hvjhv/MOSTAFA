@@ -2574,7 +2574,6 @@ const Stock = () => {
         pieces_count: '',
         cost_per_mm: ''
       });
-      alert('تمت إضافة المادة الخام بنجاح');
     } catch (error) {
       console.error('Error adding raw material:', error);
       alert('حدث خطأ في إضافة المادة الخام: ' + (error.response?.data?.detail || error.message));
