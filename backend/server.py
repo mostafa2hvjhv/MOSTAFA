@@ -214,7 +214,7 @@ class RawMaterialCreate(BaseModel):
     outer_diameter: float
     height: float
     pieces_count: int
-    unit_code: str
+    unit_code: Optional[str] = None  # سيتم توليده تلقائياً
     cost_per_mm: float
 
 class FinishedProductCreate(BaseModel):
