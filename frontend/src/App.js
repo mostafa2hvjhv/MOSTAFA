@@ -2939,7 +2939,7 @@ const Stock = () => {
               </tr>
             </thead>
             <tbody>
-              {finishedProducts.map(product => (
+              {filteredFinishedProducts.map(product => (
                 <tr key={product.id}>
                   <td className="border border-gray-300 p-2">{product.seal_type}</td>
                   <td className="border border-gray-300 p-2">{product.material_type}</td>
