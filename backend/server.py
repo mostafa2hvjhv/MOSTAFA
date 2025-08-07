@@ -616,7 +616,10 @@ async def create_raw_material(material: RawMaterialCreate):
 
 @api_router.get("/raw-materials", response_model=List[RawMaterial])
 async def get_raw_materials():
-    materials = await db.raw_materials.find().to_list(1000)
+    materials = await db.raw_materials.find().sort([
+        ("inner_diameter", 1),  # ترتيب تصاعدي حسب القطر الداخلي
+        ("outer_diameter", 1)   # ثم القطر الخارجي
+    ]).to_list(1000)
     return [RawMaterial(**material) for material in materials]
 
 @api_router.put("/raw-materials/{material_id}")
