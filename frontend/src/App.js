@@ -4377,9 +4377,23 @@ const Invoices = () => {
                     {editForm.items.map((item, index) => (
                       <tr key={index}>
                         <td className="border border-gray-300 p-2">
-                          {item.product_type === 'local' ? item.product_name : 
-                            `${item.seal_type || ''} - ${item.material_type || ''} (${item.inner_diameter}×${item.outer_diameter}×${item.height})`
-                          }
+                          {item.product_type === 'local' ? (
+                            <input
+                              type="text"
+                              value={item.product_name || ''}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[index].product_name = e.target.value;
+                                setEditForm({...editForm, items: newItems});
+                              }}
+                              className="w-full p-1 border border-gray-300 rounded"
+                              placeholder="اسم المنتج المحلي"
+                            />
+                          ) : (
+                            <span>
+                              {`${item.seal_type || ''} - ${item.material_type || ''} (${item.inner_diameter}×${item.outer_diameter}×${item.height})`}
+                            </span>
+                          )}
                         </td>
                         <td className="border border-gray-300 p-2">
                           <input
