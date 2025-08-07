@@ -399,7 +399,16 @@ const Inventory = () => {
     transaction.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
     transaction.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     transaction.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a, b) => {
+    // ترتيب حسب المقاس (القطر الداخلي ثم الخارجي) ثم التاريخ
+    if (a.inner_diameter !== b.inner_diameter) {
+      return a.inner_diameter - b.inner_diameter;
+    }
+    if (a.outer_diameter !== b.outer_diameter) {
+      return a.outer_diameter - b.outer_diameter;
+    }
+    return new Date(b.date) - new Date(a.date); // الأحدث أولاً
+  });
 
   return (
     <div className="p-6" dir="rtl">
