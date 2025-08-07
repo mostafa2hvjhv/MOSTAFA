@@ -2784,6 +2784,17 @@ const Stock = () => {
           إضافة مادة خام
         </button>
 
+        {/* حقل البحث */}
+        <div className="mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="بحث في المواد الخام (نوع الخامة، كود الوحدة، المقاسات...)"
+            className="w-full p-3 border border-gray-300 rounded-lg"
+          />
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-300">
             <thead>
