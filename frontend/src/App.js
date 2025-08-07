@@ -138,44 +138,44 @@ const Navigation = ({ currentPage, onPageChange }) => {
   
   // Dashboard is only for Elsawy
   const elsawyPages = [
-    { key: 'dashboard', label: 'لوحة التحكم' },
-    { key: 'sales', label: 'المبيعات' },
-    { key: 'inventory', label: 'الجرد' },
-    { key: 'stock', label: 'المخزون' },
-    { key: 'local', label: 'محلي' },
-    { key: 'deferred', label: 'الآجل' },
-    { key: 'expenses', label: 'المصروفات' },
-    { key: 'revenue', label: 'الإيرادات' },
-    { key: 'treasury', label: 'الخزينة' },
-    { key: 'invoices', label: 'الفواتير' },
-    { key: 'work-orders', label: 'أمر شغل' },
-    { key: 'users', label: 'المستخدمين' }
+    { key: 'dashboard', label: 'لوحة التحكم', icon: '📊' },
+    { key: 'sales', label: 'المبيعات', icon: '💰' },
+    { key: 'inventory', label: 'الجرد', icon: '📦' },
+    { key: 'stock', label: 'المخزون', icon: '🏪' },
+    { key: 'local', label: 'محلي', icon: '🏭' },
+    { key: 'deferred', label: 'الآجل', icon: '⏳' },
+    { key: 'expenses', label: 'المصروفات', icon: '💸' },
+    { key: 'revenue', label: 'الإيرادات', icon: '📈' },
+    { key: 'treasury', label: 'الخزينة', icon: '🏦' },
+    { key: 'invoices', label: 'الفواتير', icon: '🧾' },
+    { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' },
+    { key: 'users', label: 'المستخدمين', icon: '👥' }
   ];
   
   const adminPages = [
-    { key: 'sales', label: 'المبيعات' },
-    { key: 'inventory', label: 'الجرد' },
-    { key: 'stock', label: 'المخزون' },
-    { key: 'local', label: 'محلي' },
-    { key: 'deferred', label: 'الآجل' },
-    { key: 'expenses', label: 'المصروفات' },
-    { key: 'revenue', label: 'الإيرادات' },
-    { key: 'treasury', label: 'الخزينة' },
-    { key: 'invoices', label: 'الفواتير' },
-    { key: 'work-orders', label: 'أمر شغل' },
-    { key: 'users', label: 'المستخدمين' }
+    { key: 'sales', label: 'المبيعات', icon: '💰' },
+    { key: 'inventory', label: 'الجرد', icon: '📦' },
+    { key: 'stock', label: 'المخزون', icon: '🏪' },
+    { key: 'local', label: 'محلي', icon: '🏭' },
+    { key: 'deferred', label: 'الآجل', icon: '⏳' },
+    { key: 'expenses', label: 'المصروفات', icon: '💸' },
+    { key: 'revenue', label: 'الإيرادات', icon: '📈' },
+    { key: 'treasury', label: 'الخزينة', icon: '🏦' },
+    { key: 'invoices', label: 'الفواتير', icon: '🧾' },
+    { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' },
+    { key: 'users', label: 'المستخدمين', icon: '👥' }
   ];
   
   const userPages = [
-    { key: 'sales', label: 'المبيعات' },
-    { key: 'inventory', label: 'الجرد' },
-    { key: 'stock', label: 'المخزون' },
-    { key: 'local', label: 'محلي' },
-    { key: 'deferred', label: 'الآجل' },
-    { key: 'expenses', label: 'المصروفات' },
-    { key: 'treasury', label: 'الخزينة' },
-    { key: 'invoices', label: 'الفواتير' },
-    { key: 'work-orders', label: 'أمر شغل' }
+    { key: 'sales', label: 'المبيعات', icon: '💰' },
+    { key: 'inventory', label: 'الجرد', icon: '📦' },
+    { key: 'stock', label: 'المخزون', icon: '🏪' },
+    { key: 'local', label: 'محلي', icon: '🏭' },
+    { key: 'deferred', label: 'الآجل', icon: '⏳' },
+    { key: 'expenses', label: 'المصروفات', icon: '💸' },
+    { key: 'treasury', label: 'الخزينة', icon: '🏦' },
+    { key: 'invoices', label: 'الفواتير', icon: '🧾' },
+    { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' }
   ];
   
   // Only Elsawy gets dashboard access
@@ -183,51 +183,70 @@ const Navigation = ({ currentPage, onPageChange }) => {
                user?.role === 'admin' ? adminPages : userPages;
 
   return (
-    <nav className="bg-blue-600 text-white" dir="rtl">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <img 
-                src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
-                alt="Master Seal Logo" 
-                className="h-10 w-auto"
-              />
-              <div>
-                <h1 className="text-xl font-bold">ماستر سيل</h1>
-                <span className="text-xs text-blue-100">الحرفيين - السلام - أمام السوبر جيت</span>
-              </div>
+    <div className="flex h-screen bg-gray-50" dir="rtl">
+      {/* Sidebar */}
+      <div className="w-80 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl">
+        {/* Header */}
+        <div className="p-6 border-b border-blue-700">
+          <div className="flex items-center space-x-3 space-x-reverse">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
+              alt="Master Seal Logo" 
+              className="h-12 w-12 rounded-lg shadow-lg"
+            />
+            <div>
+              <h1 className="text-xl font-bold text-white">ماستر سيل</h1>
+              <p className="text-xs text-blue-200">نظام إدارة متكامل</p>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <span className="text-sm">أهلاً {user?.username}</span>
+        </div>
+
+        {/* User Info */}
+        <div className="p-4 bg-blue-800 border-b border-blue-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">أهلاً وسهلاً</p>
+              <p className="text-lg font-bold text-blue-200">{user?.username}</p>
+            </div>
             <button
               onClick={logout}
-              className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
+              className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               خروج
             </button>
           </div>
         </div>
         
-        <div className="flex space-x-4 space-x-reverse border-t border-blue-500 py-2">
+        {/* Navigation Menu */}
+        <nav className="flex-1 p-4 space-y-2">
           {pages.map(page => (
             <button
               key={page.key}
               onClick={() => onPageChange(page.key)}
-              className={`px-4 py-2 rounded text-sm transition-colors ${
+              className={`w-full flex items-center space-x-3 space-x-reverse p-4 rounded-xl text-right transition-all duration-200 group ${
                 currentPage === page.key 
-                  ? 'bg-blue-800 text-white' 
-                  : 'hover:bg-blue-500'
+                  ? 'bg-white text-blue-900 shadow-lg transform scale-105' 
+                  : 'hover:bg-blue-700 hover:transform hover:translate-x-2'
               }`}
             >
-              {page.label}
+              <span className="text-2xl">{page.icon}</span>
+              <span className="font-medium">{page.label}</span>
+              {currentPage === page.key && (
+                <div className="mr-auto">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                </div>
+              )}
             </button>
           ))}
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-blue-700 text-center">
+          <p className="text-xs text-blue-300">الحرفيين - السلام - أمام السوبر جيت</p>
+          <p className="text-xs text-blue-400 mt-1">01020630677</p>
         </div>
       </div>
-    </nav>
+    </div>
   );
 };
 
