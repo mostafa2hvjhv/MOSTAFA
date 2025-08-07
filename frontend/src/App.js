@@ -183,68 +183,66 @@ const Navigation = ({ currentPage, onPageChange }) => {
                user?.role === 'admin' ? adminPages : userPages;
 
   return (
-    <div className="flex h-screen bg-gray-50" dir="rtl">
-      {/* Sidebar */}
-      <div className="w-80 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl">
-        {/* Header */}
-        <div className="p-6 border-b border-blue-700">
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <img 
-              src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
-              alt="Master Seal Logo" 
-              className="h-12 w-12 rounded-lg shadow-lg"
-            />
-            <div>
-              <h1 className="text-xl font-bold text-white">ماستر سيل</h1>
-              <p className="text-xs text-blue-200">نظام إدارة متكامل</p>
-            </div>
+  return (
+    <div className="w-80 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl">
+      {/* Header */}
+      <div className="p-6 border-b border-blue-700">
+        <div className="flex items-center space-x-3 space-x-reverse">
+          <img 
+            src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
+            alt="Master Seal Logo" 
+            className="h-12 w-12 rounded-lg shadow-lg"
+          />
+          <div>
+            <h1 className="text-xl font-bold text-white">ماستر سيل</h1>
+            <p className="text-xs text-blue-200">نظام إدارة متكامل</p>
           </div>
         </div>
+      </div>
 
-        {/* User Info */}
-        <div className="p-4 bg-blue-800 border-b border-blue-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">أهلاً وسهلاً</p>
-              <p className="text-lg font-bold text-blue-200">{user?.username}</p>
-            </div>
-            <button
-              onClick={logout}
-              className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              خروج
-            </button>
+      {/* User Info */}
+      <div className="p-4 bg-blue-800 border-b border-blue-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">أهلاً وسهلاً</p>
+            <p className="text-lg font-bold text-blue-200">{user?.username}</p>
           </div>
+          <button
+            onClick={logout}
+            className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            خروج
+          </button>
         </div>
-        
-        {/* Navigation Menu */}
-        <nav className="flex-1 p-4 space-y-2">
-          {pages.map(page => (
-            <button
-              key={page.key}
-              onClick={() => onPageChange(page.key)}
-              className={`w-full flex items-center space-x-3 space-x-reverse p-4 rounded-xl text-right transition-all duration-200 group ${
-                currentPage === page.key 
-                  ? 'bg-white text-blue-900 shadow-lg transform scale-105' 
-                  : 'hover:bg-blue-700 hover:transform hover:translate-x-2'
-              }`}
-            >
-              <span className="text-2xl">{page.icon}</span>
-              <span className="font-medium">{page.label}</span>
-              {currentPage === page.key && (
-                <div className="mr-auto">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                </div>
-              )}
-            </button>
-          ))}
-        </nav>
+      </div>
+      
+      {/* Navigation Menu */}
+      <nav className="flex-1 p-4 space-y-2">
+        {pages.map(page => (
+          <button
+            key={page.key}
+            onClick={() => onPageChange(page.key)}
+            className={`w-full flex items-center space-x-3 space-x-reverse p-4 rounded-xl text-right transition-all duration-200 group ${
+              currentPage === page.key 
+                ? 'bg-white text-blue-900 shadow-lg transform scale-105' 
+                : 'hover:bg-blue-700 hover:transform hover:translate-x-2'
+            }`}
+          >
+            <span className="text-2xl">{page.icon}</span>
+            <span className="font-medium">{page.label}</span>
+            {currentPage === page.key && (
+              <div className="mr-auto">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              </div>
+            )}
+          </button>
+        ))}
+      </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-blue-700 text-center">
-          <p className="text-xs text-blue-300">الحرفيين - السلام - أمام السوبر جيت</p>
-          <p className="text-xs text-blue-400 mt-1">01020630677</p>
-        </div>
+      {/* Footer */}
+      <div className="p-4 border-t border-blue-700 text-center">
+        <p className="text-xs text-blue-300">الحرفيين - السلام - أمام السوبر جيت</p>
+        <p className="text-xs text-blue-400 mt-1">01020630677</p>
       </div>
     </div>
   );
