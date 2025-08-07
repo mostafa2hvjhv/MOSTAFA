@@ -2503,6 +2503,7 @@ const Sales = () => {
 const Stock = () => {
   const [rawMaterials, setRawMaterials] = useState([]);
   const [finishedProducts, setFinishedProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(''); // للبحث
   const [newRawMaterial, setNewRawMaterial] = useState({
     material_type: 'NBR',
     inner_diameter: '',
