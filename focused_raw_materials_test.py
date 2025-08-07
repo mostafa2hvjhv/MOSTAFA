@@ -16,7 +16,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://599daaea-1291-4db2-8599-f00a6cfcd246.preview.emergentagent.com/api"
+BACKEND_URL = "https://ae821e37-5d23-4699-b766-30ebd69d0df1.preview.emergentagent.com/api"
 
 class FocusedRawMaterialsTester:
     def __init__(self):

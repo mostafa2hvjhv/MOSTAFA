@@ -11,7 +11,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BASE_URL = "https://599daaea-1291-4db2-8599-f00a6cfcd246.preview.emergentagent.com/api"
+BASE_URL = "https://ae821e37-5d23-4699-b766-30ebd69d0df1.preview.emergentagent.com/api"
 
 class FocusedCriticalIssuesTest:
     def __init__(self):
