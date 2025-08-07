@@ -2564,7 +2564,15 @@ const Stock = () => {
     material.outer_diameter.toString().includes(searchTerm) ||
     material.height.toString().includes(searchTerm)
   ).sort((a, b) => {
-    // ترتيب حسب المقاس (القطر الداخلي ثم الخارجي)
+    // ترتيب حسب أولوية الخامة: BUR-NBR-BT-BOOM-VT
+    const materialPriority = { 'BUR': 1, 'NBR': 2, 'BT': 3, 'BOOM': 4, 'VT': 5 };
+    const aPriority = materialPriority[a.material_type] || 6;
+    const bPriority = materialPriority[b.material_type] || 6;
+    
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    // ثم ترتيب حسب المقاس (القطر الداخلي ثم الخارجي)
     if (a.inner_diameter !== b.inner_diameter) {
       return a.inner_diameter - b.inner_diameter;
     }
