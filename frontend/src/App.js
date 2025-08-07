@@ -408,7 +408,15 @@ const Inventory = () => {
     transaction.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     transaction.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   ).sort((a, b) => {
-    // ترتيب حسب المقاس (القطر الداخلي ثم الخارجي) ثم التاريخ
+    // ترتيب حسب أولوية الخامة: BUR-NBR-BT-BOOM-VT
+    const materialPriority = { 'BUR': 1, 'NBR': 2, 'BT': 3, 'BOOM': 4, 'VT': 5 };
+    const aPriority = materialPriority[a.material_type] || 6;
+    const bPriority = materialPriority[b.material_type] || 6;
+    
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    // ثم ترتيب حسب المقاس (القطر الداخلي ثم الخارجي) ثم التاريخ
     if (a.inner_diameter !== b.inner_diameter) {
       return a.inner_diameter - b.inner_diameter;
     }
