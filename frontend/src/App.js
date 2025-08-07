@@ -1647,8 +1647,8 @@ const Sales = () => {
         seal_type: localProduct.product_type, // نوع المنتج في نوع السيل
         material_type: "محلي", // نوع الخامة محلي
         inner_diameter: localProduct.product_size, // مقاس المنتج في المقاس
-        outer_diameter: localProduct.product_size, // نفس المقاس
-        height: localProduct.product_size, // نفس المقاس
+        outer_diameter: 0, // لا نستخدمه للمنتج المحلي
+        height: 0, // لا نستخدمه للمنتج المحلي
         product_type: 'local',
         product_name: product_name,
         product_size: localProduct.product_size,
