@@ -2525,6 +2525,35 @@ const Stock = () => {
   const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
   const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
 
+  // دالة تصفية البحث
+  const filteredRawMaterials = rawMaterials.filter(material => 
+    material.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    material.unit_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    material.inner_diameter.toString().includes(searchTerm) ||
+    material.outer_diameter.toString().includes(searchTerm) ||
+    material.height.toString().includes(searchTerm)
+  ).sort((a, b) => {
+    // ترتيب حسب المقاس (القطر الداخلي ثم الخارجي)
+    if (a.inner_diameter !== b.inner_diameter) {
+      return a.inner_diameter - b.inner_diameter;
+    }
+    return a.outer_diameter - b.outer_diameter;
+  });
+
+  const filteredFinishedProducts = finishedProducts.filter(product => 
+    product.seal_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.inner_diameter.toString().includes(searchTerm) ||
+    product.outer_diameter.toString().includes(searchTerm) ||
+    product.height.toString().includes(searchTerm)
+  ).sort((a, b) => {
+    // ترتيب حسب المقاس (القطر الداخلي ثم الخارجي)
+    if (a.inner_diameter !== b.inner_diameter) {
+      return a.inner_diameter - b.inner_diameter;
+    }
+    return a.outer_diameter - b.outer_diameter;
+  });
+
   useEffect(() => {
     fetchRawMaterials();
     fetchFinishedProducts();
