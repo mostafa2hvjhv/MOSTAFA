@@ -82,51 +82,79 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center" dir="rtl">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-blue-600">ماستر سيل</h1>
-          <p className="text-gray-600">نظام إدارة الشركة</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center p-4" dir="rtl">
+      <div className="max-w-md w-full">
+        {/* Login Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="mb-4">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_oilseal-mgmt/artifacts/42i3e7yn_WhatsApp%20Image%202025-07-31%20at%2015.14.10_e8c55120.jpg" 
+                alt="Master Seal Logo" 
+                className="h-16 w-16 mx-auto rounded-full shadow-lg border-4 border-blue-100"
+              />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">ماستر سيل</h1>
+            <p className="text-gray-500 mt-2">نظام إدارة الشركة المتكامل</p>
+            <div className="w-16 h-1 bg-gradient-to-r from-blue-400 to-blue-600 mx-auto mt-3 rounded-full"></div>
+          </div>
+          
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                👤 اسم المستخدم
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 bg-gray-50 hover:bg-white"
+                placeholder="ادخل اسم المستخدم"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                🔒 كلمة المرور
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 bg-gray-50 hover:bg-white"
+                placeholder="ادخل كلمة المرور"
+                required
+              />
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center animate-pulse">
+                ⚠️ {error}
+              </div>
+            )}
+            
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-blue-900 focus:outline-none focus:ring-3 focus:ring-blue-300 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              🚀 دخول
+            </button>
+          </form>
+          
+          {/* Footer */}
+          <div className="text-center mt-8 pt-6 border-t border-gray-100">
+            <p className="text-xs text-gray-400">الحرفيين - السلام - أمام السوبر جيت</p>
+            <p className="text-xs text-gray-500 mt-1 font-medium">📞 01020630677</p>
+          </div>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              اسم المستخدم
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              كلمة المرور
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
-          )}
-          
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            دخول
-          </button>
-        </form>
+        {/* Additional Info Card */}
+        <div className="mt-6 bg-white/60 backdrop-blur-sm rounded-xl p-4 text-center border border-blue-100/50">
+          <p className="text-sm text-gray-600">نظام إدارة متكامل لإدارة المبيعات والمخزون والحسابات</p>
+        </div>
       </div>
     </div>
   );
