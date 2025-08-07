@@ -616,11 +616,21 @@ async def create_raw_material(material: RawMaterialCreate):
 
 @api_router.get("/raw-materials", response_model=List[RawMaterial])
 async def get_raw_materials():
-    materials = await db.raw_materials.find().sort([
-        ("inner_diameter", 1),  # ترتيب تصاعدي حسب القطر الداخلي
-        ("outer_diameter", 1)   # ثم القطر الخارجي
-    ]).to_list(1000)
-    return [RawMaterial(**material) for material in materials]
+    """Get all raw materials sorted by material type priority then size"""
+    # Define material type priority order: BUR-NBR-BT-BOOM-VT
+    material_priority = {'BUR': 1, 'NBR': 2, 'BT': 3, 'BOOM': 4, 'VT': 5}
+    
+    # Get all materials first
+    materials = await db.raw_materials.find().to_list(1000)
+    
+    # Sort by material type priority, then by diameter
+    sorted_materials = sorted(materials, key=lambda x: (
+        material_priority.get(x.get('material_type', ''), 6),  # Material priority
+        x.get('inner_diameter', 0),  # Then inner diameter
+        x.get('outer_diameter', 0)   # Then outer diameter
+    ))
+    
+    return [RawMaterial(**material) for material in sorted_materials]
 
 @api_router.put("/raw-materials/{material_id}")
 async def update_raw_material(material_id: str, material: RawMaterialCreate):
