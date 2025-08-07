@@ -4772,7 +4772,7 @@ const WorkOrders = () => {
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? 'محلي' : (item.material_type || 'غير محدد')}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? '100' : (item.inner_diameter && item.outer_diameter && item.height ? `${item.inner_diameter} × ${item.outer_diameter} × ${item.height}` : 'غير محدد')}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.material_used || 'غير محدد'}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? 'محلي' : (item.material_used || 'غير محدد')}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
                     ${item.local_product_details ? 
                       'محلي' :
