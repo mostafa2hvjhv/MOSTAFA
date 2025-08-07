@@ -183,7 +183,6 @@ const Navigation = ({ currentPage, onPageChange }) => {
                user?.role === 'admin' ? adminPages : userPages;
 
   return (
-  return (
     <div className="w-80 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl">
       {/* Header */}
       <div className="p-6 border-b border-blue-700">
