@@ -1687,9 +1687,12 @@ async def pay_supplier(supplier_id: str, amount: float, payment_method: str = "c
 # Inventory Management endpoints
 @api_router.get("/inventory", response_model=List[InventoryItem])
 async def get_inventory():
-    """Get all inventory items"""
+    """Get all inventory items sorted by size"""
     try:
-        items = await db.inventory_items.find({}).to_list(None)
+        items = await db.inventory_items.find({}).sort([
+            ("inner_diameter", 1),  # ترتيب تصاعدي حسب القطر الداخلي
+            ("outer_diameter", 1)   # ثم القطر الخارجي
+        ]).to_list(None)
         return items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
