@@ -1493,74 +1493,120 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-6" dir="rtl">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-blue-600 mb-4">لوحة التحكم</h2>
+    <div className="space-y-6" dir="rtl">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">لوحة التحكم</h2>
+            <p className="text-blue-100">مرحباً {user?.username} - إليك نظرة عامة على أداء النشاط</p>
+          </div>
+          <div className="text-6xl opacity-20">📊</div>
+        </div>
         
-        <div className="flex space-x-4 space-x-reverse mb-4">
+        <div className="flex flex-wrap space-x-4 space-x-reverse mt-6">
           <button 
             onClick={clearAllData}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-            حذف الكل
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:transform hover:scale-105">
+            🗑️ حذف الكل
           </button>
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            إعادة تحميل
+          <button 
+            onClick={fetchStats}
+            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:transform hover:scale-105">
+            🔄 إعادة تحميل
           </button>
           <button 
             onClick={() => printReport('dashboard')}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-            طباعة تقرير
+            className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl hover:transform hover:scale-105">
+            🖨️ طباعة تقرير
           </button>
-          <select className="border border-gray-300 rounded px-3 py-2">
-            <option>يومي</option>
-            <option>أسبوعي</option>
-            <option>شهري</option>
-            <option>سنوي</option>
+          <select className="bg-white text-gray-700 border-0 rounded-lg px-4 py-3 shadow-lg focus:ring-2 focus:ring-blue-300 font-medium">
+            <option>📅 يومي</option>
+            <option>📆 أسبوعي</option>
+            <option>📊 شهري</option>
+            <option>📈 سنوي</option>
           </select>
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 text-center">إجمالي المبيعات</h3>
-          <p className="text-3xl font-bold text-green-600 text-center">
-            ج.م {stats.total_sales.toFixed(2)}
-          </p>
+        {/* Total Sales */}
+        <div className="bg-gradient-to-br from-green-400 to-green-600 p-6 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:transform hover:scale-105">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold opacity-90">إجمالي المبيعات</h3>
+              <p className="text-3xl font-bold mt-2">
+                ج.م {stats.total_sales.toFixed(2)}
+              </p>
+            </div>
+            <div className="text-5xl opacity-30">💰</div>
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 text-center">إجمالي المصروفات</h3>
-          <p className="text-3xl font-bold text-red-600 text-center">
-            ج.م {stats.total_expenses.toFixed(2)}
-          </p>
+        {/* Total Expenses */}
+        <div className="bg-gradient-to-br from-red-400 to-red-600 p-6 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:transform hover:scale-105">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold opacity-90">إجمالي المصروفات</h3>
+              <p className="text-3xl font-bold mt-2">
+                ج.م {stats.total_expenses.toFixed(2)}
+              </p>
+            </div>
+            <div className="text-5xl opacity-30">💸</div>
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 text-center">صافي الربح</h3>
-          <p className="text-3xl font-bold text-blue-600 text-center">
-            ج.م {stats.net_profit.toFixed(2)}
-          </p>
+        {/* Net Profit */}
+        <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-6 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:transform hover:scale-105">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold opacity-90">صافي الربح</h3>
+              <p className="text-3xl font-bold mt-2">
+                ج.م {stats.net_profit.toFixed(2)}
+              </p>
+            </div>
+            <div className="text-5xl opacity-30">📈</div>
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 text-center">المبالغ المستحقة</h3>
-          <p className="text-3xl font-bold text-orange-600 text-center">
-            ج.م {stats.total_unpaid.toFixed(2)}
-          </p>
+        {/* Unpaid Amount */}
+        <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-6 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:transform hover:scale-105">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold opacity-90">المبالغ المستحقة</h3>
+              <p className="text-3xl font-bold mt-2">
+                ج.م {stats.total_unpaid.toFixed(2)}
+              </p>
+            </div>
+            <div className="text-5xl opacity-30">⏳</div>
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 text-center">عدد الفواتير</h3>
-          <p className="text-3xl font-bold text-purple-600 text-center">
-            {stats.invoice_count}
-          </p>
+        {/* Invoice Count */}
+        <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-6 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:transform hover:scale-105">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold opacity-90">عدد الفواتير</h3>
+              <p className="text-3xl font-bold mt-2">
+                {stats.invoice_count}
+              </p>
+            </div>
+            <div className="text-5xl opacity-30">🧾</div>
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 text-center">عدد العملاء</h3>
-          <p className="text-3xl font-bold text-blue-600 text-center">
-            {stats.customer_count}
-          </p>
+        {/* Customer Count */}
+        <div className="bg-gradient-to-br from-teal-400 to-teal-600 p-6 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:transform hover:scale-105">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold opacity-90">عدد العملاء</h3>
+              <p className="text-3xl font-bold mt-2">
+                {stats.customer_count}
+              </p>
+            </div>
+            <div className="text-5xl opacity-30">👥</div>
+          </div>
         </div>
       </div>
     </div>
