@@ -381,13 +381,19 @@ const Inventory = () => {
     }
   };
 
-  // Filter items based on search
+  // Filter and sort items based on search
   const filteredItems = inventoryItems.filter(item =>
     item.material_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.inner_diameter.toString().includes(searchTerm.toLowerCase()) ||
     item.outer_diameter.toString().includes(searchTerm.toLowerCase()) ||
     item.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a, b) => {
+    // ترتيب حسب المقاس (القطر الداخلي ثم الخارجي)
+    if (a.inner_diameter !== b.inner_diameter) {
+      return a.inner_diameter - b.inner_diameter;
+    }
+    return a.outer_diameter - b.outer_diameter;
+  });
 
   const filteredTransactions = inventoryTransactions.filter(transaction =>
     transaction.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
