@@ -4468,17 +4468,17 @@ const Invoices = () => {
                     {editForm.items.map((item, index) => (
                       <tr key={index}>
                         <td className="border border-gray-300 p-2">
-                          {item.product_type === 'local' ? (
+                          {item.product_type === 'local' || item.local_product_details ? (
                             <input
                               type="text"
-                              value={item.product_name || ''}
+                              value={item.product_name || 'OR - 100'}
                               onChange={(e) => {
                                 const newItems = [...editForm.items];
                                 newItems[index].product_name = e.target.value;
                                 setEditForm({...editForm, items: newItems});
                               }}
                               className="w-full p-1 border border-gray-300 rounded"
-                              placeholder="اسم المنتج المحلي"
+                              placeholder="OR - 100"
                             />
                           ) : (
                             <span>
