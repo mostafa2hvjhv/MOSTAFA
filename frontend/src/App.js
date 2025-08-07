@@ -1966,7 +1966,7 @@ const Sales = () => {
                 <td>${item.quantity}</td>
                 <td style="text-align: right;">
                   ${item.local_product_details ? 
-                    `${item.local_product_details.product_type} - ${item.local_product_details.product_size}` : 
+                    `OR - 100` : 
                     `${item.seal_type} - ${item.material_type}<br>
                     <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>`
                   }
