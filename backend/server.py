@@ -1690,13 +1690,22 @@ async def pay_supplier(supplier_id: str, amount: float, payment_method: str = "c
 # Inventory Management endpoints
 @api_router.get("/inventory", response_model=List[InventoryItem])
 async def get_inventory():
-    """Get all inventory items sorted by size"""
+    """Get all inventory items sorted by material type priority then size"""
     try:
-        items = await db.inventory_items.find({}).sort([
-            ("inner_diameter", 1),  # ترتيب تصاعدي حسب القطر الداخلي
-            ("outer_diameter", 1)   # ثم القطر الخارجي
-        ]).to_list(None)
-        return items
+        # Define material type priority order: BUR-NBR-BT-BOOM-VT
+        material_priority = {'BUR': 1, 'NBR': 2, 'BT': 3, 'BOOM': 4, 'VT': 5}
+        
+        # Get all items first
+        items = await db.inventory_items.find({}).to_list(None)
+        
+        # Sort by material type priority, then by diameter
+        sorted_items = sorted(items, key=lambda x: (
+            material_priority.get(x.get('material_type', ''), 6),  # Material priority
+            x.get('inner_diameter', 0),  # Then inner diameter
+            x.get('outer_diameter', 0)   # Then outer diameter
+        ))
+        
+        return sorted_items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
