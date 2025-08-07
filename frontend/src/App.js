@@ -2810,7 +2810,7 @@ const Stock = () => {
               </tr>
             </thead>
             <tbody>
-              {rawMaterials.map(material => (
+              {filteredRawMaterials.map(material => (
                 <tr key={material.id}>
                   <td className="border border-gray-300 p-2">{material.material_type}</td>
                   <td className="border border-gray-300 p-2">{material.inner_diameter}</td>
