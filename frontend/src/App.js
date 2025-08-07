@@ -4053,8 +4053,11 @@ const Invoices = () => {
                 <td>${index + 1}</td>
                 <td>${item.quantity}</td>
                 <td style="text-align: right;">
-                  ${item.seal_type} - ${item.material_type}<br>
-                  <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>
+                  ${item.local_product_details ? 
+                    `OR - 100` : 
+                    `${item.seal_type} - ${item.material_type}<br>
+                    <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>`
+                  }
                 </td>
                 <td>ج.م ${item.unit_price.toFixed(2)}</td>
                 <td>ج.م ${item.total_price.toFixed(2)}</td>
