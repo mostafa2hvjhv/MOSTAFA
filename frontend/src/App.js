@@ -3184,12 +3184,45 @@ const Stock = () => {
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">مخزون المواد الخام</h3>
-          <button
-            onClick={clearAllRawMaterials}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            حذف الكل
-          </button>
+          <div className="flex space-x-2 space-x-reverse">
+            <button
+              onClick={clearAllRawMaterials}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              حذف الكل
+            </button>
+          </div>
+        </div>
+
+        {/* Import/Export Section */}
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <h4 className="font-medium mb-4">📁 استيراد وتصدير المواد الخام</h4>
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <label className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 cursor-pointer">
+                📤 استيراد من Excel
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileImport}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-sm text-gray-600">(.xlsx أو .xls)</span>
+            </div>
+            
+            <button
+              onClick={handleFileExport}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              📥 تصدير إلى Excel
+            </button>
+            
+            <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+              <strong>تنسيق الملف المطلوب:</strong><br/>
+              material_type, inner_diameter, outer_diameter, height, pieces_count, unit_code, cost_per_mm
+            </div>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
