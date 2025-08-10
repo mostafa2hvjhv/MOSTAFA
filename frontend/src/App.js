@@ -2060,7 +2060,7 @@ const Sales = () => {
                   ${item.local_product_details ? 
                     `${item.local_product_details.product_size} - ${item.local_product_details.product_type}` : 
                     `${item.seal_type} - ${item.material_type}<br>
-                    <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم</small>`
+                    <small>${item.inner_diameter} × ${item.outer_diameter} × ${item.height} مم${item.wall_height ? ` (ارتفاع الحيطة: ${item.wall_height} مم)` : ""}</small>`
                   }
                 </td>
                 <td>ج.م ${item.unit_price.toFixed(2)}</td>
