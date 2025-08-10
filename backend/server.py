@@ -679,6 +679,31 @@ async def delete_finished_product(product_id: str):
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
     return {"message": "تم حذف المنتج بنجاح"}
 
+@api_router.put("/finished-products/{product_id}")
+async def update_finished_product(product_id: str, product_update: FinishedProductCreate):
+    updated_data = product_update.dict()
+    
+    # Check if product exists
+    existing_product = await db.finished_products.find_one({"id": product_id})
+    if not existing_product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    # Update the product
+    result = await db.finished_products.update_one(
+        {"id": product_id},
+        {"$set": updated_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="لم يتم تحديث أي بيانات")
+    
+    # Get updated product
+    updated_product = await db.finished_products.find_one({"id": product_id})
+    if "_id" in updated_product:
+        del updated_product["_id"]
+    
+    return updated_product
+
 # Compatibility check endpoint
 @api_router.post("/compatibility-check")
 async def check_compatibility(check: CompatibilityCheck):
