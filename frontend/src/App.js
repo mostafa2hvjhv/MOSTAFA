@@ -2412,7 +2412,10 @@ const Sales = () => {
                   <div
                     key={index}
                     className={`p-3 border rounded cursor-pointer transition-colors ${
-                      selectedMaterial?.unit_code === material.unit_code 
+                      selectedMaterial?.unit_code === material.unit_code && 
+                      selectedMaterial?.inner_diameter === material.inner_diameter &&
+                      selectedMaterial?.outer_diameter === material.outer_diameter &&
+                      selectedMaterial?.height === material.height
                         ? 'border-blue-500 bg-blue-50' 
                         : material.low_stock 
                           ? 'border-red-300 bg-red-50 hover:bg-red-100' 
