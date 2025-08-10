@@ -4561,14 +4561,14 @@ const Invoices = () => {
                           {item.product_type === 'local' || item.local_product_details ? (
                             <input
                               type="text"
-                              value={item.product_name || 'OR - 100'}
+                              value={item.product_name || `${item.local_product_details?.product_size || ''} - ${item.local_product_details?.product_type || ''}`}
                               onChange={(e) => {
                                 const newItems = [...editForm.items];
                                 newItems[index].product_name = e.target.value;
                                 setEditForm({...editForm, items: newItems});
                               }}
                               className="w-full p-1 border border-gray-300 rounded"
-                              placeholder="OR - 100"
+                              placeholder="مقاس المنتج - نوع المنتج"
                             />
                           ) : (
                             <span>
