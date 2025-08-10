@@ -1367,6 +1367,24 @@ const Local = () => {
                       <td className="border border-gray-300 p-2">ج.م {product.selling_price.toFixed(2)}</td>
                       <td className="border border-gray-300 p-2">{product.current_stock || 0}</td>
                       <td className="border border-gray-300 p-2">{product.total_sold || 0}</td>
+                      <td className="border border-gray-300 p-2">
+                        <div className="flex space-x-2 space-x-reverse">
+                          <button
+                            onClick={() => editLocalProduct(product)}
+                            className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                            title="تحرير"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => deleteLocalProduct(product.id)}
+                            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                            title="حذف"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
