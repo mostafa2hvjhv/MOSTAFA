@@ -2890,6 +2890,19 @@ const Stock = () => {
     }
   };
 
+  const editRawMaterial = (material) => {
+    // Fill the form with the material data for editing
+    setNewRawMaterial({
+      id: material.id,
+      material_type: material.material_type,
+      inner_diameter: material.inner_diameter.toString(),
+      outer_diameter: material.outer_diameter.toString(),
+      height: material.height.toString(),
+      pieces_count: material.pieces_count.toString(),
+      cost_per_mm: material.cost_per_mm.toString()
+    });
+  };
+
   const addFinishedProduct = async () => {
     if (!newFinishedProduct.inner_diameter || !newFinishedProduct.outer_diameter || !newFinishedProduct.height || !newFinishedProduct.quantity || !newFinishedProduct.unit_price) {
       alert('الرجاء إدخال جميع البيانات المطلوبة');
