@@ -1671,6 +1671,8 @@ const Sales = () => {
   const [discountType, setDiscountType] = useState('amount'); // نوع الخصم: amount أو percentage
   const [compatibilityResults, setCompatibilityResults] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [measurementUnit, setMeasurementUnit] = useState('مم'); // بوصة أو مم
+  const [wallHeight, setWallHeight] = useState(''); // ارتفاع الحيطة للـ W types
 
   const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
   const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
