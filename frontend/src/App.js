@@ -2287,6 +2287,33 @@ const Sales = () => {
                   />
                 </div>
                 
+                {/* Wall Height for W-type seals */}
+                {currentItem.seal_type && currentItem.seal_type.startsWith('W') && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">ارتفاع الحيطة</label>
+                    <input
+                      type="number"
+                      value={wallHeight}
+                      onChange={(e) => setWallHeight(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded"
+                      placeholder="ارتفاع الحيطة للسيل نوع W"
+                    />
+                  </div>
+                )}
+                
+                {/* Measurement Unit */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">وحدة القياس</label>
+                  <select
+                    value={measurementUnit}
+                    onChange={(e) => setMeasurementUnit(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  >
+                    <option value="مم">مليمتر (مم)</option>
+                    <option value="بوصة">بوصة</option>
+                  </select>
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium mb-1">عدد السيل</label>
                   <input
