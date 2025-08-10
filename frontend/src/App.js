@@ -3060,6 +3060,50 @@ const Stock = () => {
     });
   };
 
+  const handleFileImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(`${API}/excel/import/raw-materials`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      alert(response.data.message);
+      fetchRawMaterials(); // Refresh the raw materials list
+      event.target.value = ''; // Clear file input
+    } catch (error) {
+      console.error('Error importing file:', error);
+      alert('حدث خطأ في استيراد الملف: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleFileExport = async () => {
+    try {
+      const response = await axios.get(`${API}/excel/export/raw-materials`, {
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `raw_materials_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting file:', error);
+      alert('حدث خطأ في تصدير الملف');
+    }
+  };
+
   const addFinishedProduct = async () => {
     if (!newFinishedProduct.inner_diameter || !newFinishedProduct.outer_diameter || !newFinishedProduct.height || !newFinishedProduct.quantity || !newFinishedProduct.unit_price) {
       alert('الرجاء إدخال جميع البيانات المطلوبة');
