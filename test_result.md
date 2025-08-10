@@ -495,33 +495,9 @@ test_plan:
         agent: "main"
         comment: "تم إصلاح مشكلة اختيار عدة مواد بنفس النوع والكود ولكن مقاسات مختلفة عبر إضافة مقارنة شاملة للمقاسات في تحديد المادة المختارة"
 
-  - task: "Add Suppliers Edit/Delete - إضافة تحرير وحذف الموردين"
-    implemented: false
-    working: false
-    file: "/app/frontend/src/App.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-      - working: false
-        agent: "pending"
-        comment: "المستخدم طلب إضافة إمكانية تحرير وحذف الموردين في قسم المحلي"
-
-  - task: "Add Stock Edit Options - إضافة خيارات تحرير المخزون"
-    implemented: false
-    working: false
-    file: "/app/frontend/src/App.js"
-    stuck_count: 0
-    priority: "medium"
-    needs_retesting: true
-    status_history:
-      - working: false
-        agent: "pending"
-        comment: "المستخدم طلب إضافة إمكانية تحرير المخزون"
-
   - task: "Invoice Item Edit/Delete - تحرير وحذف عناصر الفاتورة"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
@@ -530,6 +506,39 @@ test_plan:
       - working: false
         agent: "main"
         comment: "بدء تنفيذ إضافة إمكانية تحرير أو حذف العناصر أثناء عمل الفاتورة"
+      - working: true
+        agent: "main"
+        comment: "تم تنفيذ تحرير وحذف العناصر في الفاتورة: إضافة عمود إجراءات مع أزرار تحرير وحذف، دالة editItem ترجع البيانات للنموذج، دالة deleteItem تحذف العنصر مع تأكيد المستخدم"
+
+  - task: "Add Stock Edit Options - إضافة خيارات تحرير المخزون"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "pending"
+        comment: "المستخدم طلب إضافة إمكانية تحرير المخزون"
+      - working: true
+        agent: "main"
+        comment: "تم تنفيذ تحرير المخزون: إضافة أزرار تحرير للمواد الخام والمنتجات النهائية، دوال editRawMaterial و editFinishedProduct لملء النماذج، تحديث دوال الإضافة للتعامل مع التحرير، إضافة PUT endpoint للمنتجات النهائية في الخلفية"
+
+  - task: "Add Suppliers Edit/Delete - إضافة تحرير وحذف الموردين"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "pending"
+        comment: "المستخدم طلب إضافة إمكانية تحرير وحذف الموردين في قسم المحلي"
+      - working: true
+        agent: "main"
+        comment: "تم تنفيذ تحرير وحذف الموردين: إضافة عمود إجراءات في جدول الموردين، دوال editSupplier و deleteSupplier، تحديث دالة addSupplier للتعامل مع التحرير، استخدام endpoints PUT/DELETE الموجودة في الخلفية"
 
   - task: "Fix Local Product Display Format - إصلاح تنسيق عرض المنتجات المحلية"
     implemented: true
