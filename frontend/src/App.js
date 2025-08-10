@@ -1735,6 +1735,8 @@ const Sales = () => {
         quantity: parseInt(currentItem.quantity),
         unit_price: parseFloat(currentItem.unit_price),
         total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
+        wall_height: wallHeight ? parseFloat(wallHeight) : null, // Add wall height
+        measurement_unit: measurementUnit, // Add measurement unit
         material_used: selectedMaterial ? selectedMaterial.unit_code : null,
         material_details: selectedMaterial ? {
           unit_code: selectedMaterial.unit_code,
