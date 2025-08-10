@@ -1135,18 +1135,59 @@ const Local = () => {
     }
 
     try {
-      await axios.post(`${API}/local-products`, {
-        ...newProduct,
-        purchase_price: parseFloat(newProduct.purchase_price),
-        selling_price: parseFloat(newProduct.selling_price),
-        current_stock: parseInt(newProduct.current_stock || 0)
-      });
+      if (newProduct.id) {
+        // Update existing product
+        await axios.put(`${API}/local-products/${newProduct.id}`, {
+          name: newProduct.name,
+          supplier_id: newProduct.supplier_id,
+          purchase_price: parseFloat(newProduct.purchase_price),
+          selling_price: parseFloat(newProduct.selling_price),
+          current_stock: parseInt(newProduct.current_stock || 0)
+        });
+        alert('تم تحديث المنتج بنجاح');
+      } else {
+        // Add new product
+        await axios.post(`${API}/local-products`, {
+          ...newProduct,
+          purchase_price: parseFloat(newProduct.purchase_price),
+          selling_price: parseFloat(newProduct.selling_price),
+          current_stock: parseInt(newProduct.current_stock || 0)
+        });
+        alert('تم إضافة المنتج بنجاح');
+      }
+      
       fetchLocalProducts();
       setNewProduct({ name: '', supplier_id: '', purchase_price: '', selling_price: '', current_stock: 0 });
-      alert('تم إضافة المنتج بنجاح');
     } catch (error) {
-      console.error('Error adding local product:', error);
-      alert('حدث خطأ في إضافة المنتج');
+      console.error('Error saving local product:', error);
+      alert('حدث خطأ في حفظ المنتج: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const editLocalProduct = (product) => {
+    // Fill the form with product data for editing
+    setNewProduct({
+      id: product.id,
+      name: product.name,
+      supplier_id: product.supplier_id,
+      purchase_price: product.purchase_price.toString(),
+      selling_price: product.selling_price.toString(),
+      current_stock: product.current_stock || 0
+    });
+  };
+
+  const deleteLocalProduct = async (productId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج المحلي؟ سيتم حذف جميع البيانات المرتبطة به.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/local-products/${productId}`);
+      fetchLocalProducts();
+      alert('تم حذف المنتج المحلي بنجاح');
+    } catch (error) {
+      console.error('Error deleting local product:', error);
+      alert('حدث خطأ في حذف المنتج: ' + (error.response?.data?.detail || error.message));
     }
   };
 
