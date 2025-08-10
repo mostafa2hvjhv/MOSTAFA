@@ -1079,13 +1079,25 @@ const Local = () => {
     }
 
     try {
-      await axios.post(`${API}/suppliers`, newSupplier);
+      if (newSupplier.id) {
+        // Update existing supplier
+        await axios.put(`${API}/suppliers/${newSupplier.id}`, {
+          name: newSupplier.name,
+          phone: newSupplier.phone,
+          address: newSupplier.address
+        });
+        alert('تم تحديث المورد بنجاح');
+      } else {
+        // Add new supplier
+        await axios.post(`${API}/suppliers`, newSupplier);
+        alert('تم إضافة المورد بنجاح');
+      }
+      
       fetchSuppliers();
       setNewSupplier({ name: '', phone: '', address: '' });
-      alert('تم إضافة المورد بنجاح');
     } catch (error) {
-      console.error('Error adding supplier:', error);
-      alert('حدث خطأ في إضافة المورد');
+      console.error('Error saving supplier:', error);
+      alert('حدث خطأ في حفظ المورد: ' + (error.response?.data?.detail || error.message));
     }
   };
 
