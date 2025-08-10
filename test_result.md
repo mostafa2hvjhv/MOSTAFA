@@ -524,12 +524,12 @@ test_plan:
     working: false
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: true
     status_history:
       - working: false
-        agent: "pending"
-        comment: "المستخدم طلب إضافة إمكانية تحرير أو حذف العناصر أثناء عمل الفاتورة"
+        agent: "main"
+        comment: "بدء تنفيذ إضافة إمكانية تحرير أو حذف العناصر أثناء عمل الفاتورة"
 
   - task: "Fix Local Product Display Format - إصلاح تنسيق عرض المنتجات المحلية"
     implemented: true
