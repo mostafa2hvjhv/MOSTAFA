@@ -1214,6 +1214,7 @@ const Local = () => {
                     <th className="border border-gray-300 p-2">إجمالي المشتريات</th>
                     <th className="border border-gray-300 p-2">إجمالي المدفوع</th>
                     <th className="border border-gray-300 p-2">الرصيد المستحق</th>
+                    <th className="border border-gray-300 p-2">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
