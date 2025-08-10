@@ -3069,12 +3069,22 @@ const Stock = () => {
                   <td className="border border-gray-300 p-2">{material.unit_code}</td>
                   <td className="border border-gray-300 p-2">{material.cost_per_mm}</td>
                   <td className="border border-gray-300 p-2">
-                    <button
-                      onClick={() => deleteRawMaterial(material.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
-                    >
-                      حذف
-                    </button>
+                    <div className="flex space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => editRawMaterial(material)}
+                        className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                        title="تحرير"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => deleteRawMaterial(material.id)}
+                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                        title="حذف"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
