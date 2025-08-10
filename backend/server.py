@@ -719,6 +719,7 @@ async def check_compatibility(check: CompatibilityCheck):
         if "_id" in product:
             del product["_id"]
             
+        # Check seal type and material compatibility
         if (product["seal_type"] == check.seal_type and
             product["inner_diameter"] == check.inner_diameter and
             product["outer_diameter"] == check.outer_diameter and
