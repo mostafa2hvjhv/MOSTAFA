@@ -4893,9 +4893,9 @@ const WorkOrders = () => {
               invoice.items?.map(item => `
                 <tr>
                   <td style="border: 1px solid #ddd; padding: 8px;">${invoice.invoice_number}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? 'OR' : (item.seal_type || 'غير محدد')}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? item.local_product_details.product_type : (item.seal_type || 'غير محدد')}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? 'محلي' : (item.material_type || 'غير محدد')}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? '100' : (item.inner_diameter && item.outer_diameter && item.height ? `${item.inner_diameter} × ${item.outer_diameter} × ${item.height}` : 'غير محدد')}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? `${item.local_product_details.product_size} - ${item.local_product_details.product_type}` : (item.inner_diameter && item.outer_diameter && item.height ? `${item.inner_diameter} × ${item.outer_diameter} × ${item.height}` : 'غير محدد')}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">${item.local_product_details ? 'محلي' : (item.material_used || 'غير محدد')}</td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
