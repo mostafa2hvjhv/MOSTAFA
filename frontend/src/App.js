@@ -2530,14 +2530,39 @@ const Sales = () => {
               <tbody>
                 {items.map((item, index) => (
                   <tr key={index}>
-                    <td className="border border-gray-300 p-2">{item.seal_type}</td>
-                    <td className="border border-gray-300 p-2">{item.material_type}</td>
                     <td className="border border-gray-300 p-2">
-                      {item.inner_diameter} × {item.outer_diameter} × {item.height}
+                      {item.local_product_details ? item.local_product_details.product_type : item.seal_type}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {item.local_product_details ? 'محلي' : item.material_type}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {item.local_product_details ? 
+                        `${item.local_product_details.product_size} - ${item.local_product_details.product_type}` :
+                        `${item.inner_diameter} × ${item.outer_diameter} × ${item.height}${item.wall_height ? ` (ارتفاع الحيطة: ${item.wall_height})` : ''}`
+                      }
                     </td>
                     <td className="border border-gray-300 p-2">{item.quantity}</td>
                     <td className="border border-gray-300 p-2">ج.م {item.unit_price}</td>
                     <td className="border border-gray-300 p-2">ج.م {item.total_price}</td>
+                    <td className="border border-gray-300 p-2">
+                      <div className="flex space-x-2 space-x-reverse">
+                        <button
+                          onClick={() => editItem(index)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                          title="تحرير"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => deleteItem(index)}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                          title="حذف"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
