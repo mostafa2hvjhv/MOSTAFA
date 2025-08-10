@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://ae821e37-5d23-4699-b766-30ebd69d0df1.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://7cb8b7fb-867f-4cc5-9322-9ca4fbac2f07.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_mathematical_conversions():
