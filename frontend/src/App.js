@@ -2947,6 +2947,20 @@ const Stock = () => {
     }
   };
 
+  const editFinishedProduct = (product) => {
+    // Fill the form with the product data for editing
+    setNewFinishedProduct({
+      id: product.id,
+      seal_type: product.seal_type,
+      material_type: product.material_type,
+      inner_diameter: product.inner_diameter.toString(),
+      outer_diameter: product.outer_diameter.toString(),
+      height: product.height.toString(),
+      quantity: product.quantity.toString(),
+      unit_price: product.unit_price.toString()
+    });
+  };
+
   const deleteFinishedProduct = async (productId) => {
     if (!confirm('هل أنت متأكد من حذف هذا المنتج النهائي؟')) {
       return;
