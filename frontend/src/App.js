@@ -1089,6 +1089,32 @@ const Local = () => {
     }
   };
 
+  const editSupplier = (supplier) => {
+    // Fill the form with supplier data for editing
+    setNewSupplier({
+      id: supplier.id,
+      name: supplier.name,
+      phone: supplier.phone || '',
+      address: supplier.address || ''
+    });
+  };
+
+  const deleteSupplier = async (supplierId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المورد؟ سيتم حذف جميع البيانات المرتبطة به.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/suppliers/${supplierId}`);
+      fetchSuppliers();
+      fetchLocalProducts(); // Refresh products as they might be affected
+      alert('تم حذف المورد بنجاح');
+    } catch (error) {
+      console.error('Error deleting supplier:', error);
+      alert('حدث خطأ في حذف المورد: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   // Add local product
   const addLocalProduct = async () => {
     if (!newProduct.name.trim() || !newProduct.supplier_id || !newProduct.purchase_price || !newProduct.selling_price) {
