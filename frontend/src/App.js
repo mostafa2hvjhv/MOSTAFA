@@ -2929,7 +2929,16 @@ const Stock = () => {
         unit_price: parseFloat(newFinishedProduct.unit_price)
       };
 
-      await axios.post(`${API}/finished-products`, finishedProduct);
+      if (newFinishedProduct.id) {
+        // Update existing product
+        await axios.put(`${API}/finished-products/${newFinishedProduct.id}`, finishedProduct);
+        alert('تم تحديث المنتج النهائي بنجاح');
+      } else {
+        // Add new product
+        await axios.post(`${API}/finished-products`, finishedProduct);
+        alert('تم إضافة المنتج النهائي بنجاح');
+      }
+
       fetchFinishedProducts();
       setNewFinishedProduct({
         seal_type: 'RSL',
@@ -2940,10 +2949,9 @@ const Stock = () => {
         quantity: '',
         unit_price: ''
       });
-      alert('تم إضافة المنتج النهائي بنجاح');
     } catch (error) {
-      console.error('Error adding finished product:', error);
-      alert('حدث خطأ في إضافة المنتج النهائي');
+      console.error('Error saving finished product:', error);
+      alert('حدث خطأ في حفظ المنتج النهائي');
     }
   };
 
