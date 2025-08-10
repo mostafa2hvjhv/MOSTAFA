@@ -2675,7 +2675,7 @@ const Sales = () => {
                     <td className="border border-gray-300 p-2">
                       {item.local_product_details ? 
                         `${item.local_product_details.product_size} - ${item.local_product_details.product_type}` :
-                        `${item.inner_diameter} × ${item.outer_diameter} × ${item.height}${item.wall_height ? ` (ارتفاع الحيطة: ${item.wall_height})` : ''}`
+                        `${item.original_inner_diameter || item.inner_diameter} × ${item.original_outer_diameter || item.outer_diameter} × ${item.original_height || item.height}${item.original_wall_height ? ` (ارتفاع الحيطة: ${item.original_wall_height})` : (item.wall_height ? ` (ارتفاع الحيطة: ${item.wall_height})` : '')} ${item.measurement_unit || 'مم'}`
                       }
                     </td>
                     <td className="border border-gray-300 p-2">{item.quantity}</td>
