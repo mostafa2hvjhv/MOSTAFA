@@ -1355,6 +1355,7 @@ const Local = () => {
                     <th className="border border-gray-300 p-2">سعر البيع</th>
                     <th className="border border-gray-300 p-2">المخزون الحالي</th>
                     <th className="border border-gray-300 p-2">إجمالي المباع</th>
+                    <th className="border border-gray-300 p-2">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
