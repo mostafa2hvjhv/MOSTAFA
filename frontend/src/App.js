@@ -2428,7 +2428,10 @@ const Sales = () => {
                     <p><strong>المقاس:</strong> {material.inner_diameter} × {material.outer_diameter} × {material.height}</p>
                     <p><strong>عدد القطع:</strong> {material.pieces_count}</p>
                     {material.warning && <p className="text-red-600 text-sm">{material.warning}</p>}
-                    {selectedMaterial?.unit_code === material.unit_code && (
+                    {selectedMaterial?.unit_code === material.unit_code && 
+                     selectedMaterial?.inner_diameter === material.inner_diameter &&
+                     selectedMaterial?.outer_diameter === material.outer_diameter &&
+                     selectedMaterial?.height === material.height && (
                       <p className="text-blue-600 font-semibold text-sm mt-2">✓ محدد للاستخدام</p>
                     )}
                   </div>
