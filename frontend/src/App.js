@@ -1820,6 +1820,54 @@ const Sales = () => {
     setSelectedMaterial(null);
   };
 
+  const editItem = (index) => {
+    const item = items[index];
+    
+    // Set current item for editing
+    setCurrentItem({
+      seal_type: item.seal_type || 'RSL',
+      material_type: item.material_type || 'NBR',
+      inner_diameter: item.inner_diameter?.toString() || '',
+      outer_diameter: item.outer_diameter?.toString() || '',
+      height: item.height?.toString() || '',
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price?.toString() || '',
+      product_type: item.product_type || (item.local_product_details ? 'local' : 'manufactured')
+    });
+    
+    // Set wall height if exists
+    if (item.wall_height) {
+      setWallHeight(item.wall_height.toString());
+    }
+    
+    // Set measurement unit if exists
+    if (item.measurement_unit) {
+      setMeasurementUnit(item.measurement_unit);
+    }
+    
+    // Set local product details if exists
+    if (item.local_product_details) {
+      setLocalProduct({
+        product_size: item.local_product_details.product_size || '',
+        product_type: item.local_product_details.product_type || '',
+        purchase_price: '',
+        selling_price: item.unit_price?.toString() || '',
+        supplier: ''
+      });
+    }
+    
+    // Remove the item being edited
+    const newItems = items.filter((_, i) => i !== index);
+    setItems(newItems);
+  };
+
+  const deleteItem = (index) => {
+    if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+      const newItems = items.filter((_, i) => i !== index);
+      setItems(newItems);
+    }
+  };
+
   const createInvoice = async () => {
     if (!selectedCustomer && !newCustomer) {
       alert('الرجاء اختيار العميل أو إدخال اسم عميل جديد');
