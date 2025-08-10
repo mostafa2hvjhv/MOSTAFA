@@ -2843,8 +2843,17 @@ const Stock = () => {
         // unit_code will be generated automatically by backend
       };
 
-      const response = await axios.post(`${API}/raw-materials`, rawMaterial);
-      alert(`تم إضافة المادة الخام بنجاح. كود الوحدة: ${response.data.unit_code}`);
+      let response;
+      if (newRawMaterial.id) {
+        // Update existing material
+        response = await axios.put(`${API}/raw-materials/${newRawMaterial.id}`, rawMaterial);
+        alert(`تم تحديث المادة الخام بنجاح. كود الوحدة: ${response.data.unit_code}`);
+      } else {
+        // Add new material
+        response = await axios.post(`${API}/raw-materials`, rawMaterial);
+        alert(`تم إضافة المادة الخام بنجاح. كود الوحدة: ${response.data.unit_code}`);
+      }
+
       fetchRawMaterials();
       setNewRawMaterial({
         material_type: 'NBR',
@@ -2855,8 +2864,8 @@ const Stock = () => {
         cost_per_mm: ''
       });
     } catch (error) {
-      console.error('Error adding raw material:', error);
-      alert('حدث خطأ في إضافة المادة الخام: ' + (error.response?.data?.detail || error.message));
+      console.error('Error saving raw material:', error);
+      alert('حدث خطأ في حفظ المادة الخام: ' + (error.response?.data?.detail || error.message));
     }
   };
 
