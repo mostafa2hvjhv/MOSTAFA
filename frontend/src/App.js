@@ -1796,16 +1796,35 @@ const Sales = () => {
         return;
       }
 
+      // Convert measurements to millimeters for storage if needed
+      let innerDiameter = parseFloat(currentItem.inner_diameter);
+      let outerDiameter = parseFloat(currentItem.outer_diameter);
+      let height = parseFloat(currentItem.height);
+      let wallHeightValue = wallHeight ? parseFloat(wallHeight) : null;
+      
+      if (measurementUnit === 'بوصة') {
+        innerDiameter = innerDiameter * 25.4;
+        outerDiameter = outerDiameter * 25.4;
+        height = height * 25.4;
+        if (wallHeightValue) {
+          wallHeightValue = wallHeightValue * 25.4;
+        }
+      }
+
       const item = {
         ...currentItem,
-        inner_diameter: parseFloat(currentItem.inner_diameter),
-        outer_diameter: parseFloat(currentItem.outer_diameter),
-        height: parseFloat(currentItem.height),
+        inner_diameter: innerDiameter,
+        outer_diameter: outerDiameter,
+        height: height,
         quantity: parseInt(currentItem.quantity),
         unit_price: parseFloat(currentItem.unit_price),
         total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
-        wall_height: wallHeight ? parseFloat(wallHeight) : null, // Add wall height
+        wall_height: wallHeightValue, // Add wall height (converted to mm if needed)
         measurement_unit: measurementUnit, // Add measurement unit
+        original_inner_diameter: parseFloat(currentItem.inner_diameter), // Store original values for display
+        original_outer_diameter: parseFloat(currentItem.outer_diameter),
+        original_height: parseFloat(currentItem.height),
+        original_wall_height: wallHeight ? parseFloat(wallHeight) : null,
         material_used: selectedMaterial ? selectedMaterial.unit_code : null,
         material_details: selectedMaterial ? {
           unit_code: selectedMaterial.unit_code,
