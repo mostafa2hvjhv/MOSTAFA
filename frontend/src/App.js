@@ -1753,13 +1753,25 @@ const Sales = () => {
       return;
     }
     
-    const innerDiameter = parseFloat(currentItem.inner_diameter);
-    const outerDiameter = parseFloat(currentItem.outer_diameter);
-    const height = parseFloat(currentItem.height);
+    let innerDiameter = parseFloat(currentItem.inner_diameter);
+    let outerDiameter = parseFloat(currentItem.outer_diameter);
+    let height = parseFloat(currentItem.height);
     
     if (isNaN(innerDiameter) || isNaN(outerDiameter) || isNaN(height)) {
       alert('الرجاء إدخال أرقام صحيحة للمقاسات');
       return;
+    }
+    
+    // Convert from inches to millimeters if needed
+    if (measurementUnit === 'بوصة') {
+      innerDiameter = innerDiameter * 25.4;
+      outerDiameter = outerDiameter * 25.4;
+      height = height * 25.4;
+      
+      console.log(`تحويل من بوصة إلى ملليمتر:
+        القطر الداخلي: ${currentItem.inner_diameter} بوصة = ${innerDiameter.toFixed(1)} مم
+        القطر الخارجي: ${currentItem.outer_diameter} بوصة = ${outerDiameter.toFixed(1)} مم
+        الارتفاع: ${currentItem.height} بوصة = ${height.toFixed(1)} مم`);
     }
     
     try {
