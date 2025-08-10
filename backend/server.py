@@ -714,46 +714,97 @@ async def check_compatibility(check: CompatibilityCheck):
     compatible_materials = []
     compatible_products = []
     
+    # Define tolerance ranges for better compatibility matching
+    # Especially important for converted measurements from inches
+    tolerance_percentage = 0.1  # 10% tolerance
+    
+    inner_tolerance = check.inner_diameter * tolerance_percentage
+    outer_tolerance = check.outer_diameter * tolerance_percentage
+    height_tolerance = max(5.0, check.height * tolerance_percentage)  # Minimum 5mm or 10%
+    
     # Check raw materials
     for material in raw_materials:
         # Remove MongoDB ObjectId if present
         if "_id" in material:
             del material["_id"]
             
-        # Material compatibility logic:
-        # - Inner diameter of material <= seal inner diameter
-        # - Outer diameter of material >= seal outer diameter  
-        # - Height of material >= seal height + 5mm
-        if (material["inner_diameter"] <= check.inner_diameter and 
-            material["outer_diameter"] >= check.outer_diameter and
-            material["height"] >= (check.height + 5)):
+        # Enhanced material compatibility logic with tolerances:
+        # - Inner diameter: material should be <= required + tolerance (can be slightly larger)
+        # - Outer diameter: material should be >= required - tolerance (can be slightly smaller)
+        # - Height: material should be >= required height + minimum safety margin
+        
+        inner_compatible = material["inner_diameter"] <= (check.inner_diameter + inner_tolerance)
+        outer_compatible = material["outer_diameter"] >= (check.outer_diameter - outer_tolerance)
+        height_compatible = material["height"] >= (check.height + 3)  # Reduced safety margin
+        
+        if inner_compatible and outer_compatible and height_compatible:
             
             warning = ""
+            compatibility_score = 100
+            
+            # Calculate compatibility warnings and scoring
             if material["height"] < (check.height + 5):
-                warning = "تحذير: الارتفاع غير كافي"
+                warning = "تحذير: الارتفاع قريب من الحد الأدنى"
+                compatibility_score -= 10
+            
+            if material["inner_diameter"] > check.inner_diameter:
+                warning += " - القطر الداخلي أكبر قليلاً"
+                compatibility_score -= 5
+                
+            if material["outer_diameter"] < check.outer_diameter:
+                warning += " - القطر الخارجي أصغر قليلاً" 
+                compatibility_score -= 5
+            
+            # Add exact match bonus
+            if (abs(material["inner_diameter"] - check.inner_diameter) < 1 and
+                abs(material["outer_diameter"] - check.outer_diameter) < 1):
+                compatibility_score += 10
+                if not warning:
+                    warning = "مطابقة ممتازة"
             
             compatible_materials.append({
                 **material,
-                "warning": warning,
-                "low_stock": material["height"] < 20
+                "warning": warning.strip(" -"),
+                "compatibility_score": compatibility_score,
+                "low_stock": material.get("height", 0) < 20,
+                "tolerance_used": {
+                    "inner_tolerance": inner_tolerance,
+                    "outer_tolerance": outer_tolerance,
+                    "height_tolerance": height_tolerance
+                }
             })
     
-    # Check finished products
+    # Sort by compatibility score (highest first)
+    compatible_materials.sort(key=lambda x: x.get("compatibility_score", 0), reverse=True)
+    
+    # Check finished products (keep exact matching for finished products)
     for product in finished_products:
         # Remove MongoDB ObjectId if present
         if "_id" in product:
             del product["_id"]
             
-        # Check seal type and material compatibility
+        # Check seal type and material compatibility with small tolerance
+        inner_match = abs(product["inner_diameter"] - check.inner_diameter) <= 1
+        outer_match = abs(product["outer_diameter"] - check.outer_diameter) <= 1
+        height_match = abs(product["height"] - check.height) <= 1
+        
         if (product["seal_type"] == check.seal_type and
-            product["inner_diameter"] == check.inner_diameter and
-            product["outer_diameter"] == check.outer_diameter and
-            product["height"] == check.height):
+            inner_match and outer_match and height_match):
             compatible_products.append(product)
     
     return {
         "compatible_materials": compatible_materials,
-        "compatible_products": compatible_products
+        "compatible_products": compatible_products,
+        "search_criteria": {
+            "inner_diameter": check.inner_diameter,
+            "outer_diameter": check.outer_diameter, 
+            "height": check.height,
+            "tolerances_applied": {
+                "inner_tolerance": inner_tolerance,
+                "outer_tolerance": outer_tolerance,
+                "height_tolerance": height_tolerance
+            }
+        }
     }
 
 # Invoice endpoints
