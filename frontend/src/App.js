@@ -2524,6 +2524,7 @@ const Sales = () => {
                   <th className="border border-gray-300 p-2">الكمية</th>
                   <th className="border border-gray-300 p-2">السعر</th>
                   <th className="border border-gray-300 p-2">المجموع</th>
+                  <th className="border border-gray-300 p-2">إجراءات</th>
                 </tr>
               </thead>
               <tbody>
