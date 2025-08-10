@@ -3230,12 +3230,22 @@ const Stock = () => {
                   <td className="border border-gray-300 p-2">{product.quantity}</td>
                   <td className="border border-gray-300 p-2">{product.unit_price}</td>
                   <td className="border border-gray-300 p-2">
-                    <button
-                      onClick={() => deleteFinishedProduct(product.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
-                    >
-                      حذف
-                    </button>
+                    <div className="flex space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => editFinishedProduct(product)}
+                        className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                        title="تحرير"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => deleteFinishedProduct(product.id)}
+                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                        title="حذف"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
