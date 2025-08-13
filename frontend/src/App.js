@@ -1837,6 +1837,7 @@ const Sales = () => {
     try {
       const response = await axios.post(`${API}/compatibility-check`, {
         seal_type: currentItem.seal_type,
+        material_type: currentItem.material_type,
         inner_diameter: innerDiameter,
         outer_diameter: outerDiameter,
         height: height
