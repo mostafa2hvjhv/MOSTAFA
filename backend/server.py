@@ -729,6 +729,10 @@ async def check_compatibility(check: CompatibilityCheck):
         if "_id" in material:
             del material["_id"]
             
+        # Material type filter - if specified, only show materials of that type
+        if check.material_type and material.get("material_type") != check.material_type:
+            continue
+            
         # Enhanced material compatibility logic with tolerances:
         # - Inner diameter: material should be <= required + tolerance (can be slightly larger)
         # - Outer diameter: material should be >= required - tolerance (can be slightly smaller)
