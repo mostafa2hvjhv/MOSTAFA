@@ -391,6 +391,7 @@ class CompatibilityCheck(BaseModel):
     inner_diameter: float
     outer_diameter: float
     height: float
+    material_type: Optional[MaterialType] = None
 
 # Auth endpoints
 @api_router.post("/auth/login")
