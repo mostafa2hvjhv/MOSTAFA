@@ -2879,9 +2879,14 @@ const Sales = () => {
           
           <button
             onClick={createInvoice}
-            className="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 mt-4 text-lg font-semibold"
+            disabled={isCreatingInvoice}
+            className={`w-full p-3 rounded mt-4 text-lg font-semibold ${
+              isCreatingInvoice 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-green-500 text-white hover:bg-green-600'
+            }`}
           >
-            إنشاء الفاتورة
+            {isCreatingInvoice ? 'جاري إنشاء الفاتورة...' : 'إنشاء الفاتورة'}
           </button>
         </div>
       )}
