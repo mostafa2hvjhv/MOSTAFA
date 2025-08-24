@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://7cb8b7fb-867f-4cc5-9322-9ca4fbac2f07.preview.emergentagent.com/api"
+BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
 
 def test_inventory_sorting():
     """اختبار ترتيب عناصر الجرد حسب المقاس"""
