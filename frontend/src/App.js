@@ -4343,6 +4343,9 @@ const Invoices = () => {
     }
 
     try {
+      console.log('Saving invoice edit for ID:', editingInvoice);
+      console.log('Edit form data:', editForm);
+      
       // Calculate totals
       const subtotal = editForm.items.reduce((sum, item) => sum + (item.total_price || 0), 0);
       let discountAmount = 0;
@@ -4363,12 +4366,19 @@ const Invoices = () => {
         total_amount: totalAfterDiscount
       };
 
-      await axios.put(`${API}/invoices/${editingInvoice}`, updatedInvoice);
-      fetchInvoices();
+      console.log('Sending update to backend:', updatedInvoice);
+      
+      const response = await axios.put(`${API}/invoices/${editingInvoice}`, updatedInvoice);
+      console.log('Update response:', response.data);
+      
+      console.log('Fetching invoices after update...');
+      await fetchInvoices();
+      
       cancelEdit();
       alert('تم تحديث الفاتورة بنجاح');
     } catch (error) {
       console.error('Error updating invoice:', error);
+      console.error('Error response:', error.response?.data);
       alert('حدث خطأ في تحديث الفاتورة: ' + (error.response?.data?.detail || error.message));
     }
   };
