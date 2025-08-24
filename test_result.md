@@ -741,6 +741,24 @@ test_plan:
         agent: "testing"
         comment: "✅ تم اختبار إصلاح فلتر صفحة الآجل بنجاح بنسبة 100%! **المشكلة المحلولة:** كانت الفواتير النقدية تظهر في صفحة الآجل رغم أن remaining_amount = 0. **الاختبار الشامل:** تم إنشاء واختبار 3 أنواع من الفواتير: 1) **فاتورة نقدية مدفوعة كاملاً** (payment_method='نقدي', remaining_amount=0) - لا تظهر في صفحة الآجل ✅، 2) **فاتورة آجلة** (payment_method='آجل', remaining_amount=100) - تظهر في صفحة الآجل ✅، 3) **فاتورة مدفوعة جزئياً** (payment_method='نقدي', remaining_amount=50) - تظهر في صفحة الآجل ✅. **منطق الفلتر المطبق:** (invoice.payment_method === 'آجل' OR invoice.remaining_amount > 0) AND (invoice.status === 'غير مدفوعة' OR invoice.status === 'مدفوعة جزئياً' OR invoice.status === 'انتظار' OR invoice.remaining_amount > 0). **الاختبار الموسع:** تم اختبار 7 سيناريوهات مختلفة بجميع طرق الدفع (نقدي، فودافون، انستاباي، آجل) مع حالات الدفع الكامل والجزئي - جميع السيناريوهات نجحت بنسبة 100%. **النتيجة:** الإصلاح يعمل بشكل مثالي - الفواتير النقدية المدفوعة كاملاً لا تظهر في صفحة الآجل، بينما الفواتير الآجلة والمدفوعة جزئياً تظهر بشكل صحيح."
 
+  - task: "Deferred Page Filter Fix - إصلاح فلتر صفحة الآجل"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "المستخدم أوضح المشكلة الحقيقية: الفواتير النقدية (غير الآجلة) تظهر في صفحة الآجل بمبلغ مستحق 0، لكن المفروض ألا تظهر نهائياً في صفحة الآجل إذا لم تكن آجلة. المشكلة في فلتر صفحة الآجل."
+      - working: true
+        agent: "main"
+        comment: "تم إصلاح فلتر صفحة الآجل بإضافة شرط جديد: (invoice.payment_method === 'آجل' || invoice.remaining_amount > 0) لضمان عدم ظهور الفواتير غير الآجلة والمدفوعة كاملاً في صفحة الآجل."
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار إصلاح فلتر صفحة الآجل بنجاح بنسبة 100%! **الاختبار الأساسي (6/6 نجح):** فاتورة نقدية مدفوعة كاملاً (payment_method='نقدي', remaining_amount=0) - لا تظهر في صفحة الآجل، فاتورة آجلة (payment_method='آجل', remaining_amount=100) - تظهر في صفحة الآجل، فاتورة مدفوعة جزئياً (payment_method='نقدي', remaining_amount=50) - تظهر في صفحة الآجل. **الاختبار الموسع (4/4 نجح):** فواتير نقدية مدفوعة كاملاً - لا تظهر في الآجل، فواتير آجلة - تظهر في الآجل، فواتير مدفوعة جزئياً (جميع طرق الدفع) - تظهر في الآجل، فواتير فودافون/انستاباي مدفوعة كاملاً - لا تظهر في الآجل. **منطق الفلتر المطبق بنجاح:** (invoice.payment_method === 'آجل' OR invoice.remaining_amount > 0) AND (invoice.status === 'غير مدفوعة' OR invoice.status === 'مدفوعة جزئياً' OR invoice.status === 'انتظار' OR invoice.remaining_amount > 0). المشكلة الأصلية (الفواتير النقدية تظهر في صفحة الآجل رغم remaining_amount=0) محلولة بالكامل."
+
 agent_communication:
   - agent: "main"
     message: "تم بناء النظام الأساسي بنجاح. الواجهة تعمل بشكل ممتاز مع نظام المصادقة ولوحة التحكم وصفحة المبيعات. تم اختبار جميع APIs الخلفية بنجاح."
