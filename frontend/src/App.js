@@ -4973,9 +4973,103 @@ const Invoices = () => {
                               placeholder="مقاس المنتج - نوع المنتج"
                             />
                           ) : (
-                            <span>
-                              {`${item.seal_type || ''} - ${item.material_type || ''} (${item.inner_diameter}×${item.outer_diameter}×${item.height})`}
-                            </span>
+                            <div className="space-y-1">
+                              {/* Seal Type */}
+                              <div className="flex items-center space-x-2 space-x-reverse">
+                                <label className="text-xs font-medium w-16">نوع السيل:</label>
+                                <select
+                                  value={item.seal_type || ''}
+                                  onChange={(e) => {
+                                    const newItems = [...editForm.items];
+                                    newItems[index].seal_type = e.target.value;
+                                    setEditForm({...editForm, items: newItems});
+                                  }}
+                                  className="flex-1 p-1 text-xs border border-gray-300 rounded"
+                                >
+                                  <option value="">اختر النوع</option>
+                                  <option value="RSL">RSL</option>
+                                  <option value="RS">RS</option>
+                                  <option value="RSE">RSE</option>
+                                  <option value="B17">B17</option>
+                                  <option value="B3">B3</option>
+                                  <option value="B14">B14</option>
+                                  <option value="B1">B1</option>
+                                  <option value="R15">R15</option>
+                                  <option value="R17">R17</option>
+                                  <option value="W1">W1</option>
+                                  <option value="W4">W4</option>
+                                  <option value="W5">W5</option>
+                                  <option value="W11">W11</option>
+                                  <option value="WBT">WBT</option>
+                                  <option value="XR">XR</option>
+                                  <option value="CH">CH</option>
+                                  <option value="VR">VR</option>
+                                </select>
+                              </div>
+                              
+                              {/* Material Type */}
+                              <div className="flex items-center space-x-2 space-x-reverse">
+                                <label className="text-xs font-medium w-16">نوع الخامة:</label>
+                                <select
+                                  value={item.material_type || ''}
+                                  onChange={(e) => {
+                                    const newItems = [...editForm.items];
+                                    newItems[index].material_type = e.target.value;
+                                    setEditForm({...editForm, items: newItems});
+                                  }}
+                                  className="flex-1 p-1 text-xs border border-gray-300 rounded"
+                                >
+                                  <option value="">اختر الخامة</option>
+                                  <option value="NBR">NBR</option>
+                                  <option value="BUR">BUR</option>
+                                  <option value="BT">BT</option>
+                                  <option value="VT">VT</option>
+                                  <option value="BOOM">BOOM</option>
+                                </select>
+                              </div>
+                              
+                              {/* Dimensions */}
+                              <div className="flex items-center space-x-1 space-x-reverse">
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  value={item.inner_diameter || ''}
+                                  onChange={(e) => {
+                                    const newItems = [...editForm.items];
+                                    newItems[index].inner_diameter = parseFloat(e.target.value) || 0;
+                                    setEditForm({...editForm, items: newItems});
+                                  }}
+                                  placeholder="داخلي"
+                                  className="w-12 p-1 text-xs border border-gray-300 rounded"
+                                />
+                                <span className="text-xs">×</span>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  value={item.outer_diameter || ''}
+                                  onChange={(e) => {
+                                    const newItems = [...editForm.items];
+                                    newItems[index].outer_diameter = parseFloat(e.target.value) || 0;
+                                    setEditForm({...editForm, items: newItems});
+                                  }}
+                                  placeholder="خارجي"
+                                  className="w-12 p-1 text-xs border border-gray-300 rounded"
+                                />
+                                <span className="text-xs">×</span>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  value={item.height || ''}
+                                  onChange={(e) => {
+                                    const newItems = [...editForm.items];
+                                    newItems[index].height = parseFloat(e.target.value) || 0;
+                                    setEditForm({...editForm, items: newItems});
+                                  }}
+                                  placeholder="ارتفاع"
+                                  className="w-12 p-1 text-xs border border-gray-300 rounded"
+                                />
+                              </div>
+                            </div>
                           )}
                         </td>
                         <td className="border border-gray-300 p-2">
