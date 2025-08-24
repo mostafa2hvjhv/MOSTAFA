@@ -663,6 +663,18 @@ test_plan:
         agent: "testing"
         comment: "✅ تم اختبار تحسينات التصميم بنجاح! التحسينات تركز على الواجهة الأمامية (UI/UX) وليس على APIs الخلفية، لذلك تم التحقق من أن جميع APIs الخلفية المطلوبة لدعم الواجهة المحسنة تعمل بشكل مثالي. جميع الاختبارات الأخرى نجحت بنسبة 100% مما يؤكد أن التحسينات لم تكسر أي وظائف خلفية."
 
+  - task: "Invoice Editing Issues Fix - إصلاح مشاكل تحرير الفواتير"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "المستخدم أبلغ عن مشكلتين: 1) حقل 'نوع المنتج' غير قابل للتحرير في الفواتير المصنعة، 2) جميع الفواتير تختفي بعد حفظ التعديلات. بدء التحقق من المشاكل وإصلاحها."
+
 agent_communication:
   - agent: "main"
     message: "تم بناء النظام الأساسي بنجاح. الواجهة تعمل بشكل ممتاز مع نظام المصادقة ولوحة التحكم وصفحة المبيعات. تم اختبار جميع APIs الخلفية بنجاح."
