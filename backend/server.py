@@ -1517,7 +1517,7 @@ async def get_account_balances():
             'yad_elsawy': 0
         }
         
-        # Add invoice amounts
+        # Add invoice amounts (only for deferred invoices that don't have treasury transactions)
         payment_method_map = {
             'نقدي': 'cash',
             'فودافون كاش محمد الصاوي': 'vodafone_elsawy',
@@ -1527,10 +1527,10 @@ async def get_account_balances():
             'يد الصاوي': 'yad_elsawy'
         }
         
+        # Only add deferred invoices directly (non-deferred invoices are handled by treasury transactions)
         for invoice in invoices:
-            account_id = payment_method_map.get(invoice.get('payment_method'))
-            if account_id:
-                account_balances[account_id] += invoice.get('total_amount', 0)
+            if invoice.get('payment_method') == 'آجل':
+                account_balances['deferred'] += invoice.get('total_amount', 0)
         
         # Subtract expenses from cash
         for expense in expenses:
