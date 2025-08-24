@@ -667,7 +667,7 @@ test_plan:
     implemented: true
     working: true
     file: "/app/frontend/src/App.js, /app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
