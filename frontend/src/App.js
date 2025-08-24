@@ -4276,10 +4276,13 @@ const Invoices = () => {
 
   const fetchInvoices = async () => {
     try {
+      console.log('Fetching invoices...');
       const response = await axios.get(`${API}/invoices`);
+      console.log('Invoices fetched:', response.data.length, 'invoices');
       setInvoices(response.data);
     } catch (error) {
       console.error('Error fetching invoices:', error);
+      alert('خطأ في تحميل الفواتير: ' + (error.response?.data?.detail || error.message));
     }
   };
 
