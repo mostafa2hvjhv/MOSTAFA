@@ -2017,7 +2017,14 @@ const Sales = () => {
     }
   };
 
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+
   const createInvoice = async () => {
+    // منع التكرار أثناء إنشاء الفاتورة
+    if (isCreatingInvoice) {
+      return;
+    }
+
     if (!selectedCustomer && !newCustomer) {
       alert('الرجاء اختيار العميل أو إدخال اسم عميل جديد');
       return;
@@ -2029,6 +2036,8 @@ const Sales = () => {
     }
 
     try {
+      setIsCreatingInvoice(true); // بدء إنشاء الفاتورة
+      
       let customerId = selectedCustomer;
       let customerName = '';
 
@@ -2092,7 +2101,9 @@ const Sales = () => {
       }
     } catch (error) {
       console.error('Error creating invoice:', error);
-      alert('حدث خطأ في إنشاء الفاتورة');
+      alert('حدث خطأ في إنشاء الفاتورة: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsCreatingInvoice(false); // إنهاء حالة الإنشاء
     }
   };
 
