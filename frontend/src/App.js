@@ -1775,6 +1775,17 @@ const Sales = () => {
     unit_price: '',
     product_type: 'manufactured' // manufactured أو local
   });
+  // New state for dual measurement inputs
+  const [measurements, setMeasurements] = useState({
+    inner_diameter_mm: '',
+    inner_diameter_inch: '',
+    outer_diameter_mm: '',
+    outer_diameter_inch: '',
+    height_mm: '',
+    height_inch: '',
+    wall_height_mm: '',
+    wall_height_inch: ''
+  });
   const [localProduct, setLocalProduct] = useState({
     product_size: '',      // مقاس المنتج
     product_type: '',      // نوع المنتج
