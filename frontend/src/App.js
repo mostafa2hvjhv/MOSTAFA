@@ -6299,6 +6299,41 @@ const Treasury = () => {
     }
   };
 
+  // Treasury Reset Function - Only for Elsawy
+  const resetTreasury = async () => {
+    if (user?.username !== 'Elsawy') {
+      alert('غير مصرح لك بتنفيذ هذه العملية');
+      return;
+    }
+
+    // Triple confirmation for this critical operation
+    const firstConfirm = confirm('⚠️ تحذير: هذا الإجراء سيحذف جميع بيانات الخزينة ولا يمكن التراجع عنه!\nهل أنت متأكد من المتابعة؟');
+    if (!firstConfirm) return;
+
+    const secondConfirm = confirm('⚠️ تأكيد ثاني: سيتم حذف جميع المعاملات والأرصدة نهائياً!\nاكتب "نعم" للتأكيد:');
+    if (!secondConfirm) return;
+
+    const finalConfirm = prompt('⚠️ للتأكيد النهائي، اكتب بالضبط: "احذف كل شيء"');
+    if (finalConfirm !== 'احذف كل شيء') {
+      alert('تم إلغاء العملية');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API}/treasury/reset`, null, {
+        params: { username: user.username }
+      });
+
+      alert(`✅ تم مسح جميع بيانات الخزينة بنجاح!\nتم حذف ${response.data.deleted_treasury_transactions} معاملة`);
+      
+      // Refresh data
+      fetchTreasuryData();
+    } catch (error) {
+      console.error('Error resetting treasury:', error);
+      alert('حدث خطأ في مسح الخزينة: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const selectedAccountData = accounts.find(acc => acc.id === selectedAccount);
 
   return (
