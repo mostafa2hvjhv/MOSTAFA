@@ -1804,6 +1804,7 @@ const Sales = () => {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [measurementUnit, setMeasurementUnit] = useState('مم'); // بوصة أو مم
   const [wallHeight, setWallHeight] = useState(''); // ارتفاع الحيطة للـ W types
+  const [clientType, setClientType] = useState(1); // نوع العميل للتسعير (1, 2, 3)
 
   // Measurement conversion functions
   const mmToInch = (mm) => {
