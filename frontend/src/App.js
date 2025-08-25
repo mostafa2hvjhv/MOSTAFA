@@ -1855,6 +1855,26 @@ const Sales = () => {
     }
   };
 
+  // Calculate automatic pricing based on material and client type
+  const calculateAutomaticPrice = async (material, height, clientType) => {
+    try {
+      const response = await axios.post(`${API}/calculate-price`, null, {
+        params: {
+          material_type: material.material_type,
+          inner_diameter: material.inner_diameter,
+          outer_diameter: material.outer_diameter,
+          height: height,
+          client_type: clientType
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.log('No pricing found for this material combination:', error);
+      return null;
+    }
+  };
+
   const checkCompatibility = async () => {
     if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height) {
       alert('الرجاء إدخال جميع المقاسات المطلوبة');
