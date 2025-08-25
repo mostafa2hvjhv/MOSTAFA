@@ -6362,6 +6362,13 @@ const Treasury = () => {
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
             طباعة تقرير
           </button>
+          {user?.username === 'Elsawy' && (
+            <button 
+              onClick={resetTreasury}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 font-bold border-2 border-red-800">
+              ⚠️ مسح الخزينة بالكامل
+            </button>
+          )}
           {user?.username === 'Elsawy' && selectedAccount === 'yad_elsawy' && selectedAccountData?.balance > 0 && (
             <button 
               onClick={() => clearAccount(selectedAccount)}
