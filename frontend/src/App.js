@@ -1952,6 +1952,16 @@ const Sales = () => {
         unit_price: '',
         product_type: 'manufactured'
       });
+      setMeasurements({
+        inner_diameter_mm: '',
+        inner_diameter_inch: '',
+        outer_diameter_mm: '',
+        outer_diameter_inch: '',
+        height_mm: '',
+        height_inch: '',
+        wall_height_mm: '',
+        wall_height_inch: ''
+      });
     } else {
       // Validation for local products
       if (!localProduct.product_size || !localProduct.product_type || !localProduct.selling_price || !localProduct.supplier || !localProduct.purchase_price) {
