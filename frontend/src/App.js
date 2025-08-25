@@ -1895,26 +1895,21 @@ const Sales = () => {
 
   const addItem = () => {
     if (currentItem.product_type === 'manufactured') {
-      // Validation for manufactured products
-      if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height || !currentItem.unit_price) {
-        alert('الرجاء إدخال جميع البيانات المطلوبة');
+      // Validation for manufactured products - check if at least one measurement is filled
+      const hasInnerDiameter = measurements.inner_diameter_mm || measurements.inner_diameter_inch;
+      const hasOuterDiameter = measurements.outer_diameter_mm || measurements.outer_diameter_inch;
+      const hasHeight = measurements.height_mm || measurements.height_inch;
+      
+      if (!hasInnerDiameter || !hasOuterDiameter || !hasHeight || !currentItem.unit_price) {
+        alert('الرجاء إدخال جميع البيانات المطلوبة (القياسات والسعر)');
         return;
       }
 
-      // Convert measurements to millimeters for storage if needed
-      let innerDiameter = parseFloat(currentItem.inner_diameter);
-      let outerDiameter = parseFloat(currentItem.outer_diameter);
-      let height = parseFloat(currentItem.height);
-      let wallHeightValue = wallHeight ? parseFloat(wallHeight) : null;
-      
-      if (measurementUnit === 'بوصة') {
-        innerDiameter = innerDiameter * 25.4;
-        outerDiameter = outerDiameter * 25.4;
-        height = height * 25.4;
-        if (wallHeightValue) {
-          wallHeightValue = wallHeightValue * 25.4;
-        }
-      }
+      // Use mm values (they're automatically kept in sync by handleMeasurementChange)
+      const innerDiameter = parseFloat(currentItem.inner_diameter);
+      const outerDiameter = parseFloat(currentItem.outer_diameter);
+      const height = parseFloat(currentItem.height);
+      const wallHeightValue = parseFloat(measurements.wall_height_mm) || null;
 
       const item = {
         ...currentItem,
@@ -1924,12 +1919,18 @@ const Sales = () => {
         quantity: parseInt(currentItem.quantity),
         unit_price: parseFloat(currentItem.unit_price),
         total_price: parseFloat(currentItem.unit_price) * parseInt(currentItem.quantity),
-        wall_height: wallHeightValue, // Add wall height (converted to mm if needed)
-        measurement_unit: measurementUnit, // Add measurement unit
-        original_inner_diameter: parseFloat(currentItem.inner_diameter), // Store original values for display
-        original_outer_diameter: parseFloat(currentItem.outer_diameter),
-        original_height: parseFloat(currentItem.height),
-        original_wall_height: wallHeight ? parseFloat(wallHeight) : null,
+        wall_height: wallHeightValue,
+        // Store original display values for both units
+        display_measurements: {
+          inner_diameter_mm: measurements.inner_diameter_mm,
+          inner_diameter_inch: measurements.inner_diameter_inch,
+          outer_diameter_mm: measurements.outer_diameter_mm,
+          outer_diameter_inch: measurements.outer_diameter_inch,
+          height_mm: measurements.height_mm,
+          height_inch: measurements.height_inch,
+          wall_height_mm: measurements.wall_height_mm,
+          wall_height_inch: measurements.wall_height_inch
+        },
         material_used: selectedMaterial ? selectedMaterial.unit_code : null,
         material_details: selectedMaterial ? {
           unit_code: selectedMaterial.unit_code,
