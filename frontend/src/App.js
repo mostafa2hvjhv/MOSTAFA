@@ -6589,6 +6589,7 @@ const Users = () => {
     { key: 'treasury', label: 'الخزينة' },
     { key: 'invoices', label: 'الفواتير' },
     { key: 'work-orders', label: 'أمر شغل' },
+    { key: 'pricing', label: 'التسعير' },
     { key: 'users', label: 'إدارة المستخدمين' }
   ];
 
