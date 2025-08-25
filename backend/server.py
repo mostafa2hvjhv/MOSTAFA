@@ -1978,6 +1978,103 @@ async def get_inventory_transactions_by_item(item_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Material Pricing APIs
+@api_router.get("/material-pricing", response_model=List[MaterialPricing])
+async def get_material_pricing():
+    """Get all material pricing"""
+    try:
+        pricings = await db.material_pricing.find({}).sort("created_at", -1).to_list(None)
+        return [MaterialPricing(**pricing) for pricing in pricings]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/material-pricing", response_model=MaterialPricing)
+async def create_material_pricing(pricing: MaterialPricing):
+    """Create new material pricing"""
+    try:
+        pricing_dict = pricing.dict()
+        await db.material_pricing.insert_one(pricing_dict)
+        return pricing
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/material-pricing/{pricing_id}")
+async def update_material_pricing(pricing_id: str, pricing: MaterialPricing):
+    """Update material pricing"""
+    try:
+        pricing_dict = pricing.dict()
+        pricing_dict["updated_at"] = datetime.utcnow()
+        
+        result = await db.material_pricing.update_one(
+            {"id": pricing_id},
+            {"$set": pricing_dict}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="التسعيرة غير موجودة")
+        return {"message": "تم تحديث التسعيرة بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/material-pricing/{pricing_id}")
+async def delete_material_pricing(pricing_id: str):
+    """Delete material pricing"""
+    try:
+        result = await db.material_pricing.delete_one({"id": pricing_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="التسعيرة غير موجودة")
+        return {"message": "تم حذف التسعيرة بنجاح"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/calculate-price")
+async def calculate_material_price(
+    material_type: str,
+    inner_diameter: float,
+    outer_diameter: float,
+    height: float,
+    client_type: int  # 1, 2, or 3
+):
+    """Calculate price based on material pricing"""
+    try:
+        # Find matching material pricing
+        pricing = await db.material_pricing.find_one({
+            "material_type": material_type,
+            "inner_diameter": inner_diameter,
+            "outer_diameter": outer_diameter
+        })
+        
+        if not pricing:
+            raise HTTPException(status_code=404, detail="لم يتم العثور على تسعيرة مطابقة لهذه الخامة")
+        
+        # Calculate price: (price_per_mm * height) + manufacturing_cost
+        mm_cost = pricing["price_per_mm"] * height
+        
+        if client_type == 1:
+            manufacturing_cost = pricing["manufacturing_cost_client1"]
+        elif client_type == 2:
+            manufacturing_cost = pricing["manufacturing_cost_client2"]
+        elif client_type == 3:
+            manufacturing_cost = pricing["manufacturing_cost_client3"]
+        else:
+            raise HTTPException(status_code=400, detail="نوع العميل يجب أن يكون 1، 2، أو 3")
+        
+        total_price = mm_cost + manufacturing_cost
+        
+        return {
+            "material_type": material_type,
+            "dimensions": f"{inner_diameter}×{outer_diameter}×{height}",
+            "price_per_mm": pricing["price_per_mm"],
+            "mm_cost": mm_cost,
+            "manufacturing_cost": manufacturing_cost,
+            "client_type": client_type,
+            "total_price": total_price,
+            "pricing_id": pricing["id"]
+        }
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Business logic function for inventory transactions
 async def create_inventory_transaction(transaction: InventoryTransactionCreate):
     """Create inventory transaction (in/out) - Business logic"""
