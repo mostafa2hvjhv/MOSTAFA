@@ -7132,6 +7132,332 @@ const Users = () => {
   );
 };
 
+// Material Pricing Component
+const Pricing = () => {
+  const [materialPricings, setMaterialPricings] = useState([]);
+  const [editingPricing, setEditingPricing] = useState(null);
+  const [newPricing, setNewPricing] = useState({
+    material_type: 'NBR',
+    inner_diameter: '',
+    outer_diameter: '',
+    price_per_mm: '',
+    manufacturing_cost_client1: '',
+    manufacturing_cost_client2: '',
+    manufacturing_cost_client3: '',
+    notes: ''
+  });
+
+  const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
+
+  useEffect(() => {
+    fetchMaterialPricings();
+  }, []);
+
+  const fetchMaterialPricings = async () => {
+    try {
+      const response = await axios.get(`${API}/material-pricing`);
+      setMaterialPricings(response.data);
+    } catch (error) {
+      console.error('Error fetching material pricings:', error);
+    }
+  };
+
+  const addMaterialPricing = async () => {
+    if (!newPricing.inner_diameter || !newPricing.outer_diameter || !newPricing.price_per_mm) {
+      alert('الرجاء إدخال جميع البيانات المطلوبة');
+      return;
+    }
+
+    try {
+      if (editingPricing) {
+        // Update existing pricing
+        await axios.put(`${API}/material-pricing/${editingPricing}`, {
+          ...newPricing,
+          inner_diameter: parseFloat(newPricing.inner_diameter),
+          outer_diameter: parseFloat(newPricing.outer_diameter),
+          price_per_mm: parseFloat(newPricing.price_per_mm),
+          manufacturing_cost_client1: parseFloat(newPricing.manufacturing_cost_client1 || 0),
+          manufacturing_cost_client2: parseFloat(newPricing.manufacturing_cost_client2 || 0),
+          manufacturing_cost_client3: parseFloat(newPricing.manufacturing_cost_client3 || 0)
+        });
+        alert('تم تحديث التسعيرة بنجاح');
+        setEditingPricing(null);
+      } else {
+        // Add new pricing
+        await axios.post(`${API}/material-pricing`, {
+          ...newPricing,
+          inner_diameter: parseFloat(newPricing.inner_diameter),
+          outer_diameter: parseFloat(newPricing.outer_diameter),
+          price_per_mm: parseFloat(newPricing.price_per_mm),
+          manufacturing_cost_client1: parseFloat(newPricing.manufacturing_cost_client1 || 0),
+          manufacturing_cost_client2: parseFloat(newPricing.manufacturing_cost_client2 || 0),
+          manufacturing_cost_client3: parseFloat(newPricing.manufacturing_cost_client3 || 0)
+        });
+        alert('تم إضافة التسعيرة بنجاح');
+      }
+      
+      fetchMaterialPricings();
+      setNewPricing({
+        material_type: 'NBR',
+        inner_diameter: '',
+        outer_diameter: '',
+        price_per_mm: '',
+        manufacturing_cost_client1: '',
+        manufacturing_cost_client2: '',
+        manufacturing_cost_client3: '',
+        notes: ''
+      });
+    } catch (error) {
+      console.error('Error saving material pricing:', error);
+      alert('حدث خطأ في حفظ التسعيرة: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const editMaterialPricing = (pricing) => {
+    setNewPricing({
+      material_type: pricing.material_type,
+      inner_diameter: pricing.inner_diameter.toString(),
+      outer_diameter: pricing.outer_diameter.toString(),
+      price_per_mm: pricing.price_per_mm.toString(),
+      manufacturing_cost_client1: pricing.manufacturing_cost_client1.toString(),
+      manufacturing_cost_client2: pricing.manufacturing_cost_client2.toString(),
+      manufacturing_cost_client3: pricing.manufacturing_cost_client3.toString(),
+      notes: pricing.notes || ''
+    });
+    setEditingPricing(pricing.id);
+  };
+
+  const deleteMaterialPricing = async (pricingId) => {
+    if (!confirm('هل أنت متأكد من حذف هذه التسعيرة؟')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/material-pricing/${pricingId}`);
+      fetchMaterialPricings();
+      alert('تم حذف التسعيرة بنجاح');
+    } catch (error) {
+      console.error('Error deleting material pricing:', error);
+      alert('حدث خطأ في حذف التسعيرة: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingPricing(null);
+    setNewPricing({
+      material_type: 'NBR',
+      inner_diameter: '',
+      outer_diameter: '',
+      price_per_mm: '',
+      manufacturing_cost_client1: '',
+      manufacturing_cost_client2: '',
+      manufacturing_cost_client3: '',
+      notes: ''
+    });
+  };
+
+  return (
+    <div className="p-6" dir="rtl">
+      <h2 className="text-2xl font-bold text-blue-600 mb-6">💲 إدارة التسعير</h2>
+      
+      {/* Add/Edit Material Pricing Form */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-semibold mb-4">
+          {editingPricing ? 'تعديل التسعيرة' : 'إضافة تسعيرة جديدة'}
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">نوع الخامة</label>
+            <select
+              value={newPricing.material_type}
+              onChange={(e) => setNewPricing({...newPricing, material_type: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              {materialTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">القطر الداخلي (مم)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={newPricing.inner_diameter}
+              onChange={(e) => setNewPricing({...newPricing, inner_diameter: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="القطر الداخلي"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">القطر الخارجي (مم)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={newPricing.outer_diameter}
+              onChange={(e) => setNewPricing({...newPricing, outer_diameter: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="القطر الخارجي"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">سعر الملي (ج.م)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newPricing.price_per_mm}
+              onChange={(e) => setNewPricing({...newPricing, price_per_mm: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="سعر الملي الواحد"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">تكلفة التصنيع - عميل 1 (ج.م)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newPricing.manufacturing_cost_client1}
+              onChange={(e) => setNewPricing({...newPricing, manufacturing_cost_client1: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="تكلفة التصنيع للعميل 1"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">تكلفة التصنيع - عميل 2 (ج.م)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newPricing.manufacturing_cost_client2}
+              onChange={(e) => setNewPricing({...newPricing, manufacturing_cost_client2: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="تكلفة التصنيع للعميل 2"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">تكلفة التصنيع - عميل 3 (ج.م)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={newPricing.manufacturing_cost_client3}
+              onChange={(e) => setNewPricing({...newPricing, manufacturing_cost_client3: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              placeholder="تكلفة التصنيع للعميل 3"
+            />
+          </div>
+          
+          <div className="md:col-span-2 lg:col-span-3">
+            <label className="block text-sm font-medium mb-1">ملاحظات</label>
+            <textarea
+              value={newPricing.notes}
+              onChange={(e) => setNewPricing({...newPricing, notes: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded"
+              rows="2"
+              placeholder="ملاحظات إضافية..."
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-4 space-x-reverse mt-4">
+          {editingPricing && (
+            <button
+              onClick={cancelEdit}
+              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+            >
+              إلغاء
+            </button>
+          )}
+          <button
+            onClick={addMaterialPricing}
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          >
+            {editingPricing ? 'تحديث التسعيرة' : 'إضافة التسعيرة'}
+          </button>
+        </div>
+      </div>
+      
+      {/* Material Pricings Table */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold">قائمة التسعيرات</h3>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع الخامة</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الأبعاد (داخلي×خارجي)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر الملي</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عميل 1</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عميل 2</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عميل 3</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ملاحظات</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العمليات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {materialPricings.map((pricing, index) => (
+                <tr key={pricing.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {pricing.material_type}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {pricing.inner_diameter}×{pricing.outer_diameter} مم
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {pricing.price_per_mm.toFixed(2)} ج.م
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {pricing.manufacturing_cost_client1.toFixed(2)} ج.م
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {pricing.manufacturing_cost_client2.toFixed(2)} ج.م
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {pricing.manufacturing_cost_client3.toFixed(2)} ج.م
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {pricing.notes || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => editMaterialPricing(pricing)}
+                      className="text-blue-600 hover:text-blue-900 ml-2"
+                    >
+                      تعديل
+                    </button>
+                    <button
+                      onClick={() => deleteMaterialPricing(pricing.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              
+              {materialPricings.length === 0 && (
+                <tr>
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
+                    لا توجد تسعيرات مضافة
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   const [currentPage, setCurrentPage] = useState('sales'); // Default to sales instead of dashboard
