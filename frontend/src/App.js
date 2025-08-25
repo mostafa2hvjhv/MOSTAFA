@@ -2600,13 +2600,30 @@ const Sales = () => {
                 {currentItem.seal_type && currentItem.seal_type.startsWith('W') && (
                   <div>
                     <label className="block text-sm font-medium mb-1">ارتفاع الحيطة</label>
-                    <input
-                      type="number"
-                      value={wallHeight}
-                      onChange={(e) => setWallHeight(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded"
-                      placeholder="ارتفاع الحيطة للسيل نوع W"
-                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">مليمتر</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={measurements.wall_height_mm}
+                          onChange={(e) => handleMeasurementChange('wall_height', e.target.value, 'mm')}
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          placeholder="ارتفاع الحيطة بالمليمتر"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">بوصة</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={measurements.wall_height_inch}
+                          onChange={(e) => handleMeasurementChange('wall_height', e.target.value, 'inch')}
+                          className="w-full p-2 border border-gray-300 rounded text-sm"
+                          placeholder="ارتفاع الحيطة بالبوصة"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
                 
