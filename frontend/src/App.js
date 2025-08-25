@@ -2048,6 +2048,18 @@ const Sales = () => {
       product_type: item.product_type || (item.local_product_details ? 'local' : 'manufactured')
     });
     
+    // Set measurements for dual input fields (assuming values are in mm from database)
+    setMeasurements({
+      inner_diameter_mm: item.inner_diameter?.toString() || '',
+      inner_diameter_inch: mmToInch(item.inner_diameter) || '',
+      outer_diameter_mm: item.outer_diameter?.toString() || '',
+      outer_diameter_inch: mmToInch(item.outer_diameter) || '',
+      height_mm: item.height?.toString() || '',
+      height_inch: mmToInch(item.height) || '',
+      wall_height_mm: item.wall_height?.toString() || '',
+      wall_height_inch: mmToInch(item.wall_height) || ''
+    });
+    
     // Set wall height if exists
     if (item.wall_height) {
       setWallHeight(item.wall_height.toString());
