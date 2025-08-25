@@ -2514,32 +2514,86 @@ const Sales = () => {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">القطر الداخلي</label>
-                  <input
-                    type="number"
-                    value={currentItem.inner_diameter}
-                    onChange={(e) => setCurrentItem({...currentItem, inner_diameter: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">مليمتر</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={measurements.inner_diameter_mm}
+                        onChange={(e) => handleMeasurementChange('inner_diameter', e.target.value, 'mm')}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        placeholder="مم"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">بوصة</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={measurements.inner_diameter_inch}
+                        onChange={(e) => handleMeasurementChange('inner_diameter', e.target.value, 'inch')}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        placeholder="بوصة"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">القطر الخارجي</label>
-                  <input
-                    type="number"
-                    value={currentItem.outer_diameter}
-                    onChange={(e) => setCurrentItem({...currentItem, outer_diameter: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">مليمتر</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={measurements.outer_diameter_mm}
+                        onChange={(e) => handleMeasurementChange('outer_diameter', e.target.value, 'mm')}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        placeholder="مم"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">بوصة</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={measurements.outer_diameter_inch}
+                        onChange={(e) => handleMeasurementChange('outer_diameter', e.target.value, 'inch')}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        placeholder="بوصة"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">ارتفاع السيل</label>
-                  <input
-                    type="number"
-                    value={currentItem.height}
-                    onChange={(e) => setCurrentItem({...currentItem, height: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">مليمتر</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={measurements.height_mm}
+                        onChange={(e) => handleMeasurementChange('height', e.target.value, 'mm')}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        placeholder="مم"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">بوصة</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={measurements.height_inch}
+                        onChange={(e) => handleMeasurementChange('height', e.target.value, 'inch')}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        placeholder="بوصة"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Wall Height for W-type seals */}
