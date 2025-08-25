@@ -1802,6 +1802,39 @@ const Sales = () => {
   const [measurementUnit, setMeasurementUnit] = useState('مم'); // بوصة أو مم
   const [wallHeight, setWallHeight] = useState(''); // ارتفاع الحيطة للـ W types
 
+  // Measurement conversion functions
+  const mmToInch = (mm) => {
+    if (!mm || mm === '') return '';
+    return (parseFloat(mm) / 25.4).toFixed(4);
+  };
+
+  const inchToMm = (inch) => {
+    if (!inch || inch === '') return '';
+    return (parseFloat(inch) * 25.4).toFixed(2);
+  };
+
+  // Handle measurement input changes with auto-conversion
+  const handleMeasurementChange = (field, value, unit) => {
+    const newMeasurements = { ...measurements };
+    
+    if (unit === 'mm') {
+      newMeasurements[`${field}_mm`] = value;
+      newMeasurements[`${field}_inch`] = mmToInch(value);
+    } else {
+      newMeasurements[`${field}_inch`] = value;
+      newMeasurements[`${field}_mm`] = inchToMm(value);
+    }
+    
+    setMeasurements(newMeasurements);
+    
+    // Update currentItem with mm values (for backend compatibility)
+    const mmValue = parseFloat(newMeasurements[`${field}_mm`]) || '';
+    setCurrentItem({
+      ...currentItem,
+      [field]: mmValue
+    });
+  };
+
   const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
   const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
 
