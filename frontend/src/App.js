@@ -2832,7 +2832,30 @@ const Sales = () => {
                           ? 'border-red-300 bg-red-50 hover:bg-red-100' 
                           : 'border-green-300 bg-green-50 hover:bg-green-100'
                     }`}
-                    onClick={() => setSelectedMaterial(material)}
+                    onClick={async () => {
+                      setSelectedMaterial(material);
+                      
+                      // Try to get automatic pricing
+                      const height = parseFloat(currentItem.height);
+                      if (height) {
+                        const pricing = await calculateAutomaticPrice(material, height, clientType);
+                        if (pricing) {
+                          setCurrentItem({
+                            ...currentItem,
+                            unit_price: pricing.total_price.toFixed(2)
+                          });
+                          
+                          // Show pricing details
+                          alert(`تم حساب السعر تلقائياً:
+سعر الملي: ${pricing.price_per_mm} ج.م
+تكلفة الملليمترات: ${pricing.mm_cost.toFixed(2)} ج.م
+تكلفة التصنيع (عميل ${pricing.client_type}): ${pricing.manufacturing_cost.toFixed(2)} ج.م
+السعر الإجمالي: ${pricing.total_price.toFixed(2)} ج.م
+                          
+يمكنك تعديل السعر إذا لزم الأمر.`);
+                        }
+                      }
+                    }}
                   >
                     <p><strong>النوع:</strong> {material.material_type}</p>
                     <p><strong>الكود:</strong> {material.unit_code}</p>
