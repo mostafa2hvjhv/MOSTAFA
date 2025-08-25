@@ -2075,6 +2075,32 @@ async def calculate_material_price(
             raise e
         raise HTTPException(status_code=500, detail=str(e))
 
+# Treasury Reset API (Only for Elsawy)
+@api_router.post("/treasury/reset")
+async def reset_treasury(username: str):
+    """Reset all treasury data - Only for Elsawy user"""
+    try:
+        # Security check - only Elsawy can perform this operation
+        if username != "Elsawy":
+            raise HTTPException(status_code=403, detail="غير مصرح لك بتنفيذ هذه العملية")
+        
+        # Get count of records before deletion for logging
+        treasury_count = await db.treasury_transactions.count_documents({})
+        
+        # Delete all treasury transactions
+        treasury_result = await db.treasury_transactions.delete_many({})
+        
+        return {
+            "message": "تم مسح جميع بيانات الخزينة بنجاح",
+            "deleted_treasury_transactions": treasury_result.deleted_count,
+            "reset_by": username,
+            "reset_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Business logic function for inventory transactions
 async def create_inventory_transaction(transaction: InventoryTransactionCreate):
     """Create inventory transaction (in/out) - Business logic"""
