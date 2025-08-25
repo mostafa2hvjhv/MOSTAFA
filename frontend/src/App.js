@@ -2694,6 +2694,19 @@ const Sales = () => {
                 </div>
                 
                 <div>
+                  <label className="block text-sm font-medium mb-1">نوع العميل للتسعير</label>
+                  <select
+                    value={clientType}
+                    onChange={(e) => setClientType(parseInt(e.target.value))}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  >
+                    <option value={1}>عميل 1</option>
+                    <option value={2}>عميل 2</option>
+                    <option value={3}>عميل 3</option>
+                  </select>
+                </div>
+                
+                <div>
                   <label className="block text-sm font-medium mb-1">سعر السيل الواحد</label>
                   <input
                     type="number"
