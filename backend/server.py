@@ -109,6 +109,19 @@ class RawMaterial(BaseModel):
     cost_per_mm: float  # تكلفة الملي الواحد
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class MaterialPricing(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    material_type: MaterialType
+    inner_diameter: float  # القطر الداخلي
+    outer_diameter: float  # القطر الخارجي
+    price_per_mm: float  # سعر الملي الواحد
+    manufacturing_cost_client1: float  # تكلفة التصنيع - عميل 1
+    manufacturing_cost_client2: float  # تكلفة التصنيع - عميل 2  
+    manufacturing_cost_client3: float  # تكلفة التصنيع - عميل 3
+    notes: Optional[str] = ""
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class FinishedProduct(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     seal_type: SealType
