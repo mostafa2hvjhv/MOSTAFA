@@ -177,6 +177,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'treasury', label: 'الخزينة', icon: '🏦' },
     { key: 'invoices', label: 'الفواتير', icon: '🧾' },
     { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' },
+    { key: 'pricing', label: 'التسعير', icon: '💲' },
     { key: 'users', label: 'المستخدمين', icon: '👥' }
   ];
   
@@ -191,6 +192,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'treasury', label: 'الخزينة', icon: '🏦' },
     { key: 'invoices', label: 'الفواتير', icon: '🧾' },
     { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' },
+    { key: 'pricing', label: 'التسعير', icon: '💲' },
     { key: 'users', label: 'المستخدمين', icon: '👥' }
   ];
   
@@ -203,7 +205,8 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'expenses', label: 'المصروفات', icon: '💸' },
     { key: 'treasury', label: 'الخزينة', icon: '🏦' },
     { key: 'invoices', label: 'الفواتير', icon: '🧾' },
-    { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' }
+    { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' },
+    { key: 'pricing', label: 'التسعير', icon: '💲' }
   ];
   
   // Only Elsawy gets dashboard access
