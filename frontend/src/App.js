@@ -2627,19 +2627,6 @@ const Sales = () => {
                   </div>
                 )}
                 
-                {/* Measurement Unit */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">وحدة القياس</label>
-                  <select
-                    value={measurementUnit}
-                    onChange={(e) => setMeasurementUnit(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  >
-                    <option value="مم">مليمتر (مم)</option>
-                    <option value="بوصة">بوصة</option>
-                  </select>
-                </div>
-                
                 <div>
                   <label className="block text-sm font-medium mb-1">عدد السيل</label>
                   <input
