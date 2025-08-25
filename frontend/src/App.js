@@ -6656,7 +6656,7 @@ const Users = () => {
       // Default permissions based on role
       const defaultPermissions = newUser.role === 'admin' 
         ? allPermissions.map(p => p.key)
-        : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders'];
+        : ['dashboard', 'sales', 'inventory', 'deferred', 'expenses', 'treasury', 'work-orders', 'pricing'];
 
       // Let backend generate ID and created_at
       const user = {
