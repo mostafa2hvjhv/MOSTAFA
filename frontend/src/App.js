@@ -2029,7 +2029,6 @@ const Sales = () => {
       });
     }
     
-    setWallHeight(''); // Reset wall height
     setCompatibilityResults(null);
     setSelectedMaterial(null);
   };
