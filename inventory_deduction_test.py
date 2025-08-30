@@ -66,6 +66,31 @@ class InventoryDeductionTester:
             self.log_test("Create test customer", False, f"Error: {str(e)}")
             return False
         
+        # First, create inventory item for NBR 40×50mm
+        try:
+            inventory_data = {
+                "material_type": "NBR",
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "available_pieces": 20,  # Enough pieces for all tests
+                "min_stock_level": 2,
+                "notes": "Test inventory for deduction testing"
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/inventory", json=inventory_data)
+            if response.status_code == 200:
+                inventory_item = response.json()
+                self.created_data['inventory'] = [inventory_item['id']]
+                self.log_test("Create inventory item NBR 40×50mm", True, 
+                            f"Inventory ID: {inventory_item['id']}, Available: {inventory_item['available_pieces']} pieces")
+            else:
+                self.log_test("Create inventory item", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Create inventory item", False, f"Error: {str(e)}")
+            return False
+        
         # Create test raw materials with different heights
         materials_to_create = [
             # Material with height ≤ 15mm (should NOT appear in compatibility)
