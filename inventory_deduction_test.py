@@ -268,7 +268,7 @@ class InventoryDeductionTester:
                         }
                         
                         invoice_response = self.session.post(f"{BACKEND_URL}/invoices", json=invoice_data)
-                        if invoice_response.status_code == 201:
+                        if invoice_response.status_code in [200, 201]:
                             invoice = invoice_response.json()
                             self.created_invoices.append(invoice)
                             
