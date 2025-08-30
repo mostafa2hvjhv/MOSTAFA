@@ -1,5 +1,459 @@
 #!/usr/bin/env python3
 """
+Comprehensive test for inventory deduction issue reported by user.
+Testing the REAL inventory deduction problem: "في المخزن عند عمل فاتورة لا يتم خصم ارتفاع السيلات من المخزون"
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+
+# Get backend URL from environment
+BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+
+class InventoryDeductionTester:
+    def __init__(self):
+        self.test_results = []
+        self.total_tests = 0
+        self.passed_tests = 0
+        
+    def log_test(self, test_name, passed, details=""):
+        self.total_tests += 1
+        if passed:
+            self.passed_tests += 1
+            status = "✅ PASS"
+        else:
+            status = "❌ FAIL"
+        
+        result = f"{status}: {test_name}"
+        if details:
+            result += f" - {details}"
+        
+        self.test_results.append(result)
+        print(result)
+        
+    def test_inventory_setup(self):
+        """Test 1: Create NBR 20×30mm inventory with 1000 pieces"""
+        print("\n=== Test 1: Setting up NBR 20×30mm inventory with 1000 pieces ===")
+        
+        # First, clear existing inventory to start fresh
+        try:
+            response = requests.delete(f"{BACKEND_URL}/inventory/clear-all")
+            print(f"Cleared existing inventory: {response.status_code}")
+        except Exception as e:
+            print(f"Warning: Could not clear inventory: {e}")
+        
+        # Create NBR 20×30mm inventory item with 1000 pieces
+        inventory_data = {
+            "material_type": "NBR",
+            "inner_diameter": 20.0,
+            "outer_diameter": 30.0,
+            "available_pieces": 1000,
+            "min_stock_level": 10,
+            "notes": "Test inventory for deduction testing"
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/inventory", json=inventory_data)
+            if response.status_code == 200:
+                inventory_item = response.json()
+                self.inventory_item_id = inventory_item["id"]
+                self.log_test("Create NBR 20×30mm inventory", True, f"Created with 1000 pieces, ID: {self.inventory_item_id}")
+                return True
+            else:
+                self.log_test("Create NBR 20×30mm inventory", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("Create NBR 20×30mm inventory", False, f"Exception: {str(e)}")
+            return False
+    
+    def verify_initial_inventory(self):
+        """Test 2: Verify initial inventory count"""
+        print("\n=== Test 2: Verify initial inventory count ===")
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/inventory")
+            if response.status_code == 200:
+                inventory_items = response.json()
+                nbr_items = [item for item in inventory_items 
+                           if item.get("material_type") == "NBR" 
+                           and item.get("inner_diameter") == 20.0 
+                           and item.get("outer_diameter") == 30.0]
+                
+                if nbr_items:
+                    initial_count = nbr_items[0].get("available_pieces", 0)
+                    self.initial_inventory_count = initial_count
+                    self.log_test("Verify initial inventory", True, f"Initial count: {initial_count} pieces")
+                    return initial_count == 1000
+                else:
+                    self.log_test("Verify initial inventory", False, "NBR 20×30mm item not found")
+                    return False
+            else:
+                self.log_test("Verify initial inventory", False, f"HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Verify initial inventory", False, f"Exception: {str(e)}")
+            return False
+    
+    def create_test_customer(self):
+        """Test 3: Create test customer for invoice"""
+        print("\n=== Test 3: Create test customer ===")
+        
+        customer_data = {
+            "name": "عميل اختبار خصم المخزون",
+            "phone": "01234567890",
+            "address": "عنوان اختبار"
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/customers", json=customer_data)
+            if response.status_code == 200:
+                customer = response.json()
+                self.customer_id = customer["id"]
+                self.log_test("Create test customer", True, f"Customer ID: {self.customer_id}")
+                return True
+            else:
+                self.log_test("Create test customer", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("Create test customer", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_invoice_creation_basic_material_info(self):
+        """Test 4: Create invoice with basic material info (no compatibility check)"""
+        print("\n=== Test 4: Create invoice with NBR 20×30×6mm × 10 seals (basic material info) ===")
+        
+        # Create invoice with manufactured product using basic material details
+        invoice_data = {
+            "customer_id": self.customer_id,
+            "customer_name": "عميل اختبار خصم المخزون",
+            "invoice_title": "فاتورة اختبار خصم المخزون - بيانات أساسية",
+            "supervisor_name": "مشرف الاختبار",
+            "items": [
+                {
+                    "seal_type": "RSL",
+                    "material_type": "NBR",
+                    "inner_diameter": 20.0,
+                    "outer_diameter": 30.0,
+                    "height": 6.0,
+                    "quantity": 10,
+                    "unit_price": 15.0,
+                    "total_price": 150.0,
+                    "product_type": "manufactured",
+                    "material_details": {
+                        "material_type": "NBR",
+                        "inner_diameter": 20.0,
+                        "outer_diameter": 30.0,
+                        "is_finished_product": False
+                    }
+                }
+            ],
+            "payment_method": "نقدي",
+            "discount_type": "amount",
+            "discount_value": 0.0,
+            "notes": "اختبار خصم المخزون - بيانات أساسية"
+        }
+        
+        try:
+            print("Sending invoice creation request...")
+            print(f"Invoice data: {json.dumps(invoice_data, indent=2, ensure_ascii=False)}")
+            
+            response = requests.post(f"{BACKEND_URL}/invoices", json=invoice_data)
+            print(f"Response status: {response.status_code}")
+            print(f"Response text: {response.text}")
+            
+            if response.status_code == 200:
+                invoice = response.json()
+                self.invoice_id_basic = invoice["id"]
+                self.log_test("Create invoice with basic material info", True, 
+                            f"Invoice {invoice['invoice_number']} created, ID: {self.invoice_id_basic}")
+                return True
+            else:
+                self.log_test("Create invoice with basic material info", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("Create invoice with basic material info", False, f"Exception: {str(e)}")
+            return False
+    
+    def verify_inventory_deduction_basic(self):
+        """Test 5: Verify inventory deduction after basic invoice"""
+        print("\n=== Test 5: Verify inventory deduction (should be 1000 - 80 = 920) ===")
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/inventory")
+            if response.status_code == 200:
+                inventory_items = response.json()
+                nbr_items = [item for item in inventory_items 
+                           if item.get("material_type") == "NBR" 
+                           and item.get("inner_diameter") == 20.0 
+                           and item.get("outer_diameter") == 30.0]
+                
+                if nbr_items:
+                    current_count = nbr_items[0].get("available_pieces", 0)
+                    expected_count = 1000 - (6 + 2) * 10  # (height + waste) * quantity = 80
+                    deducted_amount = 1000 - current_count
+                    
+                    self.log_test("Verify inventory deduction", 
+                                current_count == expected_count,
+                                f"Expected: {expected_count}, Actual: {current_count}, Deducted: {deducted_amount}")
+                    
+                    if current_count == expected_count:
+                        print(f"✅ CORRECT: Inventory properly deducted {deducted_amount} pieces")
+                        return True
+                    else:
+                        print(f"❌ INCORRECT: Expected deduction of 80 pieces, but got {deducted_amount}")
+                        return False
+                else:
+                    self.log_test("Verify inventory deduction", False, "NBR 20×30mm item not found after invoice")
+                    return False
+            else:
+                self.log_test("Verify inventory deduction", False, f"HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Verify inventory deduction", False, f"Exception: {str(e)}")
+            return False
+    
+    def check_inventory_transactions(self):
+        """Test 6: Check if inventory transactions were created"""
+        print("\n=== Test 6: Check inventory transactions ===")
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/inventory-transactions")
+            if response.status_code == 200:
+                transactions = response.json()
+                
+                # Look for transactions related to our inventory item
+                relevant_transactions = [t for t in transactions 
+                                       if t.get("material_type") == "NBR" 
+                                       and t.get("inner_diameter") == 20.0 
+                                       and t.get("outer_diameter") == 30.0
+                                       and t.get("transaction_type") == "out"]
+                
+                if relevant_transactions:
+                    latest_transaction = relevant_transactions[0]  # Most recent
+                    pieces_change = abs(latest_transaction.get("pieces_change", 0))
+                    
+                    self.log_test("Check inventory transactions", 
+                                pieces_change == 80,
+                                f"Found transaction with {pieces_change} pieces deducted")
+                    return pieces_change == 80
+                else:
+                    self.log_test("Check inventory transactions", False, 
+                                "No outbound transactions found for NBR 20×30mm")
+                    return False
+            else:
+                self.log_test("Check inventory transactions", False, f"HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Check inventory transactions", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_compatibility_check_workflow(self):
+        """Test 7: Test invoice creation with compatibility check workflow"""
+        print("\n=== Test 7: Test compatibility check workflow ===")
+        
+        # First, do compatibility check
+        compatibility_data = {
+            "seal_type": "RSL",
+            "inner_diameter": 20.0,
+            "outer_diameter": 30.0,
+            "height": 8.0,
+            "material_type": "NBR"
+        }
+        
+        try:
+            print("Performing compatibility check...")
+            response = requests.post(f"{BACKEND_URL}/compatibility-check", json=compatibility_data)
+            
+            if response.status_code == 200:
+                compatibility_result = response.json()
+                compatible_materials = compatibility_result.get("compatible_materials", [])
+                
+                if compatible_materials:
+                    # Use the first compatible material
+                    selected_material = compatible_materials[0]
+                    
+                    # Create invoice with selected material
+                    invoice_data = {
+                        "customer_id": self.customer_id,
+                        "customer_name": "عميل اختبار خصم المخزون",
+                        "invoice_title": "فاتورة اختبار خصم المخزون - فحص التوافق",
+                        "supervisor_name": "مشرف الاختبار",
+                        "items": [
+                            {
+                                "seal_type": "RSL",
+                                "material_type": "NBR",
+                                "inner_diameter": 20.0,
+                                "outer_diameter": 30.0,
+                                "height": 8.0,
+                                "quantity": 5,
+                                "unit_price": 18.0,
+                                "total_price": 90.0,
+                                "product_type": "manufactured",
+                                "material_details": {
+                                    "material_type": selected_material.get("material_type"),
+                                    "inner_diameter": selected_material.get("inner_diameter"),
+                                    "outer_diameter": selected_material.get("outer_diameter"),
+                                    "unit_code": selected_material.get("unit_code"),
+                                    "is_finished_product": False
+                                }
+                            }
+                        ],
+                        "payment_method": "نقدي",
+                        "discount_type": "amount",
+                        "discount_value": 0.0,
+                        "notes": "اختبار خصم المخزون - فحص التوافق"
+                    }
+                    
+                    response = requests.post(f"{BACKEND_URL}/invoices", json=invoice_data)
+                    
+                    if response.status_code == 200:
+                        invoice = response.json()
+                        self.invoice_id_compatibility = invoice["id"]
+                        self.log_test("Create invoice with compatibility check", True,
+                                    f"Invoice {invoice['invoice_number']} created")
+                        return True
+                    else:
+                        self.log_test("Create invoice with compatibility check", False,
+                                    f"Invoice creation failed: HTTP {response.status_code}")
+                        return False
+                else:
+                    self.log_test("Create invoice with compatibility check", False,
+                                "No compatible materials found")
+                    return False
+            else:
+                self.log_test("Create invoice with compatibility check", False,
+                            f"Compatibility check failed: HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Create invoice with compatibility check", False, f"Exception: {str(e)}")
+            return False
+    
+    def verify_final_inventory_count(self):
+        """Test 8: Verify final inventory count after both invoices"""
+        print("\n=== Test 8: Verify final inventory count ===")
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/inventory")
+            if response.status_code == 200:
+                inventory_items = response.json()
+                nbr_items = [item for item in inventory_items 
+                           if item.get("material_type") == "NBR" 
+                           and item.get("inner_diameter") == 20.0 
+                           and item.get("outer_diameter") == 30.0]
+                
+                if nbr_items:
+                    final_count = nbr_items[0].get("available_pieces", 0)
+                    
+                    # Expected: 1000 - 80 (first invoice) - 50 (second invoice) = 870
+                    expected_final = 1000 - 80 - 50
+                    total_deducted = 1000 - final_count
+                    
+                    self.log_test("Verify final inventory count",
+                                final_count == expected_final,
+                                f"Expected: {expected_final}, Actual: {final_count}, Total deducted: {total_deducted}")
+                    
+                    return final_count == expected_final
+                else:
+                    self.log_test("Verify final inventory count", False, "NBR 20×30mm item not found")
+                    return False
+            else:
+                self.log_test("Verify final inventory count", False, f"HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Verify final inventory count", False, f"Exception: {str(e)}")
+            return False
+    
+    def debug_backend_logs(self):
+        """Test 9: Check backend logs for deduction details"""
+        print("\n=== Test 9: Debug backend processing ===")
+        
+        # Print debug information about what we found
+        try:
+            # Get all invoices to see what was created
+            response = requests.get(f"{BACKEND_URL}/invoices")
+            if response.status_code == 200:
+                invoices = response.json()
+                test_invoices = [inv for inv in invoices if "اختبار خصم المخزون" in inv.get("invoice_title", "")]
+                
+                print(f"Found {len(test_invoices)} test invoices:")
+                for inv in test_invoices:
+                    print(f"  - {inv.get('invoice_number')}: {inv.get('invoice_title')}")
+                    for item in inv.get('items', []):
+                        print(f"    * {item.get('seal_type')} {item.get('material_type')} "
+                              f"{item.get('inner_diameter')}×{item.get('outer_diameter')}×{item.get('height')} "
+                              f"qty: {item.get('quantity')}")
+                        if item.get('material_details'):
+                            print(f"      Material details: {item.get('material_details')}")
+                
+                self.log_test("Debug backend processing", True, f"Found {len(test_invoices)} test invoices")
+                return True
+            else:
+                self.log_test("Debug backend processing", False, f"Could not get invoices: HTTP {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Debug backend processing", False, f"Exception: {str(e)}")
+            return False
+    
+    def run_all_tests(self):
+        """Run all inventory deduction tests"""
+        print("🔍 TESTING REAL INVENTORY DEDUCTION ISSUE")
+        print("=" * 60)
+        print("User Problem: 'في المخزن عند عمل فاتورة لا يتم خصم ارتفاع السيلات من المخزون'")
+        print("Expected: When creating invoices, seal heights should be deducted from inventory")
+        print("=" * 60)
+        
+        # Initialize test variables
+        self.inventory_item_id = None
+        self.customer_id = None
+        self.invoice_id_basic = None
+        self.invoice_id_compatibility = None
+        self.initial_inventory_count = 0
+        
+        # Run tests in sequence
+        tests = [
+            self.test_inventory_setup,
+            self.verify_initial_inventory,
+            self.create_test_customer,
+            self.test_invoice_creation_basic_material_info,
+            self.verify_inventory_deduction_basic,
+            self.check_inventory_transactions,
+            self.test_compatibility_check_workflow,
+            self.verify_final_inventory_count,
+            self.debug_backend_logs
+        ]
+        
+        for test in tests:
+            try:
+                test()
+            except Exception as e:
+                self.log_test(test.__name__, False, f"Test crashed: {str(e)}")
+        
+        # Print summary
+        print("\n" + "=" * 60)
+        print("📊 TEST SUMMARY")
+        print("=" * 60)
+        
+        for result in self.test_results:
+            print(result)
+        
+        success_rate = (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+        print(f"\n🎯 Overall Success Rate: {self.passed_tests}/{self.total_tests} ({success_rate:.1f}%)")
+        
+        if success_rate >= 80:
+            print("✅ INVENTORY DEDUCTION IS WORKING CORRECTLY")
+            return True
+        else:
+            print("❌ INVENTORY DEDUCTION HAS ISSUES")
+            return False
+
+if __name__ == "__main__":
+    tester = InventoryDeductionTester()
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)
+"""
 Inventory Deduction Testing for Invoice Creation
 اختبار خصم المخزون عند إنشاء الفواتير
 """
