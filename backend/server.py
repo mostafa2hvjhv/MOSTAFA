@@ -914,7 +914,9 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                     )
         else:
             # Handle manufactured products - deduct from material height
-            if item.material_used:
+            material_deducted = False  # Flag to prevent double deduction
+            
+            if item.material_used and not material_deducted:
                 # Find the raw material by unit_code
                 raw_material = await db.raw_materials.find_one({"unit_code": item.material_used})
                 
@@ -931,14 +933,15 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                             {"$inc": {"height": -material_consumption}}
                         )
                         
+                        material_deducted = True
                         print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {item.material_used}")
                     else:
                         print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة {item.material_used} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
                 else:
                     print(f"تحذير: الخامة {item.material_used} غير موجودة في المواد الخام")
             
-            # Also handle materials selected from compatibility check
-            if item.material_details:
+            # Also handle materials selected from compatibility check (only if not already deducted)
+            if item.material_details and not material_deducted:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
                     # This is a raw material, find by unit_code for exact match
@@ -971,6 +974,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                                 {"$inc": {"height": -material_consumption}}
                             )
                             
+                            material_deducted = True
                             print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {raw_material.get('unit_code', 'غير محدد')} - المتبقي: {current_height - material_consumption} مم")
                         else:
                             print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة المختارة - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
