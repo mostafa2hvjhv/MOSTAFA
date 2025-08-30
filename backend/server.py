@@ -751,9 +751,17 @@ async def check_compatibility(check: CompatibilityCheck):
         # - Outer diameter: material should be >= required - tolerance (can be slightly smaller)
         # - Height: material should be >= required height + minimum safety margin
         
+        # CRITICAL: Filter out materials with height <= 15mm as per user requirement
+        if material.get("height", 0) <= 15:
+            continue
+            
+        # Calculate required material height (seal height + 2mm waste) for this quantity
+        required_height = check.height + 2
+        
         inner_compatible = material["inner_diameter"] <= (check.inner_diameter + inner_tolerance)
         outer_compatible = material["outer_diameter"] >= (check.outer_diameter - outer_tolerance)
-        height_compatible = material["height"] >= (check.height + 3)  # Reduced safety margin
+        # Material must have enough height for at least 1 seal + waste
+        height_compatible = material["height"] >= required_height
         
         if inner_compatible and outer_compatible and height_compatible:
             
