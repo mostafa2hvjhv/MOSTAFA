@@ -24,7 +24,8 @@ class InventoryDeductionTester:
         self.created_data = {
             'customers': [],
             'raw_materials': [],
-            'invoices': []
+            'invoices': [],
+            'inventory': []
         }
     
     def log_test(self, test_name: str, success: bool, details: str = ""):
