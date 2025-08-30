@@ -497,6 +497,7 @@ class InventoryDeductionTester:
         print("=" * 60)
         
         # Setup test data
+        self.setup_inventory_items()
         self.setup_test_materials()
         
         # Run tests
