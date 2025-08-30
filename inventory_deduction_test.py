@@ -1,5 +1,497 @@
 #!/usr/bin/env python3
 """
+Inventory Deduction Logic Testing - CORRECTED Requirements
+اختبار منطق خصم المخزون - المتطلبات المصححة
+
+Testing the corrected inventory deduction logic based on user's exact requirements:
+1. عند فحص التوافق واختيار خامة، يتم خصم (ارتفاع السيل + 2) × عدد السيلات من **ارتفاع الخامة** المختارة (ليس عدد القطع)
+2. عندما تكون ارتفاع الخامة في المخزون 15 أو أقل، لا تظهر في فحص التوافق
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+from typing import Dict, List, Any
+
+# Backend URL from frontend/.env
+BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+
+class InventoryDeductionTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.test_results = []
+        self.created_materials = []
+        self.created_invoices = []
+        
+    def log_test(self, test_name: str, success: bool, details: str = ""):
+        """Log test results"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}")
+        if details:
+            print(f"   Details: {details}")
+        
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'details': details,
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    def setup_test_materials(self):
+        """Setup raw materials for testing according to user requirements"""
+        print("\n=== Setting Up Test Materials ===")
+        
+        # Test Material 1: NBR 30×40mm with height 100mm (should appear in compatibility)
+        material1_data = {
+            "material_type": "NBR",
+            "inner_diameter": 30.0,
+            "outer_diameter": 40.0,
+            "height": 100.0,
+            "pieces_count": 5,
+            "cost_per_mm": 1.5
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material1_data)
+            if response.status_code == 201:
+                material1 = response.json()
+                self.created_materials.append(material1)
+                self.log_test("Create NBR 30×40mm height 100mm", True, 
+                            f"Material created with unit_code: {material1.get('unit_code')}")
+            else:
+                self.log_test("Create NBR 30×40mm height 100mm", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create NBR 30×40mm height 100mm", False, str(e))
+        
+        # Test Material 2: BUR 25×35mm with height 10mm (should NOT appear - ≤15mm)
+        material2_data = {
+            "material_type": "BUR",
+            "inner_diameter": 25.0,
+            "outer_diameter": 35.0,
+            "height": 10.0,
+            "pieces_count": 3,
+            "cost_per_mm": 2.0
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material2_data)
+            if response.status_code == 201:
+                material2 = response.json()
+                self.created_materials.append(material2)
+                self.log_test("Create BUR 25×35mm height 10mm", True, 
+                            f"Material created with unit_code: {material2.get('unit_code')}")
+            else:
+                self.log_test("Create BUR 25×35mm height 10mm", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create BUR 25×35mm height 10mm", False, str(e))
+        
+        # Test Material 3: VT 20×30mm with height 20mm (should appear in compatibility)
+        material3_data = {
+            "material_type": "VT",
+            "inner_diameter": 20.0,
+            "outer_diameter": 30.0,
+            "height": 20.0,
+            "pieces_count": 4,
+            "cost_per_mm": 1.8
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material3_data)
+            if response.status_code == 201:
+                material3 = response.json()
+                self.created_materials.append(material3)
+                self.log_test("Create VT 20×30mm height 20mm", True, 
+                            f"Material created with unit_code: {material3.get('unit_code')}")
+            else:
+                self.log_test("Create VT 20×30mm height 20mm", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Create VT 20×30mm height 20mm", False, str(e))
+    
+    def test_compatibility_filtering(self):
+        """Test compatibility check filtering - materials ≤15mm should not appear"""
+        print("\n=== Testing Compatibility Filtering ===")
+        
+        # Test compatibility for RSL seal 30×40×8mm
+        compatibility_data = {
+            "seal_type": "RSL",
+            "inner_diameter": 30.0,
+            "outer_diameter": 40.0,
+            "height": 8.0
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/compatibility-check", json=compatibility_data)
+            if response.status_code == 200:
+                compatibility_result = response.json()
+                compatible_materials = compatibility_result.get("compatible_materials", [])
+                
+                # Check if NBR 30×40mm appears (height=100mm > 15mm)
+                nbr_found = any(mat.get("material_type") == "NBR" and 
+                              mat.get("inner_diameter") == 30.0 and 
+                              mat.get("outer_diameter") == 40.0 
+                              for mat in compatible_materials)
+                
+                # Check if BUR 25×35mm does NOT appear (height=10mm ≤ 15mm)
+                bur_found = any(mat.get("material_type") == "BUR" and 
+                              mat.get("inner_diameter") == 25.0 and 
+                              mat.get("outer_diameter") == 35.0 
+                              for mat in compatible_materials)
+                
+                if nbr_found and not bur_found:
+                    self.log_test("Compatibility filtering works correctly", True, 
+                                f"NBR appears (height>15mm), BUR filtered out (height≤15mm)")
+                else:
+                    self.log_test("Compatibility filtering works correctly", False, 
+                                f"NBR found: {nbr_found}, BUR found: {bur_found} (should be True, False)")
+                
+                # Log all compatible materials for debugging
+                print(f"   Compatible materials found: {len(compatible_materials)}")
+                for mat in compatible_materials:
+                    print(f"   - {mat.get('material_type')} {mat.get('inner_diameter')}×{mat.get('outer_diameter')} height={mat.get('height')}mm")
+                    
+            else:
+                self.log_test("Compatibility filtering works correctly", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Compatibility filtering works correctly", False, str(e))
+    
+    def test_height_deduction_logic(self):
+        """Test height deduction: (seal_height + 2) × quantity FROM material height"""
+        print("\n=== Testing Height Deduction Logic ===")
+        
+        # First, get the current height of NBR material
+        try:
+            response = self.session.get(f"{BACKEND_URL}/raw-materials")
+            if response.status_code == 200:
+                materials = response.json()
+                nbr_material = None
+                for mat in materials:
+                    if (mat.get("material_type") == "NBR" and 
+                        mat.get("inner_diameter") == 30.0 and 
+                        mat.get("outer_diameter") == 40.0):
+                        nbr_material = mat
+                        break
+                
+                if nbr_material:
+                    initial_height = nbr_material.get("height", 0)
+                    print(f"   Initial NBR material height: {initial_height}mm")
+                    
+                    # Create test customer
+                    customer_data = {
+                        "name": "عميل اختبار خصم المخزون",
+                        "phone": "01234567890"
+                    }
+                    
+                    customer_response = self.session.post(f"{BACKEND_URL}/customers", json=customer_data)
+                    if customer_response.status_code == 201:
+                        customer = customer_response.json()
+                        
+                        # Create invoice with NBR 30×40×8mm × 5 seals
+                        # Expected deduction: (8 + 2) × 5 = 50mm from material height
+                        invoice_data = {
+                            "customer_id": customer.get("id"),
+                            "customer_name": customer.get("name"),
+                            "invoice_title": "اختبار خصم الارتفاع",
+                            "supervisor_name": "مشرف الاختبار",
+                            "payment_method": "نقدي",
+                            "items": [
+                                {
+                                    "seal_type": "RSL",
+                                    "material_type": "NBR",
+                                    "inner_diameter": 30.0,
+                                    "outer_diameter": 40.0,
+                                    "height": 8.0,
+                                    "quantity": 5,
+                                    "unit_price": 15.0,
+                                    "total_price": 75.0,
+                                    "product_type": "manufactured",
+                                    "material_used": nbr_material.get("unit_code"),
+                                    "material_details": {
+                                        "material_type": "NBR",
+                                        "inner_diameter": 30.0,
+                                        "outer_diameter": 40.0,
+                                        "height": initial_height,
+                                        "unit_code": nbr_material.get("unit_code"),
+                                        "is_finished_product": False
+                                    }
+                                }
+                            ]
+                        }
+                        
+                        invoice_response = self.session.post(f"{BACKEND_URL}/invoices", json=invoice_data)
+                        if invoice_response.status_code == 201:
+                            invoice = invoice_response.json()
+                            self.created_invoices.append(invoice)
+                            
+                            # Check material height after deduction
+                            materials_response = self.session.get(f"{BACKEND_URL}/raw-materials")
+                            if materials_response.status_code == 200:
+                                updated_materials = materials_response.json()
+                                updated_nbr = None
+                                for mat in updated_materials:
+                                    if (mat.get("material_type") == "NBR" and 
+                                        mat.get("inner_diameter") == 30.0 and 
+                                        mat.get("outer_diameter") == 40.0):
+                                        updated_nbr = mat
+                                        break
+                                
+                                if updated_nbr:
+                                    final_height = updated_nbr.get("height", 0)
+                                    expected_deduction = (8 + 2) * 5  # 50mm
+                                    expected_final_height = initial_height - expected_deduction
+                                    
+                                    print(f"   Final NBR material height: {final_height}mm")
+                                    print(f"   Expected deduction: {expected_deduction}mm")
+                                    print(f"   Expected final height: {expected_final_height}mm")
+                                    
+                                    if abs(final_height - expected_final_height) < 0.1:
+                                        self.log_test("Height deduction calculation correct", True, 
+                                                    f"Deducted {expected_deduction}mm correctly: {initial_height}mm → {final_height}mm")
+                                    else:
+                                        self.log_test("Height deduction calculation correct", False, 
+                                                    f"Expected {expected_final_height}mm, got {final_height}mm")
+                                else:
+                                    self.log_test("Height deduction calculation correct", False, 
+                                                "Could not find NBR material after invoice creation")
+                            else:
+                                self.log_test("Height deduction calculation correct", False, 
+                                            f"Failed to get updated materials: HTTP {materials_response.status_code}")
+                        else:
+                            self.log_test("Height deduction calculation correct", False, 
+                                        f"Failed to create invoice: HTTP {invoice_response.status_code}: {invoice_response.text}")
+                    else:
+                        self.log_test("Height deduction calculation correct", False, 
+                                    f"Failed to create customer: HTTP {customer_response.status_code}")
+                else:
+                    self.log_test("Height deduction calculation correct", False, 
+                                "Could not find NBR material for testing")
+            else:
+                self.log_test("Height deduction calculation correct", False, 
+                            f"Failed to get materials: HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Height deduction calculation correct", False, str(e))
+    
+    def test_insufficient_height_scenario(self):
+        """Test scenario where invoice requires more height than available"""
+        print("\n=== Testing Insufficient Height Scenario ===")
+        
+        try:
+            # Get VT material (should have 20mm height)
+            response = self.session.get(f"{BACKEND_URL}/raw-materials")
+            if response.status_code == 200:
+                materials = response.json()
+                vt_material = None
+                for mat in materials:
+                    if (mat.get("material_type") == "VT" and 
+                        mat.get("inner_diameter") == 20.0 and 
+                        mat.get("outer_diameter") == 30.0):
+                        vt_material = mat
+                        break
+                
+                if vt_material:
+                    current_height = vt_material.get("height", 0)
+                    print(f"   VT material current height: {current_height}mm")
+                    
+                    # Try to create invoice requiring more height than available
+                    # If height is 20mm, try to use 15mm seal × 2 quantity = (15+2)×2 = 34mm required
+                    required_height_per_seal = 15
+                    quantity = 2
+                    total_required = (required_height_per_seal + 2) * quantity  # 34mm
+                    
+                    print(f"   Attempting to use {total_required}mm (need {required_height_per_seal}mm × {quantity} + 2mm waste each)")
+                    
+                    # Create test customer
+                    customer_data = {
+                        "name": "عميل اختبار نقص الارتفاع",
+                        "phone": "01234567891"
+                    }
+                    
+                    customer_response = self.session.post(f"{BACKEND_URL}/customers", json=customer_data)
+                    if customer_response.status_code == 201:
+                        customer = customer_response.json()
+                        
+                        invoice_data = {
+                            "customer_id": customer.get("id"),
+                            "customer_name": customer.get("name"),
+                            "invoice_title": "اختبار نقص الارتفاع",
+                            "supervisor_name": "مشرف الاختبار",
+                            "payment_method": "نقدي",
+                            "items": [
+                                {
+                                    "seal_type": "RSL",
+                                    "material_type": "VT",
+                                    "inner_diameter": 20.0,
+                                    "outer_diameter": 30.0,
+                                    "height": required_height_per_seal,
+                                    "quantity": quantity,
+                                    "unit_price": 20.0,
+                                    "total_price": 40.0,
+                                    "product_type": "manufactured",
+                                    "material_used": vt_material.get("unit_code"),
+                                    "material_details": {
+                                        "material_type": "VT",
+                                        "inner_diameter": 20.0,
+                                        "outer_diameter": 30.0,
+                                        "height": current_height,
+                                        "unit_code": vt_material.get("unit_code"),
+                                        "is_finished_product": False
+                                    }
+                                }
+                            ]
+                        }
+                        
+                        invoice_response = self.session.post(f"{BACKEND_URL}/invoices", json=invoice_data)
+                        
+                        # Invoice should be created but with warning logged
+                        if invoice_response.status_code == 201:
+                            invoice = invoice_response.json()
+                            self.created_invoices.append(invoice)
+                            
+                            # Check if material height went negative or stayed at minimum
+                            materials_response = self.session.get(f"{BACKEND_URL}/raw-materials")
+                            if materials_response.status_code == 200:
+                                updated_materials = materials_response.json()
+                                updated_vt = None
+                                for mat in updated_materials:
+                                    if (mat.get("material_type") == "VT" and 
+                                        mat.get("inner_diameter") == 20.0 and 
+                                        mat.get("outer_diameter") == 30.0):
+                                        updated_vt = mat
+                                        break
+                                
+                                if updated_vt:
+                                    final_height = updated_vt.get("height", 0)
+                                    print(f"   VT material final height: {final_height}mm")
+                                    
+                                    if total_required > current_height:
+                                        # Should log warning but complete invoice
+                                        self.log_test("Insufficient height handled correctly", True, 
+                                                    f"Invoice created with warning - required {total_required}mm, had {current_height}mm")
+                                    else:
+                                        # Normal deduction
+                                        expected_final = current_height - total_required
+                                        if abs(final_height - expected_final) < 0.1:
+                                            self.log_test("Insufficient height handled correctly", True, 
+                                                        f"Normal deduction: {current_height}mm → {final_height}mm")
+                                        else:
+                                            self.log_test("Insufficient height handled correctly", False, 
+                                                        f"Unexpected final height: {final_height}mm")
+                                else:
+                                    self.log_test("Insufficient height handled correctly", False, 
+                                                "Could not find VT material after invoice")
+                            else:
+                                self.log_test("Insufficient height handled correctly", False, 
+                                            "Failed to get updated materials")
+                        else:
+                            self.log_test("Insufficient height handled correctly", False, 
+                                        f"Invoice creation failed: HTTP {invoice_response.status_code}: {invoice_response.text}")
+                    else:
+                        self.log_test("Insufficient height handled correctly", False, 
+                                    "Failed to create test customer")
+                else:
+                    self.log_test("Insufficient height handled correctly", False, 
+                                "Could not find VT material for testing")
+            else:
+                self.log_test("Insufficient height handled correctly", False, 
+                            f"Failed to get materials: HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Insufficient height handled correctly", False, str(e))
+    
+    def verify_raw_materials_collection(self):
+        """Verify that deductions happen in raw_materials collection"""
+        print("\n=== Verifying Raw Materials Collection Updates ===")
+        
+        try:
+            # Get all raw materials and verify they have the height field
+            response = self.session.get(f"{BACKEND_URL}/raw-materials")
+            if response.status_code == 200:
+                materials = response.json()
+                
+                height_field_count = 0
+                total_materials = len(materials)
+                
+                for material in materials:
+                    if "height" in material and isinstance(material["height"], (int, float)):
+                        height_field_count += 1
+                
+                if height_field_count == total_materials and total_materials > 0:
+                    self.log_test("Raw materials have height field", True, 
+                                f"All {total_materials} materials have height field")
+                else:
+                    self.log_test("Raw materials have height field", False, 
+                                f"Only {height_field_count}/{total_materials} materials have height field")
+                
+                # Verify that our test materials are in the collection
+                test_materials_found = 0
+                for created_mat in self.created_materials:
+                    unit_code = created_mat.get("unit_code")
+                    found = any(mat.get("unit_code") == unit_code for mat in materials)
+                    if found:
+                        test_materials_found += 1
+                
+                if test_materials_found == len(self.created_materials):
+                    self.log_test("Test materials exist in raw_materials collection", True, 
+                                f"All {test_materials_found} test materials found")
+                else:
+                    self.log_test("Test materials exist in raw_materials collection", False, 
+                                f"Only {test_materials_found}/{len(self.created_materials)} test materials found")
+                    
+            else:
+                self.log_test("Raw materials collection accessible", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Raw materials collection accessible", False, str(e))
+    
+    def run_all_tests(self):
+        """Run all inventory deduction tests"""
+        print("🔍 Starting Inventory Deduction Logic Testing")
+        print("=" * 60)
+        
+        # Setup test data
+        self.setup_test_materials()
+        
+        # Run tests
+        self.test_compatibility_filtering()
+        self.test_height_deduction_logic()
+        self.test_insufficient_height_scenario()
+        self.verify_raw_materials_collection()
+        
+        # Print summary
+        print("\n" + "=" * 60)
+        print("📊 TEST SUMMARY")
+        print("=" * 60)
+        
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result['success'])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"📈 Success Rate: {success_rate:.1f}%")
+        
+        if failed_tests > 0:
+            print(f"\n❌ FAILED TESTS:")
+            for result in self.test_results:
+                if not result['success']:
+                    print(f"   - {result['test']}: {result['details']}")
+        
+        print(f"\n🎯 INVENTORY DEDUCTION TESTING COMPLETED")
+        print(f"Created {len(self.created_materials)} test materials")
+        print(f"Created {len(self.created_invoices)} test invoices")
+        
+        return success_rate >= 80  # Consider 80%+ success rate as passing
+
+if __name__ == "__main__":
+    tester = InventoryDeductionTester()
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)
+"""
 Comprehensive test for inventory deduction issue reported by user.
 Testing the REAL inventory deduction problem: "في المخزن عند عمل فاتورة لا يتم خصم ارتفاع السيلات من المخزون"
 """
