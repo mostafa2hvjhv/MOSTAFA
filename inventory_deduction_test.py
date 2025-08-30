@@ -490,6 +490,17 @@ class InventoryDeductionTester:
             except Exception as e:
                 self.log_test(f"Delete raw material {material_id}", False, f"Error: {str(e)}")
         
+        # Delete created inventory items
+        for inventory_id in self.created_data.get('inventory', []):
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/inventory/{inventory_id}")
+                if response.status_code == 200:
+                    self.log_test(f"Delete inventory item {inventory_id}", True)
+                else:
+                    self.log_test(f"Delete inventory item {inventory_id}", False, f"Status: {response.status_code}")
+            except Exception as e:
+                self.log_test(f"Delete inventory item {inventory_id}", False, f"Error: {str(e)}")
+        
         # Delete created customers
         for customer_id in self.created_data['customers']:
             try:
