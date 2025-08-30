@@ -941,12 +941,22 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             if item.material_details:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
-                    # This is a raw material, we need to deduct from height
-                    raw_material = await db.raw_materials.find_one({
-                        "material_type": material_details.get("material_type"),
-                        "inner_diameter": material_details.get("inner_diameter"),
-                        "outer_diameter": material_details.get("outer_diameter")
-                    })
+                    # This is a raw material, find by unit_code for exact match
+                    raw_material = None
+                    
+                    # First try to find by unit_code if available
+                    if material_details.get("unit_code"):
+                        raw_material = await db.raw_materials.find_one({
+                            "unit_code": material_details.get("unit_code")
+                        })
+                    
+                    # If not found by unit_code, try by specifications
+                    if not raw_material:
+                        raw_material = await db.raw_materials.find_one({
+                            "material_type": material_details.get("material_type"),
+                            "inner_diameter": material_details.get("inner_diameter"),
+                            "outer_diameter": material_details.get("outer_diameter")
+                        })
                     
                     if raw_material:
                         # Calculate material consumption (seal height + 2mm waste) * quantity
@@ -961,7 +971,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                                 {"$inc": {"height": -material_consumption}}
                             )
                             
-                            print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}")
+                            print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {raw_material.get('unit_code', 'غير محدد')} - المتبقي: {current_height - material_consumption} مم")
                         else:
                             print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة المختارة - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
                     else:
