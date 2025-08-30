@@ -2202,6 +2202,7 @@ const Sales = () => {
         setPaymentMethod('نقدي');
         setDiscount(0);
         setDiscountType('amount');
+        setClientType(1); // إعادة تعيين نوع العميل
         
         // طباعة الفاتورة
         printInvoice(response.data);
