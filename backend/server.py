@@ -940,8 +940,8 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                 else:
                     print(f"تحذير: المادة {item.material_used} غير موجودة في المخزون")
             
-            # Also handle materials selected from compatibility check
-            if hasattr(item, 'material_details') and item.material_details:
+            # Also handle materials selected from compatibility check or basic material info
+            if item.material_details:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
                     # This is a raw material, we need to deduct from inventory
@@ -973,11 +973,14 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                                 pieces_change=material_consumption,
                                 remaining_pieces=inventory_item.get("available_pieces", 0) - material_consumption,
                                 reason="استهلاك في الإنتاج",
-                                notes=f"فاتورة {invoice_number} - خامة متوافقة {material_details.get('unit_code', 'غير محدد')}"
+                                notes=f"فاتورة {invoice_number} - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}"
                             )
                             await db.inventory_transactions.insert_one(inventory_transaction.dict())
+                            print(f"تم خصم {material_consumption} قطعة من المخزون - المادة: {material_details.get('material_type')}")
                         else:
-                            print(f"تحذير: لا توجد كمية كافية في المخزون للخامة المختارة")
+                            print(f"تحذير: لا توجد كمية كافية في المخزون للخامة المختارة - مطلوب: {material_consumption}, متوفر: {inventory_item.get('available_pieces', 0)}")
+                    else:
+                        print(f"تحذير: لم يتم العثور على المادة في المخزون - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}")
     
     await db.invoices.insert_one(invoice_obj.dict())
     
