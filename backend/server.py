@@ -913,82 +913,59 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                         }
                     )
         else:
-            # Handle manufactured products (existing logic)
+            # Handle manufactured products - deduct from material height
             if item.material_used:
-                # Find the inventory item by unit_code
-                inventory_item = await db.inventory_items.find_one({"unit_code": item.material_used})
+                # Find the raw material by unit_code
+                raw_material = await db.raw_materials.find_one({"unit_code": item.material_used})
                 
-                if inventory_item:
+                if raw_material:
                     # Calculate required material consumption (seal height + 2mm waste) * quantity
                     material_consumption = (item.height + 2) * item.quantity
                     
-                    # Check if there's enough material available
-                    if inventory_item.get("available_pieces", 0) >= material_consumption:
-                        # Deduct from inventory (reduce available_pieces)
-                        await db.inventory_items.update_one(
+                    # Check if there's enough height available
+                    current_height = raw_material.get("height", 0)
+                    if current_height >= material_consumption:
+                        # Deduct from material height
+                        await db.raw_materials.update_one(
                             {"unit_code": item.material_used},
-                            {"$inc": {"available_pieces": -material_consumption}}
+                            {"$inc": {"height": -material_consumption}}
                         )
                         
-                        # Create inventory transaction for the deduction
-                        inventory_transaction = InventoryTransaction(
-                            inventory_item_id=inventory_item["id"],
-                            material_type=inventory_item["material_type"],
-                            inner_diameter=inventory_item["inner_diameter"],
-                            outer_diameter=inventory_item["outer_diameter"],
-                            transaction_type="out",
-                            pieces_change=material_consumption,
-                            remaining_pieces=inventory_item.get("available_pieces", 0) - material_consumption,
-                            reason="استهلاك في الإنتاج",
-                            notes=f"فاتورة {invoice_number} - {item.quantity} سيل × {item.height + 2} مم"
-                        )
-                        await db.inventory_transactions.insert_one(inventory_transaction.dict())
+                        print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {item.material_used}")
                     else:
-                        print(f"تحذير: لا توجد كمية كافية من المادة {item.material_used} في المخزون")
+                        print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة {item.material_used} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
                 else:
-                    print(f"تحذير: المادة {item.material_used} غير موجودة في المخزون")
+                    print(f"تحذير: الخامة {item.material_used} غير موجودة في المواد الخام")
             
-            # Also handle materials selected from compatibility check or basic material info
+            # Also handle materials selected from compatibility check
             if item.material_details:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
-                    # This is a raw material, we need to deduct from inventory
-                    inventory_item = await db.inventory_items.find_one({
+                    # This is a raw material, we need to deduct from height
+                    raw_material = await db.raw_materials.find_one({
                         "material_type": material_details.get("material_type"),
                         "inner_diameter": material_details.get("inner_diameter"),
                         "outer_diameter": material_details.get("outer_diameter")
                     })
                     
-                    if inventory_item:
+                    if raw_material:
                         # Calculate material consumption (seal height + 2mm waste) * quantity
                         material_consumption = (item.height + 2) * item.quantity
                         
-                        # Check if there's enough material
-                        if inventory_item.get("available_pieces", 0) >= material_consumption:
-                            # Deduct from inventory
-                            await db.inventory_items.update_one(
-                                {"id": inventory_item["id"]},
-                                {"$inc": {"available_pieces": -material_consumption}}
+                        # Check if there's enough height
+                        current_height = raw_material.get("height", 0)
+                        if current_height >= material_consumption:
+                            # Deduct from material height
+                            await db.raw_materials.update_one(
+                                {"id": raw_material["id"]},
+                                {"$inc": {"height": -material_consumption}}
                             )
                             
-                            # Create inventory transaction
-                            inventory_transaction = InventoryTransaction(
-                                inventory_item_id=inventory_item["id"],
-                                material_type=inventory_item["material_type"],
-                                inner_diameter=inventory_item["inner_diameter"],
-                                outer_diameter=inventory_item["outer_diameter"],
-                                transaction_type="out",
-                                pieces_change=material_consumption,
-                                remaining_pieces=inventory_item.get("available_pieces", 0) - material_consumption,
-                                reason="استهلاك في الإنتاج",
-                                notes=f"فاتورة {invoice_number} - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}"
-                            )
-                            await db.inventory_transactions.insert_one(inventory_transaction.dict())
-                            print(f"تم خصم {material_consumption} قطعة من المخزون - المادة: {material_details.get('material_type')}")
+                            print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}")
                         else:
-                            print(f"تحذير: لا توجد كمية كافية في المخزون للخامة المختارة - مطلوب: {material_consumption}, متوفر: {inventory_item.get('available_pieces', 0)}")
+                            print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة المختارة - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
                     else:
-                        print(f"تحذير: لم يتم العثور على المادة في المخزون - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}")
+                        print(f"تحذير: لم يتم العثور على الخامة في المواد الخام - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}")
     
     await db.invoices.insert_one(invoice_obj.dict())
     
