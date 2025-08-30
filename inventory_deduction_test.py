@@ -232,7 +232,7 @@ class InventoryDeductionTester:
                     }
                     
                     customer_response = self.session.post(f"{BACKEND_URL}/customers", json=customer_data)
-                    if customer_response.status_code == 201:
+                    if customer_response.status_code in [200, 201]:
                         customer = customer_response.json()
                         
                         # Create invoice with NBR 30×40×8mm × 5 seals
