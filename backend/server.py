@@ -971,7 +971,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                                 outer_diameter=inventory_item["outer_diameter"],
                                 transaction_type="out",
                                 pieces_change=material_consumption,
-                                remaining_pieces=inventory_item.get("pieces_count", 0) - material_consumption,
+                                remaining_pieces=inventory_item.get("available_pieces", 0) - material_consumption,
                                 reason="استهلاك في الإنتاج",
                                 notes=f"فاتورة {invoice_number} - خامة متوافقة {material_details.get('unit_code', 'غير محدد')}"
                             )
