@@ -915,11 +915,11 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                     material_consumption = (item.height + 2) * item.quantity
                     
                     # Check if there's enough material available
-                    if inventory_item.get("pieces_count", 0) >= material_consumption:
-                        # Deduct from inventory (reduce pieces_count)
+                    if inventory_item.get("available_pieces", 0) >= material_consumption:
+                        # Deduct from inventory (reduce available_pieces)
                         await db.inventory_items.update_one(
                             {"unit_code": item.material_used},
-                            {"$inc": {"pieces_count": -material_consumption}}
+                            {"$inc": {"available_pieces": -material_consumption}}
                         )
                         
                         # Create inventory transaction for the deduction
