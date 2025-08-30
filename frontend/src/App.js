@@ -1957,13 +1957,20 @@ const Sales = () => {
         },
         material_used: selectedMaterial ? selectedMaterial.unit_code : null,
         material_details: selectedMaterial ? {
+          id: selectedMaterial.id,
           unit_code: selectedMaterial.unit_code,
           inner_diameter: selectedMaterial.inner_diameter,
           outer_diameter: selectedMaterial.outer_diameter,
           height: selectedMaterial.height,
           material_type: selectedMaterial.material_type,
           is_finished_product: selectedMaterial.is_finished_product || false
-        } : null
+        } : {
+          // إرسال معلومات المادة الأساسية حتى بدون اختيار مادة محددة
+          material_type: currentItem.material_type,
+          inner_diameter: parseFloat(currentItem.inner_diameter),
+          outer_diameter: parseFloat(currentItem.outer_diameter),
+          is_finished_product: false
+        }
       };
 
       setItems([...items, item]);
