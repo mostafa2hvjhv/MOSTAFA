@@ -1,5 +1,579 @@
 #!/usr/bin/env python3
 """
+Final Inventory Deduction System Test
+اختبار نظام خصم المخزون النهائي
+
+Testing the FINAL corrected inventory deduction system based on exact user requirements:
+1. في فحص التوافق: الخامات بارتفاع 15 أو أقل لا تظهر
+2. عند اختيار خامة: يتم خصم (ارتفاع السيل + 2) × عدد السيلات من ارتفاع الخامة المختارة
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+from typing import Dict, List, Any
+
+# Backend URL from frontend/.env
+BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+
+class InventoryDeductionTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.test_results = []
+        self.created_data = {
+            'customers': [],
+            'raw_materials': [],
+            'invoices': []
+        }
+    
+    def log_test(self, test_name: str, success: bool, details: str = ""):
+        """Log test results"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}")
+        if details:
+            print(f"   Details: {details}")
+        
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'details': details,
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    def setup_test_data(self):
+        """Setup test data for inventory deduction testing"""
+        print("\n=== Setting Up Test Data ===")
+        
+        # Create test customer
+        try:
+            customer_data = {
+                "name": "عميل اختبار خصم المخزون",
+                "phone": "01234567890",
+                "address": "عنوان اختبار"
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/customers", json=customer_data)
+            if response.status_code == 200:
+                customer = response.json()
+                self.created_data['customers'].append(customer['id'])
+                self.log_test("Create test customer", True, f"Customer ID: {customer['id']}")
+            else:
+                self.log_test("Create test customer", False, f"Status: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Create test customer", False, f"Error: {str(e)}")
+            return False
+        
+        # Create test raw materials with different heights
+        materials_to_create = [
+            # Material with height ≤ 15mm (should NOT appear in compatibility)
+            {
+                "material_type": "NBR",
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "height": 10.0,  # ≤ 15mm - should be filtered out
+                "pieces_count": 5,
+                "cost_per_mm": 1.5
+            },
+            # Material with height ≤ 15mm (should NOT appear in compatibility)
+            {
+                "material_type": "NBR", 
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "height": 15.0,  # = 15mm - should be filtered out
+                "pieces_count": 3,
+                "cost_per_mm": 1.5
+            },
+            # Material with height > 15mm (should appear in compatibility)
+            {
+                "material_type": "NBR",
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "height": 80.0,  # > 15mm - should appear
+                "pieces_count": 2,
+                "cost_per_mm": 1.5
+            }
+        ]
+        
+        for i, material_data in enumerate(materials_to_create):
+            try:
+                response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material_data)
+                if response.status_code == 200:
+                    material = response.json()
+                    self.created_data['raw_materials'].append(material['id'])
+                    self.log_test(f"Create test material {i+1} (height: {material_data['height']}mm)", 
+                                True, f"Material ID: {material['id']}, Unit Code: {material.get('unit_code', 'N/A')}")
+                else:
+                    self.log_test(f"Create test material {i+1}", False, f"Status: {response.status_code}, Response: {response.text}")
+                    
+            except Exception as e:
+                self.log_test(f"Create test material {i+1}", False, f"Error: {str(e)}")
+        
+        return len(self.created_data['raw_materials']) > 0
+    
+    def test_compatibility_filtering(self):
+        """Test 1: Verify materials ≤15mm height don't appear in compatibility results"""
+        print("\n=== Test 1: Compatibility Filtering (Height ≤ 15mm) ===")
+        
+        try:
+            # Test compatibility check for RSL seal 40×50×10mm
+            compatibility_data = {
+                "seal_type": "RSL",
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "height": 10.0,
+                "material_type": "NBR"
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/compatibility-check", json=compatibility_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                compatible_materials = result.get('compatible_materials', [])
+                
+                # Check that no materials with height ≤ 15mm appear
+                filtered_materials = [m for m in compatible_materials if m.get('height', 0) <= 15]
+                
+                if len(filtered_materials) == 0:
+                    self.log_test("Compatibility filtering (≤15mm excluded)", True, 
+                                f"Found {len(compatible_materials)} compatible materials, none with height ≤15mm")
+                else:
+                    self.log_test("Compatibility filtering (≤15mm excluded)", False, 
+                                f"Found {len(filtered_materials)} materials with height ≤15mm that should be filtered out")
+                
+                # Check that materials with height > 15mm do appear
+                valid_materials = [m for m in compatible_materials if m.get('height', 0) > 15]
+                if len(valid_materials) > 0:
+                    self.log_test("Compatibility filtering (>15mm included)", True, 
+                                f"Found {len(valid_materials)} materials with height >15mm as expected")
+                    return valid_materials[0]  # Return first valid material for next test
+                else:
+                    self.log_test("Compatibility filtering (>15mm included)", False, 
+                                "No materials with height >15mm found")
+                    return None
+                    
+            else:
+                self.log_test("Compatibility check API", False, f"Status: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            self.log_test("Compatibility filtering test", False, f"Error: {str(e)}")
+            return None
+    
+    def test_height_deduction_with_unit_code(self, selected_material):
+        """Test 2: Test height deduction with unit code matching"""
+        print("\n=== Test 2: Height Deduction with Unit Code ===")
+        
+        if not selected_material:
+            self.log_test("Height deduction test", False, "No valid material provided")
+            return None
+        
+        try:
+            # Get initial height of the selected material
+            unit_code = selected_material.get('unit_code')
+            initial_height = selected_material.get('height', 0)
+            
+            self.log_test("Initial material state", True, 
+                        f"Unit Code: {unit_code}, Initial Height: {initial_height}mm")
+            
+            # Create invoice using the selected material
+            seal_height = 10.0  # RSL seal height
+            quantity = 3  # Number of seals
+            expected_deduction = (seal_height + 2) * quantity  # (10 + 2) × 3 = 36mm
+            
+            invoice_data = {
+                "customer_name": "عميل اختبار خصم المخزون",
+                "customer_id": self.created_data['customers'][0] if self.created_data['customers'] else None,
+                "invoice_title": "فاتورة اختبار خصم المخزون",
+                "supervisor_name": "مشرف الاختبار",
+                "payment_method": "نقدي",
+                "items": [
+                    {
+                        "seal_type": "RSL",
+                        "material_type": "NBR",
+                        "inner_diameter": 40.0,
+                        "outer_diameter": 50.0,
+                        "height": seal_height,
+                        "quantity": quantity,
+                        "unit_price": 15.0,
+                        "total_price": 15.0 * quantity,
+                        "product_type": "manufactured",
+                        "material_used": unit_code,
+                        "material_details": selected_material
+                    }
+                ]
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/invoices", json=invoice_data)
+            
+            if response.status_code == 200:
+                invoice = response.json()
+                self.created_data['invoices'].append(invoice['id'])
+                
+                self.log_test("Invoice creation", True, 
+                            f"Invoice ID: {invoice['id']}, Number: {invoice.get('invoice_number', 'N/A')}")
+                
+                # Verify height deduction by checking the raw material
+                materials_response = self.session.get(f"{BACKEND_URL}/raw-materials")
+                if materials_response.status_code == 200:
+                    materials = materials_response.json()
+                    
+                    # Find the material by unit_code
+                    updated_material = None
+                    for material in materials:
+                        if material.get('unit_code') == unit_code:
+                            updated_material = material
+                            break
+                    
+                    if updated_material:
+                        final_height = updated_material.get('height', 0)
+                        actual_deduction = initial_height - final_height
+                        
+                        if abs(actual_deduction - expected_deduction) < 0.1:  # Allow small floating point differences
+                            self.log_test("Height deduction calculation", True, 
+                                        f"Expected: {expected_deduction}mm, Actual: {actual_deduction}mm, Final Height: {final_height}mm")
+                        else:
+                            self.log_test("Height deduction calculation", False, 
+                                        f"Expected: {expected_deduction}mm, Actual: {actual_deduction}mm, Final Height: {final_height}mm")
+                        
+                        return {
+                            'invoice': invoice,
+                            'initial_height': initial_height,
+                            'final_height': final_height,
+                            'expected_deduction': expected_deduction,
+                            'actual_deduction': actual_deduction
+                        }
+                    else:
+                        self.log_test("Find updated material", False, f"Material with unit_code {unit_code} not found")
+                else:
+                    self.log_test("Get updated materials", False, f"Status: {materials_response.status_code}")
+            else:
+                self.log_test("Invoice creation", False, f"Status: {response.status_code}, Response: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Height deduction test", False, f"Error: {str(e)}")
+        
+        return None
+    
+    def test_complete_workflow(self):
+        """Test 3: Complete workflow as specified in requirements"""
+        print("\n=== Test 3: Complete Workflow Test ===")
+        
+        try:
+            # Setup: Create raw material NBR 40×50mm with 80mm height
+            setup_material = {
+                "material_type": "NBR",
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "height": 80.0,
+                "pieces_count": 2,
+                "cost_per_mm": 1.5
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/raw-materials", json=setup_material)
+            if response.status_code == 200:
+                created_material = response.json()
+                self.created_data['raw_materials'].append(created_material['id'])
+                self.log_test("Setup: Create NBR 40×50mm with 80mm height", True, 
+                            f"Unit Code: {created_material.get('unit_code')}")
+            else:
+                self.log_test("Setup: Create test material", False, f"Status: {response.status_code}")
+                return False
+            
+            # Compatibility: Check for RSL seal 40×50×10mm
+            compatibility_data = {
+                "seal_type": "RSL",
+                "inner_diameter": 40.0,
+                "outer_diameter": 50.0,
+                "height": 10.0,
+                "material_type": "NBR"
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/compatibility-check", json=compatibility_data)
+            if response.status_code == 200:
+                result = response.json()
+                compatible_materials = result.get('compatible_materials', [])
+                
+                # Find our created material
+                target_material = None
+                for material in compatible_materials:
+                    if (material.get('unit_code') == created_material.get('unit_code') and
+                        material.get('height', 0) == 80.0):
+                        target_material = material
+                        break
+                
+                if target_material:
+                    self.log_test("Compatibility: Find created material", True, 
+                                f"Found material with unit_code: {target_material.get('unit_code')}")
+                else:
+                    self.log_test("Compatibility: Find created material", False, 
+                                "Created material not found in compatibility results")
+                    return False
+            else:
+                self.log_test("Compatibility check", False, f"Status: {response.status_code}")
+                return False
+            
+            # Invoice: Create invoice with 3 seals from selected material
+            invoice_data = {
+                "customer_name": "عميل اختبار سير العمل الكامل",
+                "invoice_title": "فاتورة اختبار سير العمل الكامل",
+                "supervisor_name": "مشرف الاختبار الكامل",
+                "payment_method": "نقدي",
+                "items": [
+                    {
+                        "seal_type": "RSL",
+                        "material_type": "NBR",
+                        "inner_diameter": 40.0,
+                        "outer_diameter": 50.0,
+                        "height": 10.0,
+                        "quantity": 3,
+                        "unit_price": 20.0,
+                        "total_price": 60.0,
+                        "product_type": "manufactured",
+                        "material_used": target_material.get('unit_code'),
+                        "material_details": target_material
+                    }
+                ]
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/invoices", json=invoice_data)
+            if response.status_code == 200:
+                invoice = response.json()
+                self.created_data['invoices'].append(invoice['id'])
+                self.log_test("Invoice: Create with 3 seals", True, 
+                            f"Invoice Number: {invoice.get('invoice_number')}")
+            else:
+                self.log_test("Invoice creation", False, f"Status: {response.status_code}")
+                return False
+            
+            # Expected: (10 + 2) × 3 = 36mm deducted → 80mm - 36mm = 44mm remaining
+            expected_remaining = 80.0 - 36.0  # 44mm
+            
+            # Verification: Check raw_materials collection for height changes
+            materials_response = self.session.get(f"{BACKEND_URL}/raw-materials")
+            if materials_response.status_code == 200:
+                materials = materials_response.json()
+                
+                updated_material = None
+                for material in materials:
+                    if material.get('unit_code') == target_material.get('unit_code'):
+                        updated_material = material
+                        break
+                
+                if updated_material:
+                    actual_remaining = updated_material.get('height', 0)
+                    
+                    if abs(actual_remaining - expected_remaining) < 0.1:
+                        self.log_test("Verification: Final height calculation", True, 
+                                    f"Expected: {expected_remaining}mm, Actual: {actual_remaining}mm")
+                        return True
+                    else:
+                        self.log_test("Verification: Final height calculation", False, 
+                                    f"Expected: {expected_remaining}mm, Actual: {actual_remaining}mm")
+                else:
+                    self.log_test("Verification: Find updated material", False, 
+                                "Material not found after invoice creation")
+            else:
+                self.log_test("Verification: Get materials", False, f"Status: {materials_response.status_code}")
+            
+        except Exception as e:
+            self.log_test("Complete workflow test", False, f"Error: {str(e)}")
+        
+        return False
+    
+    def verify_system_requirements(self):
+        """Test 4: Verify all system requirements are met"""
+        print("\n=== Test 4: System Requirements Verification ===")
+        
+        try:
+            # Test multiple compatibility checks to ensure consistent filtering
+            test_cases = [
+                {"height": 5.0, "should_appear": False},
+                {"height": 10.0, "should_appear": False},
+                {"height": 15.0, "should_appear": False},
+                {"height": 16.0, "should_appear": True},
+                {"height": 20.0, "should_appear": True}
+            ]
+            
+            for case in test_cases:
+                compatibility_data = {
+                    "seal_type": "RSL",
+                    "inner_diameter": 40.0,
+                    "outer_diameter": 50.0,
+                    "height": case["height"],
+                    "material_type": "NBR"
+                }
+                
+                response = self.session.post(f"{BACKEND_URL}/compatibility-check", json=compatibility_data)
+                if response.status_code == 200:
+                    result = response.json()
+                    compatible_materials = result.get('compatible_materials', [])
+                    
+                    # Check filtering logic
+                    materials_with_low_height = [m for m in compatible_materials if m.get('height', 0) <= 15]
+                    
+                    if case["should_appear"]:
+                        # For heights > 15mm, we should find materials with height > 15mm
+                        valid_materials = [m for m in compatible_materials if m.get('height', 0) > 15]
+                        if len(valid_materials) > 0 and len(materials_with_low_height) == 0:
+                            self.log_test(f"Filtering test (seal height {case['height']}mm)", True, 
+                                        f"Found {len(valid_materials)} valid materials, no low-height materials")
+                        else:
+                            self.log_test(f"Filtering test (seal height {case['height']}mm)", False, 
+                                        f"Found {len(materials_with_low_height)} low-height materials (should be 0)")
+                    else:
+                        # For any seal height, materials ≤15mm should never appear
+                        if len(materials_with_low_height) == 0:
+                            self.log_test(f"Filtering test (seal height {case['height']}mm)", True, 
+                                        "No materials ≤15mm found as expected")
+                        else:
+                            self.log_test(f"Filtering test (seal height {case['height']}mm)", False, 
+                                        f"Found {len(materials_with_low_height)} materials ≤15mm (should be 0)")
+                else:
+                    self.log_test(f"Compatibility API (seal height {case['height']}mm)", False, 
+                                f"Status: {response.status_code}")
+            
+        except Exception as e:
+            self.log_test("System requirements verification", False, f"Error: {str(e)}")
+    
+    def cleanup_test_data(self):
+        """Clean up created test data"""
+        print("\n=== Cleaning Up Test Data ===")
+        
+        # Delete created invoices
+        for invoice_id in self.created_data['invoices']:
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/invoices/{invoice_id}")
+                if response.status_code == 200:
+                    self.log_test(f"Delete invoice {invoice_id}", True)
+                else:
+                    self.log_test(f"Delete invoice {invoice_id}", False, f"Status: {response.status_code}")
+            except Exception as e:
+                self.log_test(f"Delete invoice {invoice_id}", False, f"Error: {str(e)}")
+        
+        # Delete created raw materials
+        for material_id in self.created_data['raw_materials']:
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/raw-materials/{material_id}")
+                if response.status_code == 200:
+                    self.log_test(f"Delete raw material {material_id}", True)
+                else:
+                    self.log_test(f"Delete raw material {material_id}", False, f"Status: {response.status_code}")
+            except Exception as e:
+                self.log_test(f"Delete raw material {material_id}", False, f"Error: {str(e)}")
+        
+        # Delete created customers
+        for customer_id in self.created_data['customers']:
+            try:
+                response = self.session.delete(f"{BACKEND_URL}/customers/{customer_id}")
+                if response.status_code == 200:
+                    self.log_test(f"Delete customer {customer_id}", True)
+                else:
+                    self.log_test(f"Delete customer {customer_id}", False, f"Status: {response.status_code}")
+            except Exception as e:
+                self.log_test(f"Delete customer {customer_id}", False, f"Error: {str(e)}")
+    
+    def run_all_tests(self):
+        """Run all inventory deduction tests"""
+        print("🔍 Starting Final Inventory Deduction System Tests")
+        print("=" * 60)
+        
+        # Setup test data
+        if not self.setup_test_data():
+            print("❌ Failed to setup test data. Aborting tests.")
+            return False
+        
+        # Test 1: Compatibility Filtering
+        selected_material = self.test_compatibility_filtering()
+        
+        # Test 2: Height Deduction with Unit Code
+        deduction_result = None
+        if selected_material:
+            deduction_result = self.test_height_deduction_with_unit_code(selected_material)
+        
+        # Test 3: Complete Workflow
+        self.test_complete_workflow()
+        
+        # Test 4: System Requirements Verification
+        self.verify_system_requirements()
+        
+        # Cleanup
+        self.cleanup_test_data()
+        
+        # Print summary
+        self.print_summary()
+        
+        return True
+    
+    def print_summary(self):
+        """Print test summary"""
+        print("\n" + "=" * 60)
+        print("📊 FINAL INVENTORY DEDUCTION SYSTEM TEST SUMMARY")
+        print("=" * 60)
+        
+        total_tests = len(self.test_results)
+        passed_tests = len([t for t in self.test_results if t['success']])
+        failed_tests = total_tests - passed_tests
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        
+        if failed_tests > 0:
+            print("\n❌ FAILED TESTS:")
+            for test in self.test_results:
+                if not test['success']:
+                    print(f"  - {test['test']}: {test['details']}")
+        
+        print("\n🎯 KEY REQUIREMENTS STATUS:")
+        
+        # Check key requirements
+        compatibility_filtering_tests = [t for t in self.test_results if 'Compatibility filtering' in t['test']]
+        height_deduction_tests = [t for t in self.test_results if 'Height deduction' in t['test']]
+        workflow_tests = [t for t in self.test_results if 'Complete workflow' in t['test'] or 'Verification' in t['test']]
+        
+        req1_status = "✅" if all(t['success'] for t in compatibility_filtering_tests) else "❌"
+        req2_status = "✅" if all(t['success'] for t in height_deduction_tests) else "❌"
+        req3_status = "✅" if all(t['success'] for t in workflow_tests) else "❌"
+        
+        print(f"{req1_status} Materials ≤15mm filtered from compatibility")
+        print(f"{req2_status} Height deduction works: (seal_height + 2) × quantity")
+        print(f"{req3_status} Complete workflow with correct calculations")
+        
+        # Overall assessment
+        critical_tests_passed = all([
+            any(t['success'] and 'Compatibility filtering' in t['test'] for t in self.test_results),
+            any(t['success'] and 'Height deduction calculation' in t['test'] for t in self.test_results),
+            any(t['success'] and 'Final height calculation' in t['test'] for t in self.test_results)
+        ])
+        
+        if critical_tests_passed:
+            print(f"\n🎉 FINAL RESULT: ✅ INVENTORY DEDUCTION SYSTEM WORKING CORRECTLY")
+            print("   All user requirements are met!")
+        else:
+            print(f"\n🚨 FINAL RESULT: ❌ INVENTORY DEDUCTION SYSTEM HAS ISSUES")
+            print("   Some user requirements are not met.")
+
+def main():
+    """Main function to run the inventory deduction tests"""
+    tester = InventoryDeductionTester()
+    
+    try:
+        success = tester.run_all_tests()
+        return 0 if success else 1
+    except KeyboardInterrupt:
+        print("\n\n⚠️ Tests interrupted by user")
+        return 1
+    except Exception as e:
+        print(f"\n\n💥 Unexpected error: {str(e)}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
+"""
 Inventory Deduction Logic Testing - CORRECTED Requirements
 اختبار منطق خصم المخزون - المتطلبات المصححة
 
