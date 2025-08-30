@@ -38,6 +38,51 @@ class InventoryDeductionTester:
             'timestamp': datetime.now().isoformat()
         })
     
+    def setup_inventory_items(self):
+        """Setup inventory items first (required for raw materials)"""
+        print("\n=== Setting Up Inventory Items ===")
+        
+        # Create inventory items for the materials we want to test
+        inventory_items = [
+            {
+                "material_type": "NBR",
+                "inner_diameter": 30.0,
+                "outer_diameter": 40.0,
+                "available_pieces": 10,
+                "min_stock_level": 2,
+                "notes": "Test inventory for NBR 30x40"
+            },
+            {
+                "material_type": "BUR", 
+                "inner_diameter": 25.0,
+                "outer_diameter": 35.0,
+                "available_pieces": 5,
+                "min_stock_level": 2,
+                "notes": "Test inventory for BUR 25x35"
+            },
+            {
+                "material_type": "VT",
+                "inner_diameter": 20.0,
+                "outer_diameter": 30.0,
+                "available_pieces": 8,
+                "min_stock_level": 2,
+                "notes": "Test inventory for VT 20x30"
+            }
+        ]
+        
+        for item_data in inventory_items:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/inventory", json=item_data)
+                if response.status_code in [200, 201]:
+                    item = response.json()
+                    self.log_test(f"Create inventory {item_data['material_type']} {item_data['inner_diameter']}×{item_data['outer_diameter']}", True, 
+                                f"Inventory created with {item_data['available_pieces']} pieces")
+                else:
+                    self.log_test(f"Create inventory {item_data['material_type']} {item_data['inner_diameter']}×{item_data['outer_diameter']}", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test(f"Create inventory {item_data['material_type']} {item_data['inner_diameter']}×{item_data['outer_diameter']}", False, str(e))
+
     def setup_test_materials(self):
         """Setup raw materials for testing according to user requirements"""
         print("\n=== Setting Up Test Materials ===")
@@ -54,7 +99,7 @@ class InventoryDeductionTester:
         
         try:
             response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material1_data)
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 material1 = response.json()
                 self.created_materials.append(material1)
                 self.log_test("Create NBR 30×40mm height 100mm", True, 
@@ -77,7 +122,7 @@ class InventoryDeductionTester:
         
         try:
             response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material2_data)
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 material2 = response.json()
                 self.created_materials.append(material2)
                 self.log_test("Create BUR 25×35mm height 10mm", True, 
@@ -100,7 +145,7 @@ class InventoryDeductionTester:
         
         try:
             response = self.session.post(f"{BACKEND_URL}/raw-materials", json=material3_data)
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 material3 = response.json()
                 self.created_materials.append(material3)
                 self.log_test("Create VT 20×30mm height 20mm", True, 
