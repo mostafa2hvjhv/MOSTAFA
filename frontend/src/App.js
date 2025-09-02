@@ -2010,7 +2010,17 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
           inner_diameter: parseFloat(currentItem.inner_diameter),
           outer_diameter: parseFloat(currentItem.outer_diameter),
           is_finished_product: false
-        }
+        },
+        // إضافة معلومات الخامات المتعددة
+        selected_materials: selectedMaterials.length > 0 ? selectedMaterials.map(sel => ({
+          unit_code: sel.material.unit_code,
+          material_type: sel.material.material_type,
+          inner_diameter: sel.material.inner_diameter,
+          outer_diameter: sel.material.outer_diameter,
+          height: sel.material.height,
+          seals_count: sel.seals,
+          id: sel.material.id
+        })) : null
       };
 
       setItems([...items, item]);
