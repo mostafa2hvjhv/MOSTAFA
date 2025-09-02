@@ -920,99 +920,47 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             if item.material_details and not material_deducted:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
-                    # Calculate total material consumption needed
-                    seal_consumption_per_piece = item.height + 2
-                    total_consumption_needed = seal_consumption_per_piece * item.quantity
-                    remaining_quantity = item.quantity
+                    # Find the specific material selected by user
+                    raw_material = None
                     
-                    print(f"🔍 المطلوب: {item.quantity} سيل × {seal_consumption_per_piece} مم = {total_consumption_needed} مم إجمالي")
-                    
-                    # Find all materials matching the specifications, ordered by height (largest first)
-                    query = {}
+                    # Search by inner_diameter + outer_diameter + unit_code together for highest accuracy
                     if (material_details.get("inner_diameter") and 
                         material_details.get("outer_diameter") and 
                         material_details.get("unit_code")):
-                        # Try exact match first
-                        query = {
+                        raw_material = await db.raw_materials.find_one({
                             "inner_diameter": material_details.get("inner_diameter"),
                             "outer_diameter": material_details.get("outer_diameter"),
                             "unit_code": material_details.get("unit_code")
-                        }
-                    elif material_details.get("material_type"):
-                        # Fallback to type and dimensions
-                        query = {
+                        })
+                    
+                    # If not found by dimensions + unit_code, try by specifications only
+                    if not raw_material and material_details.get("material_type"):
+                        raw_material = await db.raw_materials.find_one({
                             "material_type": material_details.get("material_type"),
                             "inner_diameter": material_details.get("inner_diameter"),
                             "outer_diameter": material_details.get("outer_diameter")
-                        }
+                        })
                     
-                    if query:
-                        # Get all matching materials, sorted by height (descending) to use largest pieces first
-                        matching_materials = await db.raw_materials.find(query).sort("height", -1).to_list(None)
+                    if raw_material:
+                        # Calculate material consumption for selected quantity only
+                        material_consumption = (item.height + 2) * item.quantity
+                        current_height = raw_material.get("height", 0)
                         
-                        # Filter materials with sufficient height (> 15mm after use)
-                        usable_materials = []
-                        for mat in matching_materials:
-                            if mat.get("height", 0) > 15:  # Only consider materials with height > 15
-                                usable_materials.append(mat)
-                        
-                        if usable_materials:
-                            deductions_made = []
-                            total_deducted = 0
+                        # Simple deduction from selected material
+                        if current_height >= material_consumption:
+                            # Deduct from material height
+                            await db.raw_materials.update_one(
+                                {"id": raw_material["id"]},
+                                {"$inc": {"height": -material_consumption}}
+                            )
                             
-                            # Use multiple materials to fulfill the order
-                            for material in usable_materials:
-                                if remaining_quantity <= 0:
-                                    break
-                                
-                                current_height = material.get("height", 0)
-                                unit_code = material.get("unit_code", "غير محدد")
-                                
-                                # Calculate how many seals can be made from this material
-                                max_seals_from_material = int(current_height // seal_consumption_per_piece)
-                                
-                                if max_seals_from_material > 0:
-                                    # Determine how many seals to make from this material
-                                    seals_to_make = min(remaining_quantity, max_seals_from_material)
-                                    deduction_amount = seals_to_make * seal_consumption_per_piece
-                                    
-                                    # Check if using this material would leave it with <= 15mm (which makes it unusable)
-                                    remaining_height_after = current_height - deduction_amount
-                                    
-                                    if remaining_height_after >= 15 or remaining_height_after == 0:
-                                        # Safe to use this material
-                                        await db.raw_materials.update_one(
-                                            {"id": material["id"]},
-                                            {"$inc": {"height": -deduction_amount}}
-                                        )
-                                        
-                                        remaining_quantity -= seals_to_make
-                                        total_deducted += deduction_amount
-                                        
-                                        deductions_made.append({
-                                            "unit_code": unit_code,
-                                            "seals_made": seals_to_make,
-                                            "deduction": deduction_amount,
-                                            "remaining_height": remaining_height_after
-                                        })
-                                        
-                                        print(f"✅ خصم {deduction_amount} مم من {unit_code} لإنتاج {seals_to_make} سيل - المتبقي: {remaining_height_after} مم")
-                                    else:
-                                        print(f"⚠️ تجاهل {unit_code} لأن استخدامه سيترك {remaining_height_after} مم (< 15 مم)")
-                            
-                            if remaining_quantity == 0:
-                                material_deducted = True
-                                print(f"🎉 تم إكمال الطلب بنجاح من {len(deductions_made)} خامة مختلفة:")
-                                for deduction in deductions_made:
-                                    print(f"   - {deduction['unit_code']}: {deduction['seals_made']} سيل ({deduction['deduction']} مم)")
-                            else:
-                                print(f"❌ لم يتم إكمال الطلب - متبقي {remaining_quantity} سيل. تم إنتاج {item.quantity - remaining_quantity} سيل فقط")
-                                if deductions_made:
-                                    print(f"📋 الخصم الذي تم:")
-                                    for deduction in deductions_made:
-                                        print(f"   - {deduction['unit_code']}: {deduction['seals_made']} سيل ({deduction['deduction']} مم)")
+                            material_deducted = True
+                            remaining_height = current_height - material_consumption
+                            print(f"✅ تم خصم {material_consumption} مم من الخامة {raw_material.get('unit_code', 'غير محدد')} لإنتاج {item.quantity} سيل - المتبقي: {remaining_height} مم")
                         else:
-                            print(f"❌ لا توجد خامات كافية بارتفاع > 15 مم لهذه المواصفات")
+                            print(f"❌ خطأ: لا يوجد ارتفاع كافٍ في الخامة {raw_material.get('unit_code', 'غير محدد')} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
+                    else:
+                        print(f"❌ خطأ: لم يتم العثور على الخامة المحددة - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')} كود: {material_details.get('unit_code', 'غير محدد')}")
             
             # Fallback to material_used only if material_details didn't work and no deduction happened
             if item.material_used and not material_deducted:
