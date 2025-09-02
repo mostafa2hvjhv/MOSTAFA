@@ -916,8 +916,41 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             # Handle manufactured products - deduct from material height
             material_deducted = False  # Flag to prevent double deduction
             
-            # Prioritize material_details (complete information) over material_used (unit_code only)
-            if item.material_details and not material_deducted:
+            # Prioritize multi-material selection over single material selection
+            if hasattr(item, 'selected_materials') and item.selected_materials and not material_deducted:
+                # Handle multiple materials with specified seal counts
+                for material_info in item.selected_materials:
+                    raw_material = await db.raw_materials.find_one({
+                        "unit_code": material_info.get("unit_code"),
+                        "inner_diameter": material_info.get("inner_diameter"),
+                        "outer_diameter": material_info.get("outer_diameter")
+                    })
+                    
+                    if raw_material:
+                        seal_consumption_per_piece = item.height + 2
+                        seals_to_produce = material_info.get("seals_count", 0)
+                        material_consumption = seals_to_produce * seal_consumption_per_piece
+                        current_height = raw_material.get("height", 0)
+                        
+                        if current_height >= material_consumption:
+                            # Deduct from this material
+                            await db.raw_materials.update_one(
+                                {"id": raw_material["id"]},
+                                {"$inc": {"height": -material_consumption}}
+                            )
+                            
+                            remaining_height = current_height - material_consumption
+                            print(f"✅ تم خصم {material_consumption} مم من الخامة {raw_material.get('unit_code', 'غير محدد')} لإنتاج {seals_to_produce} سيل - المتبقي: {remaining_height} مم")
+                        else:
+                            print(f"❌ خطأ: لا يوجد ارتفاع كافٍ في الخامة {raw_material.get('unit_code', 'غير محدد')} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
+                    else:
+                        print(f"❌ خطأ: لم يتم العثور على الخامة {material_info.get('unit_code', 'غير محدد')}")
+                
+                material_deducted = True
+                print(f"🎉 تم خصم المواد من {len(item.selected_materials)} خامة مختلفة")
+                
+            # Prioritize material_details (single material) if no multi-material selection
+            elif item.material_details and not material_deducted:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
                     # Find the specific material selected by user
