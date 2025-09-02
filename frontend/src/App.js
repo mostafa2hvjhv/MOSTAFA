@@ -1839,7 +1839,7 @@ const Sales = () => {
     });
   };
 
-  const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
+  const sealTypes = ['RSL', 'RS', 'RSS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
   const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
 
   useEffect(() => {
@@ -3123,7 +3123,7 @@ const Stock = () => {
   });
 
   const materialTypes = ['NBR', 'BUR', 'BT', 'VT', 'BOOM'];
-  const sealTypes = ['RSL', 'RS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
+  const sealTypes = ['RSL', 'RS', 'RSS', 'RSE', 'B17', 'B3', 'B14', 'B1', 'R15', 'R17', 'W1', 'W4', 'W5', 'W11', 'WBT', 'XR', 'CH', 'VR'];
 
   // دالة تصفية البحث
   const filteredRawMaterials = rawMaterials.filter(material => 
@@ -5222,6 +5222,7 @@ const Invoices = () => {
                                   <option value="">اختر النوع</option>
                                   <option value="RSL">RSL</option>
                                   <option value="RS">RS</option>
+                                  <option value="RSS">RSS</option>
                                   <option value="RSE">RSE</option>
                                   <option value="B17">B17</option>
                                   <option value="B3">B3</option>
@@ -5564,7 +5565,7 @@ const WorkOrders = () => {
       <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
         <div style="text-align: center; margin-bottom: 20px;">
           <h1>ماستر سيل</h1>
-          <p>الحرفيان شارع السوبر جيت - 01020630677</p>
+          <p>الحرفيين شارع السوبر جيت - 01020630677</p>
           <h2 style="color: #333; margin-top: 20px;">أمر شغل</h2>
         </div>
         
@@ -6680,7 +6681,7 @@ const Users = () => {
   });
   const [companyInfo, setCompanyInfo] = useState({
     name: 'ماستر سيل',
-    address: 'الحرفيان شارع السوبر جيت',
+    address: 'الحرفيين شارع السوبر جيت',
     phone: '01020630677'
   });
   const [editingCompany, setEditingCompany] = useState(false);

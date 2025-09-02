@@ -950,7 +950,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                     # First try to find by unit_code if available
                     if material_details.get("unit_code"):
                         raw_material = await db.raw_materials.find_one({
-                            "unit_code": material_details.get("unit_code")
+                            "unit": material_details.get("unit")
                         })
                     
                     # If not found by unit_code, try by specifications
@@ -958,7 +958,8 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                         raw_material = await db.raw_materials.find_one({
                             "material_type": material_details.get("material_type"),
                             "inner_diameter": material_details.get("inner_diameter"),
-                            "outer_diameter": material_details.get("outer_diameter")
+                            "outer_diameter": material_details.get("outer_diameter"),
+                            "unit_code": material_details.get("unit_code")
                         })
                     
                     if raw_material:
