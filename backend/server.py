@@ -155,6 +155,7 @@ class InvoiceItem(BaseModel):
     # Fields for manufactured products
     material_used: Optional[str] = None  # كود الوحدة للخامة المستخدمة
     material_details: Optional[Dict[str, Any]] = None  # تفاصيل الخامة المختارة
+    selected_materials: Optional[List[Dict[str, Any]]] = None  # الخامات المتعددة المختارة
 
 class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
