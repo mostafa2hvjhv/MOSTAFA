@@ -1044,10 +1044,36 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             await db.work_orders.insert_one(work_order.dict())
             daily_work_order = work_order.dict()
         
-        # Add invoice to daily work order
+        # Add invoice to daily work order with enhanced material details
         invoice_for_work_order = invoice_obj.dict()
         if "_id" in invoice_for_work_order:
             del invoice_for_work_order["_id"]
+        
+        # Enhance items with material usage details for work order display
+        enhanced_items = []
+        for item in invoice_for_work_order.get("items", []):
+            enhanced_item = item.copy()
+            
+            # Add material consumption details for manufactured products
+            if item.get("product_type") == "manufactured":
+                seal_consumption = (item.get("height", 0) + 2) * item.get("quantity", 0)
+                
+                # Get material info from material_details or material_used
+                material_info = ""
+                if item.get("material_details"):
+                    mat_details = item.get("material_details")
+                    unit_code = mat_details.get("unit_code", "غير محدد")
+                    material_info = f"{unit_code} ({item.get('quantity', 0)} سيل)"
+                elif item.get("material_used"):
+                    material_info = f"{item.get('material_used')} ({item.get('quantity', 0)} سيل)"
+                
+                enhanced_item["material_consumption"] = seal_consumption
+                enhanced_item["material_info"] = material_info
+                enhanced_item["work_order_display"] = f"{item.get('seal_type', '')} {item.get('material_type', '')} {item.get('inner_diameter', 0)}×{item.get('outer_diameter', 0)}×{item.get('height', 0)} - {material_info} - استهلاك: {seal_consumption} مم"
+            
+            enhanced_items.append(enhanced_item)
+        
+        invoice_for_work_order["items"] = enhanced_items
             
         current_invoices = daily_work_order.get("invoices", [])
         current_invoices.append(invoice_for_work_order)
