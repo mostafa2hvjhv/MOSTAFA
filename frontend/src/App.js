@@ -2930,13 +2930,17 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
               
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {compatibilityResults.compatible_materials.map((material, index) => {
-                  const isSelected = selectedMaterials.some(sel => sel.material.unit_code === material.unit_code);
+                  const isSelected = selectedMaterials.some(sel => 
+                    sel.material.unit_code === material.unit_code && 
+                    sel.material.inner_diameter === material.inner_diameter &&
+                    sel.material.outer_diameter === material.outer_diameter
+                  );
                   const maxSeals = Math.floor(material.height / (parseFloat(currentItem.height) + 2));
                   const remainingSeals = parseInt(currentItem.quantity) - selectedMaterials.reduce((sum, sel) => sum + sel.seals, 0);
                   
                   return (
                     <div key={index} 
-                         className={`p-3 rounded border cursor-pointer transition-colors ${
+                         className={`p-3 rounded border transition-colors ${
                            isSelected ? 'bg-blue-100 border-blue-300' : 'bg-gray-50 hover:bg-gray-100'
                          }`}>
                       <div className="flex justify-between items-start">
@@ -2954,7 +2958,7 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
                             <p className="text-xs text-gray-500">نسبة التوافق: {material.score}%</p>
                           )}
                         </div>
-                        {!isSelected && remainingSeals > 0 && (
+                        {!isSelected && remainingSeals > 0 && maxSeals > 0 && (
                           <button
                             onClick={() => {
                               const newSelection = {
@@ -2967,6 +2971,16 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
                           >
                             اختيار
                           </button>
+                        )}
+                        {isSelected && (
+                          <div className="text-blue-600 text-sm font-medium">
+                            ✓ مختارة
+                          </div>
+                        )}
+                        {!isSelected && remainingSeals <= 0 && (
+                          <div className="text-gray-400 text-sm">
+                            مكتمل
+                          </div>
                         )}
                       </div>
                     </div>
