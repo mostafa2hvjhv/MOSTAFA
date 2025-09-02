@@ -2841,6 +2841,52 @@ const Sales = () => {
                           : 'border-green-300 bg-green-50 hover:bg-green-100'
                     }`}
                     onClick={async () => {
+                      // حساب كم سيل يمكن إنتاجه من هذه الخامة
+                      const sealHeight = parseFloat(currentItem.height);
+                      const requiredQuantity = parseInt(currentItem.quantity);
+                      const materialHeight = material.height;
+                      const consumptionPerSeal = sealHeight + 2; // ارتفاع السيل + 2 مم هدر
+                      const availableSeals = Math.floor(materialHeight / consumptionPerSeal);
+                      
+                      // تحقق من أن الارتفاع المتبقي لن يكون أقل من 15 مم
+                      const remainingHeight = materialHeight - (availableSeals * consumptionPerSeal);
+                      let usableSeals = availableSeals;
+                      
+                      // إذا كان الارتفاع المتبقي أقل من 15 مم ولكن ليس صفر، قلل عدد السيلات
+                      if (remainingHeight > 0 && remainingHeight < 15) {
+                        usableSeals = availableSeals - 1;
+                      }
+                      
+                      if (usableSeals <= 0) {
+                        alert(`⚠️ هذه الخامة لا تكفي لإنتاج أي سيل!
+الارتفاع المتاح: ${materialHeight} مم
+المطلوب لكل سيل: ${consumptionPerSeal} مم
+الرجاء اختيار خامة بارتفاع أكبر.`);
+                        return;
+                      }
+                      
+                      if (usableSeals < requiredQuantity) {
+                        const confirmMessage = `⚠️ تنبيه: هذه الخامة تكفي لإنتاج ${usableSeals} سيل فقط من أصل ${requiredQuantity} سيل مطلوب.
+
+تفاصيل الخامة:
+- الكود: ${material.unit_code}
+- الارتفاع المتاح: ${materialHeight} مم  
+- سيتم استهلاك: ${usableSeals * consumptionPerSeal} مم
+- سيتبقى: ${materialHeight - (usableSeals * consumptionPerSeal)} مم
+
+هل تريد المتابعة؟ ستحتاج لاختيار خامة أخرى للـ ${requiredQuantity - usableSeals} سيل المتبقية.`;
+                        
+                        if (!confirm(confirmMessage)) {
+                          return;
+                        }
+                        
+                        // تحديث الكمية للكمية المتاحة من هذه الخامة
+                        setCurrentItem({
+                          ...currentItem,
+                          quantity: usableSeals
+                        });
+                      }
+                      
                       setSelectedMaterial(material);
                       
                       // Try to get automatic pricing
@@ -2850,15 +2896,18 @@ const Sales = () => {
                         if (pricing) {
                           setCurrentItem({
                             ...currentItem,
-                            unit_price: pricing.total_price.toFixed(2)
+                            unit_price: pricing.total_price.toFixed(2),
+                            quantity: usableSeals // استخدم الكمية المحدثة
                           });
                           
-                          // Show pricing details
+                          // Show pricing details with seal count info
                           alert(`تم حساب السعر تلقائياً:
 سعر الملي: ${pricing.price_per_mm} ج.م
 تكلفة الملليمترات: ${pricing.mm_cost.toFixed(2)} ج.م
 تكلفة التصنيع (عميل ${pricing.client_type}): ${pricing.manufacturing_cost.toFixed(2)} ج.م
 السعر الإجمالي: ${pricing.total_price.toFixed(2)} ج.م
+
+ملاحظة: تم تحديد الكمية إلى ${usableSeals} سيل (المتاح من هذه الخامة)
                           
 يمكنك تعديل السعر إذا لزم الأمر.`);
                         }
