@@ -1876,6 +1876,45 @@ const Sales = () => {
     }
   };
 
+  // Confirm multi-material selection and calculate pricing
+  const confirmMultiMaterialSelection = async () => {
+    try {
+      // Calculate total pricing for all selected materials
+      let totalPrice = 0;
+      const height = parseFloat(currentItem.height);
+      
+      for (const selected of selectedMaterials) {
+        const pricing = await calculateAutomaticPrice(selected.material, height, clientType);
+        if (pricing) {
+          totalPrice += pricing.total_price * selected.seals;
+        }
+      }
+      
+      // Update the current item with the calculated price
+      setCurrentItem({
+        ...currentItem,
+        unit_price: (totalPrice / parseInt(currentItem.quantity)).toFixed(2)
+      });
+      
+      // Set the first material as the selected material for compatibility
+      if (selectedMaterials.length > 0) {
+        setSelectedMaterial(selectedMaterials[0].material);
+      }
+      
+      alert(`✅ تم تأكيد اختيار الخامات بنجاح!
+
+📊 ملخص الاختيار:
+${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل`).join('\n')}
+
+💰 السعر الإجمالي: ${totalPrice.toFixed(2)} ج.م
+💰 سعر السيل الواحد: ${(totalPrice / parseInt(currentItem.quantity)).toFixed(2)} ج.م`);
+      
+    } catch (error) {
+      console.error('Error confirming multi-material selection:', error);
+      alert('حدث خطأ في تأكيد الاختيار');
+    }
+  };
+
   const checkCompatibility = async () => {
     if (!currentItem.inner_diameter || !currentItem.outer_diameter || !currentItem.height) {
       alert('الرجاء إدخال جميع المقاسات المطلوبة');
