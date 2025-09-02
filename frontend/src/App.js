@@ -6170,7 +6170,9 @@ const WorkOrders = () => {
                                   </div>
                                 ) : (
                                   <div>
-                                    <div className="font-semibold">{item.material_details.unit_code}</div>
+                                    <div className="font-semibold">
+                                      {item.unit_code_display || item.material_details.unit_code}
+                                    </div>
                                     <div className="text-xs text-gray-600">
                                       {item.material_details.inner_diameter} - {item.material_details.outer_diameter}
                                     </div>
