@@ -2112,6 +2112,7 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
     
     setCompatibilityResults(null);
     setSelectedMaterial(null);
+    setSelectedMaterials([]); // مسح الخامات المختارة المتعددة
   };
 
   const editItem = (index) => {
