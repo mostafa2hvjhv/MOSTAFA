@@ -942,12 +942,24 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                         })
                     
                     if raw_material:
-                        # Calculate material consumption for selected quantity only
-                        material_consumption = (item.height + 2) * item.quantity
-                        current_height = raw_material.get("height", 0)
+                        # Calculate actual seals to be made from this material
+                        seal_consumption_per_piece = item.height + 2
+                        total_seals_requested = item.quantity
+                        material_height = raw_material.get("height", 0)
                         
-                        # Simple deduction from selected material
-                        if current_height >= material_consumption:
+                        # Calculate maximum seals possible from this material
+                        max_possible_seals = int(material_height // seal_consumption_per_piece)
+                        
+                        # Check if remaining height would be unusable (< 15mm but > 0)
+                        remaining_after_max = material_height - (max_possible_seals * seal_consumption_per_piece)
+                        if remaining_after_max > 0 and remaining_after_max < 15 and max_possible_seals > 0:
+                            max_possible_seals -= 1  # Reduce by 1 to avoid unusable remainder
+                        
+                        # Determine actual seals to produce (limited by material availability)
+                        actual_seals_to_produce = min(total_seals_requested, max_possible_seals)
+                        material_consumption = actual_seals_to_produce * seal_consumption_per_piece
+                        
+                        if actual_seals_to_produce > 0 and material_height >= material_consumption:
                             # Deduct from material height
                             await db.raw_materials.update_one(
                                 {"id": raw_material["id"]},
@@ -955,10 +967,18 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                             )
                             
                             material_deducted = True
-                            remaining_height = current_height - material_consumption
-                            print(f"✅ تم خصم {material_consumption} مم من الخامة {raw_material.get('unit_code', 'غير محدد')} لإنتاج {item.quantity} سيل - المتبقي: {remaining_height} مم")
+                            remaining_height = material_height - material_consumption
+                            
+                            if actual_seals_to_produce < total_seals_requested:
+                                print(f"⚠️ تم خصم {material_consumption} مم من الخامة {raw_material.get('unit_code', 'غير محدد')} لإنتاج {actual_seals_to_produce} سيل من أصل {total_seals_requested} سيل - المتبقي: {remaining_height} مم")
+                                print(f"📌 ملاحظة: يحتاج المستخدم لاختيار خامة أخرى لإنتاج الـ {total_seals_requested - actual_seals_to_produce} سيل المتبقية")
+                            else:
+                                print(f"✅ تم خصم {material_consumption} مم من الخامة {raw_material.get('unit_code', 'غير محدد')} لإنتاج جميع الـ {total_seals_requested} سيل - المتبقي: {remaining_height} مم")
                         else:
-                            print(f"❌ خطأ: لا يوجد ارتفاع كافٍ في الخامة {raw_material.get('unit_code', 'غير محدد')} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
+                            if max_possible_seals <= 0:
+                                print(f"❌ خطأ: الخامة {raw_material.get('unit_code', 'غير محدد')} لا تكفي لإنتاج أي سيل - الارتفاع: {material_height} مم، المطلوب: {seal_consumption_per_piece} مم للسيل الواحد")
+                            else:
+                                print(f"❌ خطأ: لا يوجد ارتفاع كافٍ في الخامة {raw_material.get('unit_code', 'غير محدد')} - مطلوب: {material_consumption} مم، متوفر: {material_height} مم")
                     else:
                         print(f"❌ خطأ: لم يتم العثور على الخامة المحددة - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')} كود: {material_details.get('unit_code', 'غير محدد')}")
             
