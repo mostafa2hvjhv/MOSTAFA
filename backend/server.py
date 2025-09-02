@@ -916,31 +916,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             # Handle manufactured products - deduct from material height
             material_deducted = False  # Flag to prevent double deduction
             
-            if item.material_used and not material_deducted:
-                # Find the raw material by unit_code
-                raw_material = await db.raw_materials.find_one({"unit_code": item.material_used})
-                
-                if raw_material:
-                    # Calculate required material consumption (seal height + 2mm waste) * quantity
-                    material_consumption = (item.height + 2) * item.quantity
-                    
-                    # Check if there's enough height available
-                    current_height = raw_material.get("height", 0)
-                    if current_height >= material_consumption:
-                        # Deduct from material height
-                        await db.raw_materials.update_one(
-                            {"unit_code": item.material_used},
-                            {"$inc": {"height": -material_consumption}}
-                        )
-                        
-                        material_deducted = True
-                        print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {item.material_used}")
-                    else:
-                        print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة {item.material_used} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
-                else:
-                    print(f"تحذير: الخامة {item.material_used} غير موجودة في المواد الخام")
-            
-            # Also handle materials selected from compatibility check (only if not already deducted)
+            # Prioritize material_details (complete information) over material_used (unit_code only)
             if item.material_details and not material_deducted:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
@@ -979,11 +955,36 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                             )
                             
                             material_deducted = True
-                            print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {raw_material.get('unit_code', 'غير محدد')} - الأبعاد: {raw_material.get('inner_diameter')}×{raw_material.get('outer_diameter')} - المتبقي: {current_height - material_consumption} مم")
+                            print(f"✅ تم خصم {material_consumption} مم من ارتفاع الخامة {raw_material.get('unit_code', 'غير محدد')} - الأبعاد: {raw_material.get('inner_diameter')}×{raw_material.get('outer_diameter')} - المتبقي: {current_height - material_consumption} مم")
                         else:
-                            print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة المختارة - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
+                            print(f"⚠️ تحذير: لا يوجد ارتفاع كافٍ في الخامة المختارة - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
                     else:
-                        print(f"تحذير: لم يتم العثور على الخامة في المواد الخام - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')} كود: {material_details.get('unit_code', 'غير محدد')}")
+                        print(f"❌ تحذير: لم يتم العثور على الخامة في المواد الخام - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')} كود: {material_details.get('unit_code', 'غير محدد')}")
+            
+            # Fallback to material_used only if material_details didn't work and no deduction happened
+            if item.material_used and not material_deducted:
+                # Find the raw material by unit_code only (less accurate fallback)
+                raw_material = await db.raw_materials.find_one({"unit_code": item.material_used})
+                
+                if raw_material:
+                    # Calculate required material consumption (seal height + 2mm waste) * quantity
+                    material_consumption = (item.height + 2) * item.quantity
+                    
+                    # Check if there's enough height available
+                    current_height = raw_material.get("height", 0)
+                    if current_height >= material_consumption:
+                        # Deduct from material height
+                        await db.raw_materials.update_one(
+                            {"unit_code": item.material_used},
+                            {"$inc": {"height": -material_consumption}}
+                        )
+                        
+                        material_deducted = True
+                        print(f"⚠️ تم خصم {material_consumption} مم من ارتفاع الخامة {item.material_used} (بحث بكود الوحدة فقط - أقل دقة)")
+                    else:
+                        print(f"❌ تحذير: لا يوجد ارتفاع كافٍ في الخامة {item.material_used} - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
+                else:
+                    print(f"❌ تحذير: الخامة {item.material_used} غير موجودة في المواد الخام")
     
     await db.invoices.insert_one(invoice_obj.dict())
     
