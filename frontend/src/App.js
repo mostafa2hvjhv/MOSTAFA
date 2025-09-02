@@ -2866,49 +2866,64 @@ const Sales = () => {
                       }
                       
                       if (usableSeals < requiredQuantity) {
-                        const confirmMessage = `⚠️ تنبيه: هذه الخامة تكفي لإنتاج ${usableSeals} سيل فقط من أصل ${requiredQuantity} سيل مطلوب.
+                        const confirmMessage = `📋 معلومات الخامة المختارة:
 
-تفاصيل الخامة:
-- الكود: ${material.unit_code}
-- الارتفاع المتاح: ${materialHeight} مم  
-- سيتم استهلاك: ${usableSeals * consumptionPerSeal} مم
-- سيتبقى: ${materialHeight - (usableSeals * consumptionPerSeal)} مم
+الخامة: ${material.unit_code} - ${material.material_type} ${material.inner_diameter}×${material.outer_diameter}
+الارتفاع المتاح: ${materialHeight} مم
+يمكن إنتاج: ${usableSeals} سيل من أصل ${requiredQuantity} سيل
 
-هل تريد المتابعة؟ ستحتاج لاختيار خامة أخرى للـ ${requiredQuantity - usableSeals} سيل المتبقية.`;
+⚠️ هذه الخامة ستغطي ${usableSeals} سيل فقط
+ستحتاج لاختيار خامة أخرى لإنتاج الـ ${requiredQuantity - usableSeals} سيل المتبقية
+
+هل تريد استخدام هذه الخامة لإنتاج ${usableSeals} سيل؟`;
                         
                         if (!confirm(confirmMessage)) {
                           return;
                         }
                         
-                        // تحديث الكمية للكمية المتاحة من هذه الخامة
-                        setCurrentItem({
-                          ...currentItem,
-                          quantity: usableSeals
-                        });
+                        // لا نغير العدد الأصلي، بل نحفظ معلومات التوزيع
+                        alert(`✅ تم اختيار الخامة ${material.unit_code} لإنتاج ${usableSeals} سيل
+
+📝 ملاحظة: 
+- العدد الإجمالي المطلوب: ${requiredQuantity} سيل
+- هذه الخامة ستغطي: ${usableSeals} سيل  
+- المتبقي للإنتاج: ${requiredQuantity - usableSeals} سيل
+
+بعد إضافة هذا المنتج، ستحتاج لإنشاء منتج آخر بنفس المواصفات لإنتاج الـ ${requiredQuantity - usableSeals} سيل المتبقية من خامة أخرى.`);
+                      } else {
+                        alert(`✅ الخامة ${material.unit_code} تكفي لإنتاج جميع الـ ${requiredQuantity} سيل المطلوبة
+
+تفاصيل الاستهلاك:
+- الارتفاع المتاح: ${materialHeight} مم
+- سيتم استهلاك: ${requiredQuantity * consumptionPerSeal} مم
+- سيتبقى: ${materialHeight - (requiredQuantity * consumptionPerSeal)} مم`);
                       }
                       
                       setSelectedMaterial(material);
                       
-                      // Try to get automatic pricing
+                      // Try to get automatic pricing (keeping original quantity)
                       const height = parseFloat(currentItem.height);
                       if (height) {
                         const pricing = await calculateAutomaticPrice(material, height, clientType);
                         if (pricing) {
                           setCurrentItem({
                             ...currentItem,
-                            unit_price: pricing.total_price.toFixed(2),
-                            quantity: usableSeals // استخدم الكمية المحدثة
+                            unit_price: pricing.total_price.toFixed(2)
+                            // لا نغير الكمية - نحتفظ بالعدد الأصلي
                           });
                           
-                          // Show pricing details with seal count info
-                          alert(`تم حساب السعر تلقائياً:
+                          // Show pricing details
+                          const actualSealsFromThisMaterial = Math.min(usableSeals, requiredQuantity);
+                          alert(`💰 تم حساب السعر تلقائياً:
+
 سعر الملي: ${pricing.price_per_mm} ج.م
-تكلفة الملليمترات: ${pricing.mm_cost.toFixed(2)} ج.م
+تكلفة الملليمترات: ${pricing.mm_cost.toFixed(2)} ج.م  
 تكلفة التصنيع (عميل ${pricing.client_type}): ${pricing.manufacturing_cost.toFixed(2)} ج.م
 السعر الإجمالي: ${pricing.total_price.toFixed(2)} ج.م
 
-ملاحظة: تم تحديد الكمية إلى ${usableSeals} سيل (المتاح من هذه الخامة)
-                          
+📌 هذا السعر للسيل الواحد
+📌 الخامة ${material.unit_code} ستغطي ${actualSealsFromThisMaterial} سيل من أصل ${requiredQuantity}
+
 يمكنك تعديل السعر إذا لزم الأمر.`);
                         }
                       }
