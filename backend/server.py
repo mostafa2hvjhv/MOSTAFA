@@ -944,22 +944,25 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             if item.material_details and not material_deducted:
                 material_details = item.material_details
                 if not material_details.get('is_finished_product', False):
-                    # This is a raw material, find by unit_code for exact match
+                    # This is a raw material, find by inner_diameter + outer_diameter + unit_code for exact match
                     raw_material = None
                     
-                    # First try to find by unit_code if available
-                    if material_details.get("unit_code"):
+                    # Search by inner_diameter + outer_diameter + unit_code together for highest accuracy
+                    if (material_details.get("inner_diameter") and 
+                        material_details.get("outer_diameter") and 
+                        material_details.get("unit_code")):
                         raw_material = await db.raw_materials.find_one({
-                            "unit": material_details.get("unit")
-                        })
-                    
-                    # If not found by unit_code, try by specifications
-                    if not raw_material:
-                        raw_material = await db.raw_materials.find_one({
-                            "material_type": material_details.get("material_type"),
                             "inner_diameter": material_details.get("inner_diameter"),
                             "outer_diameter": material_details.get("outer_diameter"),
                             "unit_code": material_details.get("unit_code")
+                        })
+                    
+                    # If not found by dimensions + unit_code, try by specifications only
+                    if not raw_material and material_details.get("material_type"):
+                        raw_material = await db.raw_materials.find_one({
+                            "material_type": material_details.get("material_type"),
+                            "inner_diameter": material_details.get("inner_diameter"),
+                            "outer_diameter": material_details.get("outer_diameter")
                         })
                     
                     if raw_material:
@@ -976,11 +979,11 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                             )
                             
                             material_deducted = True
-                            print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {raw_material.get('unit_code', 'غير محدد')} - المتبقي: {current_height - material_consumption} مم")
+                            print(f"تم خصم {material_consumption} مم من ارتفاع الخامة {raw_material.get('unit_code', 'غير محدد')} - الأبعاد: {raw_material.get('inner_diameter')}×{raw_material.get('outer_diameter')} - المتبقي: {current_height - material_consumption} مم")
                         else:
                             print(f"تحذير: لا يوجد ارتفاع كافٍ في الخامة المختارة - مطلوب: {material_consumption} مم، متوفر: {current_height} مم")
                     else:
-                        print(f"تحذير: لم يتم العثور على الخامة في المواد الخام - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')}")
+                        print(f"تحذير: لم يتم العثور على الخامة في المواد الخام - {material_details.get('material_type')} {material_details.get('inner_diameter')}×{material_details.get('outer_diameter')} كود: {material_details.get('unit_code', 'غير محدد')}")
     
     await db.invoices.insert_one(invoice_obj.dict())
     
