@@ -1802,6 +1802,7 @@ const Sales = () => {
   const [discountType, setDiscountType] = useState('amount'); // نوع الخصم: amount أو percentage
   const [compatibilityResults, setCompatibilityResults] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [selectedMaterials, setSelectedMaterials] = useState([]); // خامات متعددة مختارة
   const [measurementUnit, setMeasurementUnit] = useState('مم'); // بوصة أو مم
   const [wallHeight, setWallHeight] = useState(''); // ارتفاع الحيطة للـ W types
   const [clientType, setClientType] = useState(1); // نوع العميل للتسعير (1, 2, 3)
