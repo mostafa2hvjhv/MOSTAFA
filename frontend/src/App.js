@@ -2865,124 +2865,133 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
           
           {compatibilityResults.compatible_materials.length > 0 && (
             <div className="mb-4">
-              <h4 className="font-medium mb-2">الخامات المتوافقة:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {compatibilityResults.compatible_materials.map((material, index) => (
-                  <div
-                    key={index}
-                    className={`p-3 border rounded cursor-pointer transition-colors ${
-                      selectedMaterial?.unit_code === material.unit_code && 
-                      selectedMaterial?.inner_diameter === material.inner_diameter &&
-                      selectedMaterial?.outer_diameter === material.outer_diameter &&
-                      selectedMaterial?.height === material.height
-                        ? 'border-blue-500 bg-blue-50' 
-                        : material.low_stock 
-                          ? 'border-red-300 bg-red-50 hover:bg-red-100' 
-                          : 'border-green-300 bg-green-50 hover:bg-green-100'
-                    }`}
-                    onClick={async () => {
-                      // حساب كم سيل يمكن إنتاجه من هذه الخامة
-                      const sealHeight = parseFloat(currentItem.height);
-                      const requiredQuantity = parseInt(currentItem.quantity);
-                      const materialHeight = material.height;
-                      const consumptionPerSeal = sealHeight + 2; // ارتفاع السيل + 2 مم هدر
-                      const availableSeals = Math.floor(materialHeight / consumptionPerSeal);
-                      
-                      // تحقق من أن الارتفاع المتبقي لن يكون أقل من 15 مم
-                      const remainingHeight = materialHeight - (availableSeals * consumptionPerSeal);
-                      let usableSeals = availableSeals;
-                      
-                      // إذا كان الارتفاع المتبقي أقل من 15 مم ولكن ليس صفر، قلل عدد السيلات
-                      if (remainingHeight > 0 && remainingHeight < 15) {
-                        usableSeals = availableSeals - 1;
-                      }
-                      
-                      if (usableSeals <= 0) {
-                        alert(`⚠️ هذه الخامة لا تكفي لإنتاج أي سيل!
-الارتفاع المتاح: ${materialHeight} مم
-المطلوب لكل سيل: ${consumptionPerSeal} مم
-الرجاء اختيار خامة بارتفاع أكبر.`);
+              <h4 className="font-medium mb-2">📦 نتائج فحص التوافق</h4>
+              <p className="text-sm text-gray-600 mb-2">اختر الخامات وحدد عدد السيلات من كل خامة (المطلوب: {currentItem.quantity} سيل)</p>
+              
+              {/* عرض الخامات المختارة */}
+              {selectedMaterials.length > 0 && (
+                <div className="mb-4 p-3 bg-blue-50 rounded border">
+                  <h5 className="font-medium text-blue-800 mb-2">الخامات المختارة:</h5>
+                  <div className="space-y-2">
+                    {selectedMaterials.map((selected, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                        <span className="text-sm">
+                          {selected.material.unit_code} - {selected.material.material_type} 
+                          {selected.material.inner_diameter}×{selected.material.outer_diameter}×{selected.material.height}
+                        </span>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <input
+                            type="number"
+                            min="1"
+                            max={Math.floor(selected.material.height / (parseFloat(currentItem.height) + 2))}
+                            value={selected.seals}
+                            onChange={(e) => {
+                              const newSelected = [...selectedMaterials];
+                              newSelected[index].seals = parseInt(e.target.value) || 0;
+                              setSelectedMaterials(newSelected);
+                            }}
+                            className="w-16 p-1 border rounded text-center"
+                          />
+                          <span className="text-xs">سيل</span>
+                          <button
+                            onClick={() => {
+                              const newSelected = selectedMaterials.filter((_, i) => i !== index);
+                              setSelectedMaterials(newSelected);
+                            }}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-sm">
+                    <span className="font-medium">
+                      المجموع: {selectedMaterials.reduce((sum, sel) => sum + sel.seals, 0)} / {currentItem.quantity} سيل
+                    </span>
+                    {selectedMaterials.reduce((sum, sel) => sum + sel.seals, 0) === parseInt(currentItem.quantity) && (
+                      <span className="text-green-600 ml-2">✓ مكتمل</span>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {compatibilityResults.compatible_materials.map((material, index) => {
+                  const isSelected = selectedMaterials.some(sel => sel.material.unit_code === material.unit_code);
+                  const maxSeals = Math.floor(material.height / (parseFloat(currentItem.height) + 2));
+                  const remainingSeals = parseInt(currentItem.quantity) - selectedMaterials.reduce((sum, sel) => sum + sel.seals, 0);
+                  
+                  return (
+                    <div key={index} 
+                         className={`p-3 rounded border cursor-pointer transition-colors ${
+                           isSelected ? 'bg-blue-100 border-blue-300' : 'bg-gray-50 hover:bg-gray-100'
+                         }`}>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-blue-600">
+                            {material.unit_code} - {material.material_type}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            الأبعاد: {material.inner_diameter} × {material.outer_diameter} × {material.height} مم
+                          </p>
+                          <p className="text-xs text-green-600">
+                            يمكن إنتاج: {maxSeals} سيل كحد أقصى
+                          </p>
+                          {material.score && (
+                            <p className="text-xs text-gray-500">نسبة التوافق: {material.score}%</p>
+                          )}
+                        </div>
+                        {!isSelected && remainingSeals > 0 && (
+                          <button
+                            onClick={() => {
+                              const newSelection = {
+                                material: material,
+                                seals: Math.min(maxSeals, remainingSeals)
+                              };
+                              setSelectedMaterials([...selectedMaterials, newSelection]);
+                            }}
+                            className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                          >
+                            اختيار
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* زر تأكيد الاختيار */}
+              {selectedMaterials.length > 0 && (
+                <div className="mt-4 flex space-x-2 space-x-reverse">
+                  <button
+                    onClick={() => {
+                      const totalSeals = selectedMaterials.reduce((sum, sel) => sum + sel.seals, 0);
+                      if (totalSeals !== parseInt(currentItem.quantity)) {
+                        alert(`⚠️ مجموع السيلات المختارة (${totalSeals}) لا يساوي العدد المطلوب (${currentItem.quantity})`);
                         return;
                       }
                       
-                      if (usableSeals < requiredQuantity) {
-                        const confirmMessage = `📋 معلومات الخامة المختارة:
-
-الخامة: ${material.unit_code} - ${material.material_type} ${material.inner_diameter}×${material.outer_diameter}
-الارتفاع المتاح: ${materialHeight} مم
-يمكن إنتاج: ${usableSeals} سيل من أصل ${requiredQuantity} سيل
-
-⚠️ هذه الخامة ستغطي ${usableSeals} سيل فقط
-ستحتاج لاختيار خامة أخرى لإنتاج الـ ${requiredQuantity - usableSeals} سيل المتبقية
-
-هل تريد استخدام هذه الخامة لإنتاج ${usableSeals} سيل؟`;
-                        
-                        if (!confirm(confirmMessage)) {
-                          return;
-                        }
-                        
-                        // لا نغير العدد الأصلي، بل نحفظ معلومات التوزيع
-                        alert(`✅ تم اختيار الخامة ${material.unit_code} لإنتاج ${usableSeals} سيل
-
-📝 ملاحظة: 
-- العدد الإجمالي المطلوب: ${requiredQuantity} سيل
-- هذه الخامة ستغطي: ${usableSeals} سيل  
-- المتبقي للإنتاج: ${requiredQuantity - usableSeals} سيل
-
-بعد إضافة هذا المنتج، ستحتاج لإنشاء منتج آخر بنفس المواصفات لإنتاج الـ ${requiredQuantity - usableSeals} سيل المتبقية من خامة أخرى.`);
-                      } else {
-                        alert(`✅ الخامة ${material.unit_code} تكفي لإنتاج جميع الـ ${requiredQuantity} سيل المطلوبة
-
-تفاصيل الاستهلاك:
-- الارتفاع المتاح: ${materialHeight} مم
-- سيتم استهلاك: ${requiredQuantity * consumptionPerSeal} مم
-- سيتبقى: ${materialHeight - (requiredQuantity * consumptionPerSeal)} مم`);
-                      }
-                      
-                      setSelectedMaterial(material);
-                      
-                      // Try to get automatic pricing (keeping original quantity)
-                      const height = parseFloat(currentItem.height);
-                      if (height) {
-                        const pricing = await calculateAutomaticPrice(material, height, clientType);
-                        if (pricing) {
-                          setCurrentItem({
-                            ...currentItem,
-                            unit_price: pricing.total_price.toFixed(2)
-                            // لا نغير الكمية - نحتفظ بالعدد الأصلي
-                          });
-                          
-                          // Show pricing details
-                          const actualSealsFromThisMaterial = Math.min(usableSeals, requiredQuantity);
-                          alert(`💰 تم حساب السعر تلقائياً:
-
-سعر الملي: ${pricing.price_per_mm} ج.م
-تكلفة الملليمترات: ${pricing.mm_cost.toFixed(2)} ج.م  
-تكلفة التصنيع (عميل ${pricing.client_type}): ${pricing.manufacturing_cost.toFixed(2)} ج.م
-السعر الإجمالي: ${pricing.total_price.toFixed(2)} ج.م
-
-📌 هذا السعر للسيل الواحد
-📌 الخامة ${material.unit_code} ستغطي ${actualSealsFromThisMaterial} سيل من أصل ${requiredQuantity}
-
-يمكنك تعديل السعر إذا لزم الأمر.`);
-                        }
-                      }
+                      // تأكيد الاختيار وحساب السعر
+                      confirmMultiMaterialSelection();
                     }}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    disabled={selectedMaterials.reduce((sum, sel) => sum + sel.seals, 0) !== parseInt(currentItem.quantity)}
                   >
-                    <p><strong>النوع:</strong> {material.material_type}</p>
-                    <p><strong>الكود:</strong> {material.unit_code}</p>
-                    <p><strong>المقاس:</strong> {material.inner_diameter} × {material.outer_diameter} × {material.height}</p>
-                    <p><strong>عدد القطع:</strong> {material.pieces_count}</p>
-                    {material.warning && <p className="text-red-600 text-sm">{material.warning}</p>}
-                    {selectedMaterial?.unit_code === material.unit_code && 
-                     selectedMaterial?.inner_diameter === material.inner_diameter &&
-                     selectedMaterial?.outer_diameter === material.outer_diameter &&
-                     selectedMaterial?.height === material.height && (
-                      <p className="text-blue-600 font-semibold text-sm mt-2">✓ محدد للاستخدام</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+                    تأكيد الاختيار
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedMaterials([]);
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  >
+                    إلغاء الاختيار
+                  </button>
+                </div>
+              )}
             </div>
           )}
           
