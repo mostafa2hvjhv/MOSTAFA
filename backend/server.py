@@ -1115,7 +1115,11 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                 material_info = ""
                 unit_code_display = ""
                 
+                print(f"🔍 Debug - Item data: {item}")
+                print(f"🔍 Debug - Selected materials: {item.get('selected_materials')}")
+                
                 if item.get("selected_materials"):
+                    print(f"✅ Found selected_materials: {len(item.get('selected_materials'))} materials")
                     # Multi-material case
                     material_parts = []
                     for mat in item.get("selected_materials", []):
@@ -1127,6 +1131,7 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
                     
                     unit_code_display = " / ".join(material_parts)
                     material_info = f"مواد متعددة: {len(item.get('selected_materials', []))} خامة"
+                    print(f"✅ Multi-material unit_code_display: {unit_code_display}")
                     
                 elif item.get("material_details"):
                     # Single material case
