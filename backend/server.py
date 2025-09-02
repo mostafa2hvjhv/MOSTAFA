@@ -1111,17 +1111,40 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
             if item.get("product_type") == "manufactured":
                 seal_consumption = (item.get("height", 0) + 2) * item.get("quantity", 0)
                 
-                # Get material info from material_details or material_used
+                # Build material info string based on selected materials
                 material_info = ""
-                if item.get("material_details"):
+                unit_code_display = ""
+                
+                if item.get("selected_materials"):
+                    # Multi-material case
+                    material_parts = []
+                    for mat in item.get("selected_materials", []):
+                        inner_dia = mat.get("inner_diameter", 0)
+                        outer_dia = mat.get("outer_diameter", 0) 
+                        unit_code = mat.get("unit_code", "غير محدد")
+                        seals_count = mat.get("seals_count", 0)
+                        material_parts.append(f"{inner_dia}×{outer_dia} {unit_code} ({seals_count})")
+                    
+                    unit_code_display = " / ".join(material_parts)
+                    material_info = f"مواد متعددة: {len(item.get('selected_materials', []))} خامة"
+                    
+                elif item.get("material_details"):
+                    # Single material case
                     mat_details = item.get("material_details")
+                    inner_dia = mat_details.get("inner_diameter", 0)
+                    outer_dia = mat_details.get("outer_diameter", 0)
                     unit_code = mat_details.get("unit_code", "غير محدد")
+                    unit_code_display = f"{inner_dia}×{outer_dia} {unit_code} ({item.get('quantity', 0)})"
                     material_info = f"{unit_code} ({item.get('quantity', 0)} سيل)"
+                    
                 elif item.get("material_used"):
+                    # Fallback case
+                    unit_code_display = f"{item.get('material_used')} ({item.get('quantity', 0)})"
                     material_info = f"{item.get('material_used')} ({item.get('quantity', 0)} سيل)"
                 
                 enhanced_item["material_consumption"] = seal_consumption
                 enhanced_item["material_info"] = material_info
+                enhanced_item["unit_code_display"] = unit_code_display  # This will be used in work order
                 enhanced_item["work_order_display"] = f"{item.get('seal_type', '')} {item.get('material_type', '')} {item.get('inner_diameter', 0)}×{item.get('outer_diameter', 0)}×{item.get('height', 0)} - {material_info} - استهلاك: {seal_consumption} مم"
             
             enhanced_items.append(enhanced_item)
