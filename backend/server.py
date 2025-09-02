@@ -761,8 +761,8 @@ async def check_compatibility(check: CompatibilityCheck):
         
         inner_compatible = material["inner_diameter"] <= (check.inner_diameter + inner_tolerance)
         outer_compatible = material["outer_diameter"] >= (check.outer_diameter - outer_tolerance)
-        # Material must have enough height for at least 1 seal + waste
-        height_compatible = material["height"] >= required_height
+        # Material must have enough height for at least 1 seal + waste AND remain above 15mm
+        height_compatible = material["height"] >= required_height and (material["height"] - required_height >= 15 or material["height"] - required_height == 0)
         
         if inner_compatible and outer_compatible and height_compatible:
             
