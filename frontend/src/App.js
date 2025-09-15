@@ -5994,7 +5994,11 @@ const WorkOrders = () => {
 
   const fetchInvoices = async () => {
     try {
-      const response = await axios.get(`${API}/invoices`);
+      // For now, use Master Seal ID directly until full multi-company is implemented
+      const masterSealId = "fdc83710-034a-410e-b5b7-ee231f36fd31";
+      const response = await axios.get(`${API}/invoices`, {
+        params: { company_id: masterSealId }
+      });
       setInvoices(response.data);
     } catch (error) {
       console.error('Error fetching invoices:', error);
