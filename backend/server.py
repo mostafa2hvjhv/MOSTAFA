@@ -2475,6 +2475,7 @@ async def cancel_invoice(invoice_id: str, username: str = None):
         if invoice.get("payment_method") != "آجل":
             payment_method_mapping = {
                 "نقدي": "cash",
+                "آجل": "deferred",
                 "فودافون كاش محمد الصاوي": "vodafone_elsawy",
                 "فودافون كاش وائل محمد": "vodafone_wael", 
                 "انستاباي": "instapay",
