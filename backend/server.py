@@ -3101,12 +3101,37 @@ async def export_all_data():
             "data": {}
         }
         
-        # Export all data types
-        export_data["data"]["raw_materials"] = await db.raw_materials.find().to_list(length=None)
-        export_data["data"]["invoices"] = await db.invoices.find().to_list(length=None)
-        export_data["data"]["treasury_transactions"] = await db.treasury_transactions.find().to_list(length=None)
-        export_data["data"]["work_orders"] = await db.work_orders.find().to_list(length=None)
-        export_data["data"]["pricing"] = await db.pricing.find().to_list(length=None)
+        # Helper function to clean MongoDB ObjectIds
+        def clean_mongo_data(data_list):
+            cleaned = []
+            for item in data_list:
+                if "_id" in item:
+                    del item["_id"]
+                cleaned.append(item)
+            return cleaned
+        
+        # Export all data types with ObjectId cleanup
+        raw_materials = await db.raw_materials.find().to_list(length=None)
+        export_data["data"]["raw_materials"] = clean_mongo_data(raw_materials)
+        
+        invoices = await db.invoices.find().to_list(length=None)
+        export_data["data"]["invoices"] = clean_mongo_data(invoices)
+        
+        treasury_transactions = await db.treasury_transactions.find().to_list(length=None)
+        export_data["data"]["treasury_transactions"] = clean_mongo_data(treasury_transactions)
+        
+        work_orders = await db.work_orders.find().to_list(length=None)
+        export_data["data"]["work_orders"] = clean_mongo_data(work_orders)
+        
+        pricing = await db.pricing.find().to_list(length=None)
+        export_data["data"]["pricing"] = clean_mongo_data(pricing)
+        
+        # Add other collections
+        customers = await db.customers.find().to_list(length=None)
+        export_data["data"]["customers"] = clean_mongo_data(customers)
+        
+        expenses = await db.expenses.find().to_list(length=None)
+        export_data["data"]["expenses"] = clean_mongo_data(expenses)
         
         return export_data
         
