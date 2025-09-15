@@ -4201,7 +4201,7 @@ const Deferred = () => {
           
           <div className="bg-yellow-50 p-4 rounded">
             <h4 className="font-semibold text-yellow-800">عدد الفواتير المعلقة</h4>
-            <p className="text-2xl font-bold text-yellow-600">{unpaidInvoices.length}</p>
+            <p className="text-2xl font-bold text-yellow-600">{filteredInvoices.length}</p>
           </div>
           
           <div className="bg-blue-50 p-4 rounded">
