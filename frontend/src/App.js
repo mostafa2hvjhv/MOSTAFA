@@ -159,7 +159,7 @@ const AuthProvider = ({ children }) => {
 };
 
 // Login Component
-const Login = () => {
+const Login = ({ selectedCompany }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
