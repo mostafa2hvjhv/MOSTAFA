@@ -11,6 +11,91 @@ const CompanyContext = createContext({
   setUserCompanies: () => {}
 });
 
+// Company Selection Component
+const CompanySelection = ({ onCompanySelect, userCompanies }) => {
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+
+  const handleCompanySelect = () => {
+    if (!selectedCompanyId) {
+      alert('يرجى اختيار شركة للمتابعة');
+      return;
+    }
+    
+    const selectedCompany = userCompanies.find(c => c.id === selectedCompanyId);
+    onCompanySelect(selectedCompany);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" dir="rtl">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">اختيار الشركة</h1>
+          <p className="text-gray-600">اختر الشركة التي تريد الدخول إليها</p>
+        </div>
+
+        <div className="space-y-4">
+          {userCompanies.map((company) => (
+            <div
+              key={company.id}
+              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                selectedCompanyId === company.id
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => setSelectedCompanyId(company.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: company.primary_color }}>
+                    {company.display_name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    الصلاحية: {company.access_level === 'admin' ? 'مدير' : 'مستخدم'}
+                  </p>
+                </div>
+                <div 
+                  className="w-6 h-6 rounded-full border-2"
+                  style={{ 
+                    borderColor: company.primary_color,
+                    backgroundColor: selectedCompanyId === company.id ? company.primary_color : 'transparent'
+                  }}
+                >
+                  {selectedCompanyId === company.id && (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={handleCompanySelect}
+          disabled={!selectedCompanyId}
+          className={`w-full mt-6 py-3 px-4 rounded-lg font-medium transition-colors ${
+            selectedCompanyId
+              ? 'bg-blue-500 hover:bg-blue-600 text-white'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          متابعة إلى تسجيل الدخول
+        </button>
+
+        <div className="mt-6 text-center">
+          <button 
+            onClick={() => window.location.reload()}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            تحديث قائمة الشركات
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
