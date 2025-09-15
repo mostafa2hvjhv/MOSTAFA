@@ -343,9 +343,14 @@ const Navigation = ({ currentPage, onPageChange, selectedCompany, onLogout }) =>
           <div>
             <p className="text-sm font-medium">أهلاً وسهلاً</p>
             <p className="text-lg font-bold text-blue-200">{user?.username}</p>
+            {selectedCompany && (
+              <p className="text-xs text-blue-300" style={{ color: selectedCompany.primary_color }}>
+                {selectedCompany.display_name}
+              </p>
+            )}
           </div>
           <button
-            onClick={logout}
+            onClick={onLogout}
             className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             خروج
