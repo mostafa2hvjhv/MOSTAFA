@@ -3192,6 +3192,158 @@ logger = logging.getLogger(__name__)
 async def shutdown_db_client():
     client.close()
 
+# Company Management APIs
+@api_router.get("/companies")
+async def get_companies():
+    """Get all active companies"""
+    try:
+        companies = await db.companies.find({"is_active": True}).to_list(length=None)
+        return companies
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استرجاع الشركات: {str(e)}")
+
+@api_router.post("/companies")
+async def create_company(company: Company):
+    """Create a new company"""
+    try:
+        # Check if company slug already exists
+        existing = await db.companies.find_one({"slug": company.slug})
+        if existing:
+            raise HTTPException(status_code=400, detail="اسم الشركة المختصر موجود بالفعل")
+        
+        company_dict = company.dict()
+        await db.companies.insert_one(company_dict)
+        return {"message": "تم إنشاء الشركة بنجاح", "company": company_dict}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في إنشاء الشركة: {str(e)}")
+
+@api_router.get("/companies/{company_id}")
+async def get_company(company_id: str):
+    """Get company by ID"""
+    try:
+        company = await db.companies.find_one({"id": company_id})
+        if not company:
+            raise HTTPException(status_code=404, detail="الشركة غير موجودة")
+        return company
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استرجاع الشركة: {str(e)}")
+
+# User-Company Access APIs
+@api_router.get("/user-companies/{username}")
+async def get_user_companies(username: str):
+    """Get companies accessible by user"""
+    try:
+        user_accesses = await db.user_company_access.find({"username": username, "is_active": True}).to_list(length=None)
+        company_ids = [access["company_id"] for access in user_accesses]
+        
+        companies = []
+        if company_ids:
+            companies = await db.companies.find({"id": {"$in": company_ids}, "is_active": True}).to_list(length=None)
+        
+        # Add access level to each company
+        for company in companies:
+            access = next((acc for acc in user_accesses if acc["company_id"] == company["id"]), None)
+            company["access_level"] = access["access_level"] if access else "user"
+        
+        return companies
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استرجاع شركات المستخدم: {str(e)}")
+
+@api_router.post("/user-companies")
+async def grant_user_company_access(access: UserCompanyAccess):
+    """Grant user access to a company"""
+    try:
+        # Check if access already exists
+        existing = await db.user_company_access.find_one({
+            "username": access.username,
+            "company_id": access.company_id
+        })
+        
+        if existing:
+            # Update existing access
+            await db.user_company_access.update_one(
+                {"id": existing["id"]},
+                {"$set": {
+                    "access_level": access.access_level,
+                    "is_active": access.is_active,
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+            return {"message": "تم تحديث صلاحيات المستخدم"}
+        else:
+            # Create new access
+            access_dict = access.dict()
+            await db.user_company_access.insert_one(access_dict)
+            return {"message": "تم منح المستخدم صلاحية الوصول للشركة"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في منح صلاحية الوصول: {str(e)}")
+
+# Initialize companies data
+@api_router.post("/setup-companies")
+async def setup_initial_companies():
+    """Setup initial companies - Master Seal and Faster Seal"""
+    try:
+        # Check if companies already exist
+        existing_companies = await db.companies.find().to_list(length=None)
+        if existing_companies:
+            return {"message": "الشركات موجودة بالفعل", "companies": existing_companies}
+        
+        # Create Master Seal
+        master_seal = Company(
+            name="Master Seal",
+            display_name="Master Seal",
+            slug="master-seal",
+            primary_color="#3B82F6",  # Blue
+            secondary_color="#10B981",  # Green
+            is_active=True
+        )
+        
+        # Create Faster Seal
+        faster_seal = Company(
+            name="Faster Seal", 
+            display_name="Faster Seal",
+            slug="faster-seal",
+            primary_color="#EF4444",  # Red
+            secondary_color="#F97316",  # Orange
+            is_active=True
+        )
+        
+        # Insert companies
+        await db.companies.insert_one(master_seal.dict())
+        await db.companies.insert_one(faster_seal.dict())
+        
+        # Grant Elsawy admin access to both companies
+        elsawy_master_access = UserCompanyAccess(
+            username="Elsawy",
+            company_id=master_seal.id,
+            access_level="admin",
+            is_active=True
+        )
+        
+        elsawy_faster_access = UserCompanyAccess(
+            username="Elsawy",
+            company_id=faster_seal.id,
+            access_level="admin",
+            is_active=True
+        )
+        
+        await db.user_company_access.insert_one(elsawy_master_access.dict())
+        await db.user_company_access.insert_one(elsawy_faster_access.dict())
+        
+        return {
+            "message": "تم إعداد الشركات بنجاح",
+            "companies": [master_seal.dict(), faster_seal.dict()],
+            "master_seal_id": master_seal.id,
+            "faster_seal_id": faster_seal.id
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في إعداد الشركات: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
