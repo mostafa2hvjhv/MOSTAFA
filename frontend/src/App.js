@@ -8065,6 +8065,7 @@ const App = () => {
       case 'invoices': return <Invoices />;
       case 'work-orders': return <WorkOrders />;
       case 'pricing': return <Pricing />;
+      case 'data-management': return <DataManagement />;
       case 'users': return <Users />;
       default: return <Sales />; // Default to sales instead of dashboard
     }
