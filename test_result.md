@@ -872,6 +872,18 @@ test_plan:
     needs_retesting: false
     status_history:
       - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار واجهة المستخدم لتحويل طريقة الدفع وإلغاء الفواتير بنجاح! جميع الأزرار والنوافذ المنبثقة تعمل بشكل صحيح مع APIs الخلفية."
+
+  - task: "Multi-Company System Testing - اختبار نظام الشركات المتعددة"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
         agent: "main"
         comment: "✅ تم تنفيذ واجهة المستخدم بنجاح الكامل! تم إضافة: 1) أزرار 'تحويل دفع' و'إلغاء فاتورة' في جدول الفواتير، 2) نافذة منبثقة لتحويل طريقة الدفع مع عرض تفاصيل الفاتورة وقائمة طرق الدفع، 3) نافذة منبثقة لإلغاء الفاتورة مع تحذيرات شاملة وتأكيد المخاطر، 4) تكامل كامل مع APIs الخلفية. تم التحقق عبر الصور: النوافذ تفتح وتغلق بسلاسة، الأزرار ملونة بشكل مناسب (برتقالي وأحمر)، النصوص العربية تظهر بشكل صحيح، واختبار backend أكد عمل APIs بنسبة 100%."
 
