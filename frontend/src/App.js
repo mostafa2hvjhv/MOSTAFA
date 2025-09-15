@@ -4139,7 +4139,7 @@ const Deferred = () => {
               </tr>
             </thead>
             <tbody>
-              {unpaidInvoices.map((invoice) => (
+              {filteredInvoices.map((invoice) => (
                 <tr key={invoice.id}>
                   <td className="border border-gray-300 p-2">{invoice.invoice_number}</td>
                   <td className="border border-gray-300 p-2">{invoice.customer_name}</td>
