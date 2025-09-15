@@ -4876,6 +4876,67 @@ const Invoices = () => {
     }
   };
 
+  // Payment method conversion functions
+  const openPaymentMethodModal = (invoice) => {
+    setSelectedInvoiceForPayment(invoice);
+    setNewPaymentMethod(invoice.payment_method);
+    setShowPaymentMethodModal(true);
+  };
+
+  const closePaymentMethodModal = () => {
+    setShowPaymentMethodModal(false);
+    setSelectedInvoiceForPayment(null);
+    setNewPaymentMethod('نقدي');
+  };
+
+  const changePaymentMethod = async () => {
+    if (!selectedInvoiceForPayment || newPaymentMethod === selectedInvoiceForPayment.payment_method) {
+      alert('لم يتم تغيير طريقة الدفع');
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${API}/invoices/${selectedInvoiceForPayment.id}/change-payment-method?new_payment_method=${encodeURIComponent(newPaymentMethod)}&username=main`
+      );
+      
+      alert(response.data.message || 'تم تحويل طريقة الدفع بنجاح');
+      fetchInvoices();
+      closePaymentMethodModal();
+    } catch (error) {
+      console.error('Error changing payment method:', error);
+      alert('حدث خطأ في تحويل طريقة الدفع: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Invoice cancellation functions
+  const openCancelModal = (invoice) => {
+    setSelectedInvoiceForCancel(invoice);
+    setShowCancelModal(true);
+  };
+
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setSelectedInvoiceForCancel(null);
+  };
+
+  const cancelInvoice = async () => {
+    if (!selectedInvoiceForCancel) return;
+
+    try {
+      const response = await axios.delete(
+        `${API}/invoices/${selectedInvoiceForCancel.id}/cancel?username=main`
+      );
+      
+      alert(response.data.message || 'تم إلغاء الفاتورة بنجاح');
+      fetchInvoices();
+      closeCancelModal();
+    } catch (error) {
+      console.error('Error canceling invoice:', error);
+      alert('حدث خطأ في إلغاء الفاتورة: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const printInvoice = (invoice) => {
     const printContent = `
       <!DOCTYPE html>
