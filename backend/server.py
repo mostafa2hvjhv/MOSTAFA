@@ -130,6 +130,28 @@ class Pricing(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Company Model for Multi-Tenant Support
+class Company(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Master Seal, Faster Seal
+    display_name: str  # Full display name
+    slug: str  # master-seal, faster-seal (for URLs/identification)
+    primary_color: str = "#3B82F6"  # Default blue
+    secondary_color: str = "#10B981"  # Default green
+    logo_url: Optional[str] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# User-Company Association Model
+class UserCompanyAccess(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    company_id: str
+    access_level: str = "user"  # admin, user
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class FinishedProduct(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     seal_type: SealType
