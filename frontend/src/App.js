@@ -4739,6 +4739,15 @@ const Invoices = () => {
     notes: ''
   });
 
+  // Payment method conversion state
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
+  const [newPaymentMethod, setNewPaymentMethod] = useState('نقدي');
+
+  // Invoice cancellation state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedInvoiceForCancel, setSelectedInvoiceForCancel] = useState(null);
+
   useEffect(() => {
     fetchInvoices();
     fetchCustomers();
