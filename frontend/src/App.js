@@ -8515,20 +8515,8 @@ const App = () => {
   // Initialize companies and check authentication
   useEffect(() => {
     const initializeApp = async () => {
-      // Check if user is already logged in
-      const savedUser = localStorage.getItem('user');
-      const savedCompany = localStorage.getItem('selectedCompany');
-      
-      if (savedUser && savedCompany) {
-        setSelectedCompany(JSON.parse(savedCompany));
-        setAppState('authenticated');
-      } else if (savedUser) {
-        // User is logged in but no company selected
-        const user = JSON.parse(savedUser);
-        await loadUserCompanies(user.username);
-      } else {
-        setAppState('login');
-      }
+      // Always start with login for now until full multi-company is implemented
+      setAppState('login');
     };
     
     initializeApp();
