@@ -4176,6 +4176,52 @@ const Deferred = () => {
                       >
                         دفع
                       </button>
+                      <select
+                        value={invoice.payment_method}
+                        onChange={async (e) => {
+                          if (confirm(`هل تريد تحويل طريقة الدفع من "${invoice.payment_method}" إلى "${e.target.value}"؟`)) {
+                            try {
+                              await axios.put(`${API}/invoices/${invoice.id}/change-payment-method`, null, {
+                                params: {
+                                  new_payment_method: e.target.value,
+                                  username: user?.username
+                                }
+                              });
+                              alert('تم تحويل طريقة الدفع بنجاح');
+                              fetchUnpaidInvoices();
+                            } catch (error) {
+                              alert('خطأ في تحويل طريقة الدفع: ' + (error.response?.data?.detail || error.message));
+                            }
+                          }
+                        }}
+                        className="text-xs border rounded px-2 py-1"
+                      >
+                        <option value="نقدي">نقدي</option>
+                        <option value="فودافون كاش محمد الصاوي">فودافون الصاوي</option>
+                        <option value="فودافون كاش وائل محمد">فودافون وائل</option>
+                        <option value="انستاباي">انستاباي</option>
+                        <option value="يد الصاوي">يد الصاوي</option>
+                        <option value="آجل">آجل</option>
+                      </select>
+                      {user?.username === 'Elsawy' && (
+                        <button 
+                          onClick={async () => {
+                            if (confirm(`⚠️ هل أنت متأكد من إلغاء الفاتورة ${invoice.invoice_number}؟ سيتم استرداد المواد وعكس المعاملات المالية.`)) {
+                              try {
+                                await axios.delete(`${API}/invoices/${invoice.id}/cancel`, {
+                                  params: { username: user?.username }
+                                });
+                                alert('تم إلغاء الفاتورة بنجاح');
+                                fetchUnpaidInvoices();
+                              } catch (error) {
+                                alert('خطأ في إلغاء الفاتورة: ' + (error.response?.data?.detail || error.message));
+                              }
+                            }
+                          }}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">
+                          إلغاء
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
