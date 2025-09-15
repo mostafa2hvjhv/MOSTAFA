@@ -58,7 +58,9 @@
 ##
 ## agent_communication:
 ##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     -message: "بدء تنفيذ واجهة المستخدم لتحويل طريقة الدفع وإلغاء الفواتير - المطلوب إضافة أزرار في صفحة الفواتير مع نوافذ التأكيد"
+##     -agent: "main"
+##     -message: "APIs الخلفية جاهزة: PUT /invoices/{id}/change-payment-method و DELETE /invoices/{id}/cancel - العمل الآن على الواجهة الأمامية"
 
 # Protocol Guidelines for Main agent
 #
