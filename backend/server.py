@@ -3239,6 +3239,9 @@ async def get_company(company_id: str):
         company = await db.companies.find_one({"id": company_id})
         if not company:
             raise HTTPException(status_code=404, detail="الشركة غير موجودة")
+        # Clean up MongoDB ObjectId for serialization
+        if "_id" in company:
+            del company["_id"]
         return company
     except HTTPException:
         raise
