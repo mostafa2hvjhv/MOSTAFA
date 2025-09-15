@@ -3982,31 +3982,52 @@ const Deferred = () => {
 
   return (
     <div className="p-6" dir="rtl">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-blue-600 mb-4">الآجل - متابعة المدفوعات</h2>
-        
-        <div className="flex space-x-4 space-x-reverse mb-4">
-          <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-            حذف الكل
-          </button>
-          <button 
-            onClick={fetchUnpaidInvoices}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            إعادة تحميل
-          </button>
-          <button 
-            onClick={() => window.print()}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-            طباعة تقرير
-          </button>
-          <select className="border border-gray-300 rounded px-3 py-2">
-            <option>يومي</option>
-            <option>أسبوعي</option>
-            <option>شهري</option>
-            <option>سنوي</option>
-          </select>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-blue-600 mb-2 md:mb-0">الآجل - متابعة المدفوعات</h3>
+          <div className="flex space-x-2 space-x-reverse">
+            <button 
+              onClick={() => window.print()} 
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+              طباعة تقرير
+            </button>
+            <select className="border border-gray-300 rounded px-3 py-2">
+              <option>يومي</option>
+              <option>أسبوعي</option>
+              <option>شهري</option>
+              <option>سنوي</option>
+            </select>
+          </div>
         </div>
-      </div>
+        
+        {/* شريط البحث وإجماليات العملاء */}
+        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="بحث بالعميل أو رقم الفاتورة أو العنوان..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          
+          {/* عرض إجماليات العملاء */}
+          {Object.keys(customerTotals).length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {Object.entries(customerTotals).map(([customerName, totals]) => (
+                <div key={customerName} className="bg-white p-3 rounded border text-center">
+                  <div className="font-semibold text-blue-800 text-sm">{customerName}</div>
+                  <div className="text-xs text-blue-600">
+                    {totals.invoiceCount} فاتورة
+                  </div>
+                  <div className="text-sm font-bold text-green-600">
+                    {totals.totalAmount.toFixed(2)} ج.م
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       {/* Payment Form */}
       {selectedInvoice && (
