@@ -2776,6 +2776,17 @@ ${selectedMaterials.map(sel => `- ${sel.material.unit_code}: ${sel.seals} سيل
                   />
                 </div>
                 
+                <div>
+                  <label className="block text-sm font-medium mb-1">ملاحظات</label>
+                  <textarea
+                    value={currentItem.notes || ''}
+                    onChange={(e) => setCurrentItem({...currentItem, notes: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    rows="2"
+                    placeholder="ملاحظات إضافية..."
+                  />
+                </div>
+                
                 <div className="flex items-end">
                   <button
                     onClick={checkCompatibility}
