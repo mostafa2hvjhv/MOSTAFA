@@ -3369,6 +3369,58 @@ async def setup_initial_companies():
 # Include the router in the main app (must be after all endpoints are defined)
 app.include_router(api_router)
 
+# Data Migration APIs
+@api_router.post("/migrate-data-to-company")
+async def migrate_existing_data_to_company(company_id: str):
+    """Migrate all existing data without company_id to specified company"""
+    try:
+        migration_results = {}
+        
+        # Migrate raw materials
+        raw_materials_result = await db.raw_materials.update_many(
+            {"company_id": {"$exists": False}},
+            {"$set": {"company_id": company_id}}
+        )
+        migration_results["raw_materials"] = raw_materials_result.modified_count
+        
+        # Migrate invoices
+        invoices_result = await db.invoices.update_many(
+            {"company_id": {"$exists": False}},
+            {"$set": {"company_id": company_id}}
+        )
+        migration_results["invoices"] = invoices_result.modified_count
+        
+        # Migrate treasury transactions
+        treasury_result = await db.treasury_transactions.update_many(
+            {"company_id": {"$exists": False}},
+            {"$set": {"company_id": company_id}}
+        )
+        migration_results["treasury_transactions"] = treasury_result.modified_count
+        
+        # Migrate work orders
+        work_orders_result = await db.work_orders.update_many(
+            {"company_id": {"$exists": False}},
+            {"$set": {"company_id": company_id}}
+        )
+        migration_results["work_orders"] = work_orders_result.modified_count
+        
+        # Migrate customers
+        customers_result = await db.customers.update_many(
+            {"company_id": {"$exists": False}},
+            {"$set": {"company_id": company_id}}
+        )
+        migration_results["customers"] = customers_result.modified_count
+        
+        return {
+            "message": "تم ترحيل البيانات بنجاح",
+            "company_id": company_id,
+            "migration_results": migration_results,
+            "total_migrated": sum(migration_results.values())
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في ترحيل البيانات: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
