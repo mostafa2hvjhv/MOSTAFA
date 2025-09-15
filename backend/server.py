@@ -612,9 +612,11 @@ async def generate_unit_code(material_type: str, inner_diameter: float, outer_di
     return f"{prefix}-{new_sequence}"
 
 @api_router.post("/raw-materials", response_model=RawMaterial)
-async def create_raw_material(material: RawMaterialCreate):
+async def create_raw_material(material: RawMaterialCreate, company_id: str):
     """Create raw material with inventory check and automatic unit code"""
     try:
+        company_id = get_company_id_from_request(company_id)
+        
         # Generate automatic unit code
         auto_unit_code = await generate_unit_code(
             material.material_type,
@@ -639,6 +641,7 @@ async def create_raw_material(material: RawMaterialCreate):
         # Create raw material with auto-generated unit code
         material_dict = material.dict()
         material_dict["unit_code"] = auto_unit_code  # Override with auto-generated code
+        material_dict['company_id'] = company_id  # Add company_id
         material_obj = RawMaterial(**material_dict)
         await db.raw_materials.insert_one(material_obj.dict())
         
