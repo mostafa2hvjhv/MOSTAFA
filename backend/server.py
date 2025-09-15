@@ -3173,9 +3173,6 @@ async def export_all_data():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في تصدير البيانات: {str(e)}")
 
-# Include the router in the main app
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
