@@ -666,13 +666,14 @@ async def create_raw_material(material: RawMaterialCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/raw-materials", response_model=List[RawMaterial])
-async def get_raw_materials():
-    """Get all raw materials sorted by material type priority then size"""
+async def get_raw_materials(company_id: str):
+    """Get raw materials for specific company"""
+    company_id = get_company_id_from_request(company_id)
     # Define material type priority order: BUR-NBR-BT-BOOM-VT
     material_priority = {'BUR': 1, 'NBR': 2, 'BT': 3, 'BOOM': 4, 'VT': 5}
     
     # Get all materials first
-    materials = await db.raw_materials.find().to_list(1000)
+    materials = await db.raw_materials.find({"company_id": company_id}).to_list(1000)
     
     # Sort by material type priority, then by diameter
     sorted_materials = sorted(materials, key=lambda x: (
