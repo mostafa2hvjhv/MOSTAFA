@@ -3874,6 +3874,7 @@ const Stock = () => {
 
 // Deferred Payments Component
 const Deferred = () => {
+  const { user } = useAuth();
   const [unpaidInvoices, setUnpaidInvoices] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
