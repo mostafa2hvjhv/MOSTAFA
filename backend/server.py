@@ -1220,9 +1220,11 @@ async def create_invoice(invoice: InvoiceCreate, supervisor_name: str = ""):
     
     return invoice_obj
 
-@api_router.get("/invoices", response_model=List[Invoice])
-async def get_invoices():
-    invoices = await db.invoices.find().sort("date", -1).to_list(1000)
+@api_router.get("/invoices")
+async def get_invoices(company_id: str):
+    """Get invoices for specific company"""
+    company_id = get_company_id_from_request(company_id)
+    invoices = await db.invoices.find({"company_id": company_id}).sort("date", -1).to_list(1000)
     return [Invoice(**invoice) for invoice in invoices]
 
 @api_router.get("/invoices/{invoice_id}", response_model=Invoice)
