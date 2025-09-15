@@ -7,7 +7,7 @@ import requests
 import json
 import time
 
-BASE_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BASE_URL = "https://seal-inventory.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def test_inventory_creation():

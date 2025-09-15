@@ -6,7 +6,7 @@ Focused test to verify specific issues found in latest improvements testing
 import requests
 import json
 
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 def test_treasury_integration():
     """Test treasury integration with different payment methods"""

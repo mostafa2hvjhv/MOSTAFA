@@ -6,7 +6,7 @@ Debug test for discount calculation issues
 import requests
 import json
 
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 def debug_discount_calculation():
     session = requests.Session()

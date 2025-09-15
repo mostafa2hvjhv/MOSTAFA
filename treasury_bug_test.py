@@ -21,7 +21,7 @@ import os
 sys.path.append('/app/backend')
 
 # Test configuration
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 TEST_CUSTOMER_NAME = "عميل اختبار الخزينة"
 
 class TreasuryBugTester:

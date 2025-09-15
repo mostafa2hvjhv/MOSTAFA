@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 class InvoiceEditingTester:
     def __init__(self):

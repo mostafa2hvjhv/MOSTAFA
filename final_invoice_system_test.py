@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 class FinalInvoiceSystemTester:
     def __init__(self):

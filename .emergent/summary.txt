@@ -1,61 +1,76 @@
 <analysis>
-The previous AI engineer successfully brought the Master Seal application to a production-ready state, addressing critical bugs and implementing new features. The trajectory details the resolution of a unit conversion bug where inch measurements, when converted to millimeters, failed to find compatible materials due to a strict backend algorithm and empty database. The engineer introduced adaptive tolerance and a scoring system in  and added test data, verifying the fix. Subsequently, the user reported two new issues: incorrect filtering by material type in compatibility checks and problems with invoice editing. The material type filtering issue was promptly resolved by updating the  model and logic in  and . The AI is currently investigating the invoice editing issues, specifically why the product type field is not editable and why invoices disappear after saving edits, having identified static text display as a potential cause for the former.
+The previous AI engineer meticulously developed the Master Seal application, transitioning it from an MVP to a robust state by addressing numerous bugs and implementing significant new features. Key achievements include resolving a complex unit conversion and material compatibility bug, fixing invoice editing issues (like non-editable fields and invoice disappearance post-save), and implementing a sophisticated pricing system with automatic calculations. The trajectory showcases an iterative development process, frequently incorporating user feedback to refine features like multi-material selection in compatibility checks, ensuring precise inventory deduction logic, and enhancing work order details. The engineer also tackled critical treasury and invoice display bugs, demonstrating strong debugging capabilities. The journey involved continuous backend and frontend modifications, highlighting adaptability and a deep understanding of the codebase.
 </analysis>
 
 <product_requirements>
-The Master Seal application is a comprehensive system for an oil seal manufacturing and supply company, designed to manage core business operations. Its primary goal is to provide an integrated solution for sales, inventory (Jard), production, financials, and user management. Key features include recording customer orders, managing raw material deduction, invoicing (immediate/deferred), discount application, handling local products with specific size/type, and editable invoice titles. Inventory management covers stock by pieces, availability checks, automatic deduction, and advanced search/sorting with Excel import/export. Financials track accounts payable, customer ledgers, revenues/expenses, and a treasury system. Work orders are created from invoices. The system supports a full Arabic UI with RTL, uses Tailwind CSS, MongoDB, FastAPI, and UUIDs for identifiers. The previous development phases focused on ensuring data consistency, improving UI/UX, expanding CRUD operations, and implementing unit conversion for compatibility checks.
+The Master Seal application is an integrated system for an oil seal manufacturing and supply company. It manages sales, inventory (Jard), production, financials, and user access. Core functionalities include recording customer orders, managing raw material deduction, various invoicing options (immediate/deferred), discount application, handling local products with specific sizing, and editable invoice titles. Inventory features stock management, availability checks, automatic deduction, and advanced search with Excel import/export. Financials cover accounts payable, customer ledgers, revenues/expenses, and a treasury system. Work orders are generated from invoices. The UI supports full Arabic and RTL, built with Tailwind CSS. The backend uses FastAPI, and data is stored in MongoDB, with UUIDs for identifiers. Recent developments focused on unit conversion, compatibility checks, and robust data consistency across various modules.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Development:** FastAPI (Python) backend, React.js frontend.
--   **Database:** MongoDB with .
+-   **Database:** MongoDB with  for asynchronous operations.
 -   **UI/UX:** Tailwind CSS, Arabic UI with RTL support.
--   **API Design:** RESTful APIs using  prefix, Pydantic models.
--   **Data Management:** Complex business logic for inventory, invoices, compatibility.
--   **UUIDs:** Unique identifiers.
--   **Excel Integration:** , .
+-   **API Design:** RESTful APIs with  prefix, Pydantic models for data validation.
+-   **Data Management:** Complex business logic for inventory, invoices, compatibility, pricing.
+-   **UUIDs:** Used for unique identifiers across entities.
+-   **Unit Conversion:** Dynamic inch/mm conversion for material measurements.
 </key_technical_concepts>
 
 <code_architecture>
-The application employs a full-stack architecture comprising a FastAPI backend and a React frontend, which interacts with a MongoDB database.
+The application uses a full-stack architecture with FastAPI for the backend and React for the frontend, connected to a MongoDB database.
 
-**Directory Structure:**
 
 
 -   ****:
-    -   **Summary**: This file serves as the core of the FastAPI backend, handling all API endpoints, business logic, and interactions with the MongoDB database. It also defines Pydantic  schemas for application entities.
+    -   **Summary**: The core FastAPI backend, managing API endpoints, business logic, and MongoDB interactions, defining Pydantic models.
     -   **Changes Made**:
-        -   ** Model**: Modified to include  as an optional field, enabling filtering of compatible materials by type.
-        -   ****: Updated to incorporate an adaptive 10% tolerance for inner/outer diameter and height measurements, and a compatibility scoring system for ranking materials. It also now filters materials based on the  provided in the request.
-        -   ****: Examined during the investigation of invoice editing issues, but no direct modifications were made in the provided trajectory.
+        -    Model:  added.
+        -   : Added adaptive tolerance, scoring, and material_type filtering. Refined filtering to exclude materials leaving <15mm.
+        -   : Fixed discount calculation logic to run independently of item updates.
+        -   : Fixed to prevent double counting invoice amounts from invoices and treasury.
+        -   New  Pydantic model and CRUD APIs ().
+        -   : New API for clearing treasury data.
+        -   Inventory deduction logic: Updated to deduct from  using  and . Fixed multiple instances of double deduction and material search priority ( +  +  first). Enhanced work order creation to store  for multi-material tracking and .
+        -    Model: Added  and .
+        -   Added API for .
 
 -   ****:
-    -   **Summary**: The main React component responsible for managing application routing, user authentication, data fetching, and rendering the user interface.
+    -   **Summary**: The main React component handling routing, authentication, data fetching, and UI rendering.
     -   **Changes Made**:
-        -   ** function**: Modified to correctly send the selected  to the backend when invoking the compatibility check API, ensuring that filtering by material type functions as expected from the UI.
-        -   **Invoice Editing UI**: Investigated for two reported issues: the product type field not being editable within the invoice edit modal, and all invoices disappearing after saving edits. It was observed that manufactured products'  fields are rendered as static, non-editable text. Functions like  and  were examined in this context.
+        -    function: Updated to send .
+        -   Invoice creation: Added  state to prevent double-clicks on the Create Invoice button.
+        -    page: Fixed filter logic to exclude non-deferred invoices with . Added search filter and customer total display.
+        -   Dual measurement input: Implemented two input fields (mm/inch) with auto-conversion for , , , . Removed separate unit selection field. Updated  state, reset, and  logic.
+        -   New  page component: Added to navigation, permissions, and main  logic.
+        -   Sales page: Added  state and dropdown. Integrated  for automatic pricing during material selection. Added a ملاحظات (notes) field to the product addition form.
+        -    page: Added  function and مسح الخزينة button (conditional for 'Elsawy' user).
+        -   Multi-material selection: Implemented UI to allow selecting multiple materials from a single compatibility check result, with quantity input for each. Updated  state and  function. Fixed bug where select button disappeared for other materials. Updated work order display for multi-material .
+        -   Planned UI for invoice payment method conversion and invoice cancellation.
 
 -   ****:
-    -   **Summary**: This file acts as a comprehensive log, documenting user problem statements, testing outcomes, and the AI agent's communications throughout the development process.
-    -   **Changes Made**: Regularly updated to track the diagnosis, iterative fixes, and successful resolution of the unit conversion bug. It also documents the new bug reports concerning material type filtering and invoice editing, alongside the successful resolution of the material type filtering issue.
+    -   **Summary**: Documents problem statements, testing outcomes, and AI agent communications.
+    -   **Changes Made**: Regularly updated to track bug fixes and feature implementations, including unit conversion, material type filtering, invoice editing, treasury bugs, inventory deduction, pricing, and multi-material selection.
 </code_architecture>
 
 <pending_tasks>
--   Investigate and resolve the invoice editing issue where the product type field cannot be edited in the invoice edit form.
--   Address the bug where all invoices disappear from the list after saving an edited invoice.
+-   Implement the frontend UI for converting invoice payment methods.
+-   Implement the frontend UI for invoice cancellation.
+-   Address the bug where depleted materials might still appear as available in the compatibility check or for selection within the same invoice transaction.
 </pending_tasks>
 
 <current_work>
-The AI engineer recently completed fixing a critical unit conversion bug. When users selected inches as the unit for inner and outer diameters, the compatibility check failed to find suitable materials, despite correct mathematical conversion. The root cause was a strict compatibility algorithm in  and a lack of appropriately sized materials in the database. The solution involved implementing an adaptive 10% tolerance and a scoring system in the  endpoint of , along with adding test data. This fix was thoroughly verified via backend  tests and frontend testing.
+The AI engineer was most recently working on a set of critical bug fixes and enhancements reported by the user. These included:
+1.  **Enhanced Compatibility Check**: Refined the backend logic in  to prevent materials from appearing in the compatibility check if deducting from them would leave less than 15mm of material (Chat Message 466).
+2.  **Notes in Sales**: Added a ملاحظات (notes) field to the product addition form in  and updated the  model in  to store these notes (Chat Message 468, 470).
+3.  **Deferred Page Filter and Totals**: Implemented a search filter (by customer, invoice number, or title) and displayed aggregate totals (total amount, invoice count) for each customer in the Deferred page () (Chat Message 472-482).
 
-Following this, the user reported two new issues. The first, compatibility check with material type not filtering correctly, was resolved by updating the  Pydantic model in  to include , modifying the backend's  logic to filter by this type, and updating  to send the  during the compatibility API call. This fix has been verified.
+The engineer successfully implemented and verified these three items, as summarized in Chat Message 485. Immediately following this, the user provided a simple اكمل (continue) command (Chat Message 486), and the engineer started working on the next two pending tasks:
+4.  **Change Invoice Payment Method**: An API endpoint () has been added to  (Chat Message 488).
+5.  **Invoice Cancellation**: The implementation for this feature, which involves returning materials to inventory and adjusting treasury balance, and its corresponding frontend UI, is planned to be developed next (Chat Message 489).
 
-The AI is currently working on the second reported issue: invoice editing problems. This involves two parts:
-1.  The product type field is not editable when modifying an invoice.
-2.  All invoices disappear from the list after saving an edited invoice.
-The AI has begun investigating , identifying that for manufactured products, the  is currently rendered as static, non-editable text (lines 4963-4979). The  and  functions are also under scrutiny for the disappearing invoices bug.
+The work paused at the point of adding the frontend UI for both payment method conversion and invoice cancellation.
 </current_work>
 
 <optional_next_step>
-Address the non-editable product type field in the invoice edit form within .
+Implement the frontend UI for changing invoice payment methods and invoice cancellation.
 </optional_next_step>

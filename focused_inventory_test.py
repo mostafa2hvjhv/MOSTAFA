@@ -9,7 +9,7 @@ import requests
 import json
 import sys
 
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 def test_exact_scenario():
     print("🎯 TESTING EXACT SCENARIO FROM REVIEW REQUEST")

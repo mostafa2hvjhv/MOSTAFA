@@ -7,7 +7,7 @@ Testing both basic material info and compatibility check workflows.
 import requests
 import json
 
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 def test_all_scenarios():
     print("🔍 COMPREHENSIVE INVENTORY DEDUCTION TEST")

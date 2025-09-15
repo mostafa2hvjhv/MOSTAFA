@@ -31,7 +31,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BASE_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BASE_URL = "https://seal-inventory.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class TestResults:

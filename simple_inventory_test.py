@@ -8,7 +8,7 @@ which means 80 pieces were already deducted from the original 1000.
 import requests
 import json
 
-BACKEND_URL = "https://oilseal-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://seal-inventory.preview.emergentagent.com/api"
 
 def verify_inventory_deduction():
     print("🔍 VERIFYING INVENTORY DEDUCTION STATUS")
