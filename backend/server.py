@@ -2859,6 +2859,252 @@ async def export_raw_materials_excel():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في تصدير الملف: {str(e)}")
 
+# Bulk Import APIs for Data Management
+@api_router.post("/raw-materials/bulk-import")
+async def bulk_import_raw_materials(data: dict, background_tasks: BackgroundTasks):
+    """Bulk import raw materials from uploaded data"""
+    try:
+        imported_count = 0
+        skipped_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Check if material already exists
+                existing = await db.raw_materials.find_one({"unit_code": item.get("unit_code")})
+                if existing:
+                    skipped_count += 1
+                    continue
+                
+                # Create new raw material
+                raw_material = RawMaterial(**item)
+                await db.raw_materials.insert_one(raw_material.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing raw material: {e}")
+                skipped_count += 1
+        
+        return {
+            "message": f"تم استيراد {imported_count} مادة خام، تم تخطي {skipped_count} مادة",
+            "imported": imported_count,
+            "skipped": skipped_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد المواد الخام: {str(e)}")
+
+@api_router.post("/invoices/bulk-import")
+async def bulk_import_invoices(data: dict):
+    """Bulk import invoices from uploaded data"""
+    try:
+        imported_count = 0
+        skipped_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Check if invoice already exists
+                existing = await db.invoices.find_one({"invoice_number": item.get("invoice_number")})
+                if existing:
+                    skipped_count += 1
+                    continue
+                
+                # Create new invoice
+                invoice = Invoice(**item)
+                await db.invoices.insert_one(invoice.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing invoice: {e}")
+                skipped_count += 1
+        
+        return {
+            "message": f"تم استيراد {imported_count} فاتورة، تم تخطي {skipped_count} فاتورة",
+            "imported": imported_count,
+            "skipped": skipped_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد الفواتير: {str(e)}")
+
+@api_router.post("/treasury/transactions/bulk-import")
+async def bulk_import_treasury_transactions(data: dict):
+    """Bulk import treasury transactions from uploaded data"""
+    try:
+        imported_count = 0
+        skipped_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Create new treasury transaction
+                transaction = TreasuryTransaction(**item)
+                await db.treasury_transactions.insert_one(transaction.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing treasury transaction: {e}")
+                skipped_count += 1
+        
+        return {
+            "message": f"تم استيراد {imported_count} معاملة خزينة، تم تخطي {skipped_count} معاملة",
+            "imported": imported_count,
+            "skipped": skipped_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد معاملات الخزينة: {str(e)}")
+
+@api_router.post("/expenses/bulk-import")
+async def bulk_import_expenses(data: dict):
+    """Bulk import expenses from uploaded data"""
+    try:
+        imported_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Create expense as treasury transaction
+                expense_transaction = TreasuryTransaction(
+                    account_id="cash",
+                    transaction_type="expense",
+                    amount=item.get("amount", 0),
+                    description=item.get("description", "مصروف مستورد"),
+                    reference=item.get("reference", "استيراد")
+                )
+                await db.treasury_transactions.insert_one(expense_transaction.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing expense: {e}")
+        
+        return {
+            "message": f"تم استيراد {imported_count} مصروف",
+            "imported": imported_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد المصروفات: {str(e)}")
+
+@api_router.post("/revenues/bulk-import")  
+async def bulk_import_revenues(data: dict):
+    """Bulk import revenues from uploaded data"""
+    try:
+        imported_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Create revenue as treasury transaction
+                revenue_transaction = TreasuryTransaction(
+                    account_id="cash",
+                    transaction_type="income",
+                    amount=item.get("amount", 0),
+                    description=item.get("description", "إيراد مستورد"),
+                    reference=item.get("reference", "استيراد")
+                )
+                await db.treasury_transactions.insert_one(revenue_transaction.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing revenue: {e}")
+        
+        return {
+            "message": f"تم استيراد {imported_count} إيراد",
+            "imported": imported_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد الإيرادات: {str(e)}")
+
+@api_router.post("/work-orders/bulk-import")
+async def bulk_import_work_orders(data: dict):
+    """Bulk import work orders from uploaded data"""
+    try:
+        imported_count = 0
+        skipped_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Check if work order already exists
+                existing = await db.work_orders.find_one({"invoice_id": item.get("invoice_id")})
+                if existing:
+                    skipped_count += 1
+                    continue
+                
+                # Create new work order
+                work_order = WorkOrder(**item)
+                await db.work_orders.insert_one(work_order.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing work order: {e}")
+                skipped_count += 1
+        
+        return {
+            "message": f"تم استيراد {imported_count} أمر شغل، تم تخطي {skipped_count} أمر",
+            "imported": imported_count,
+            "skipped": skipped_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد أوامر الشغل: {str(e)}")
+
+@api_router.post("/pricing/bulk-import")
+async def bulk_import_pricing(data: dict):
+    """Bulk import pricing data from uploaded data"""
+    try:
+        imported_count = 0
+        skipped_count = 0
+        
+        for item in data.get("data", []):
+            try:
+                # Check if pricing rule already exists
+                existing = await db.pricing.find_one({
+                    "client_type": item.get("client_type"),
+                    "material_type": item.get("material_type")
+                })
+                if existing:
+                    skipped_count += 1
+                    continue
+                
+                # Create new pricing rule
+                pricing = Pricing(**item)
+                await db.pricing.insert_one(pricing.dict())
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Error importing pricing: {e}")
+                skipped_count += 1
+        
+        return {
+            "message": f"تم استيراد {imported_count} قاعدة تسعير، تم تخطي {skipped_count} قاعدة",
+            "imported": imported_count,
+            "skipped": skipped_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في استيراد قواعد التسعير: {str(e)}")
+
+# Complete Data Export API
+@api_router.get("/data-management/export-all")
+async def export_all_data():
+    """Export all system data for backup/transfer"""
+    try:
+        export_data = {
+            "export_timestamp": datetime.now().isoformat(),
+            "system_version": "Master Seal v1.0",
+            "data": {}
+        }
+        
+        # Export all data types
+        export_data["data"]["raw_materials"] = await db.raw_materials.find().to_list(length=None)
+        export_data["data"]["invoices"] = await db.invoices.find().to_list(length=None)
+        export_data["data"]["treasury_transactions"] = await db.treasury_transactions.find().to_list(length=None)
+        export_data["data"]["work_orders"] = await db.work_orders.find().to_list(length=None)
+        export_data["data"]["pricing"] = await db.pricing.find().to_list(length=None)
+        
+        return export_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في تصدير البيانات: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
