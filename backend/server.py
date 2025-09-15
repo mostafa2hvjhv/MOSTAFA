@@ -2287,6 +2287,182 @@ async def reset_treasury(username: str):
             raise e
         raise HTTPException(status_code=500, detail=str(e))
 
+# Change Invoice Payment Method API
+@api_router.put("/invoices/{invoice_id}/change-payment-method")
+async def change_invoice_payment_method(
+    invoice_id: str, 
+    new_payment_method: str,
+    username: str = None
+):
+    """Change invoice payment method and update treasury transactions"""
+    try:
+        # Find the invoice
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+        
+        old_payment_method = invoice.get("payment_method")
+        if old_payment_method == new_payment_method:
+            return {"message": "طريقة الدفع هي نفسها بالفعل"}
+        
+        # Map payment methods to treasury account IDs
+        payment_method_mapping = {
+            "نقدي": "cash",
+            "فودافون كاش محمد الصاوي": "vodafone_elsawy", 
+            "فودافون كاش وائل محمد": "vodafone_wael",
+            "انستاباي": "instapay",
+            "يد الصاوي": "yad_elsawy"
+        }
+        
+        old_account_id = payment_method_mapping.get(old_payment_method)
+        new_account_id = payment_method_mapping.get(new_payment_method)
+        
+        if not old_account_id or not new_account_id:
+            raise HTTPException(status_code=400, detail="طريقة الدفع غير مدعومة")
+        
+        invoice_amount = invoice.get("total_amount", 0)
+        
+        # Create treasury transactions for the transfer
+        transfer_reference = f"تحويل دفع فاتورة {invoice.get('invoice_number')} من {old_payment_method} إلى {new_payment_method}"
+        
+        # Remove from old account (negative transaction)
+        old_transaction = TreasuryTransaction(
+            account_id=old_account_id,
+            transaction_type="expense",
+            amount=invoice_amount,
+            description=f"خصم لتحويل طريقة الدفع - {transfer_reference}",
+            reference=f"تحويل-{invoice.get('invoice_number')}",
+            balance=-invoice_amount
+        )
+        await db.treasury_transactions.insert_one(old_transaction.dict())
+        
+        # Add to new account (positive transaction) 
+        new_transaction = TreasuryTransaction(
+            account_id=new_account_id,
+            transaction_type="income",
+            amount=invoice_amount,
+            description=f"إضافة من تحويل طريقة الدفع - {transfer_reference}",
+            reference=f"تحويل-{invoice.get('invoice_number')}",
+            balance=invoice_amount
+        )
+        await db.treasury_transactions.insert_one(new_transaction.dict())
+        
+        # Update invoice payment method
+        await db.invoices.update_one(
+            {"id": invoice_id},
+            {"$set": {"payment_method": new_payment_method}}
+        )
+        
+        return {
+            "message": f"تم تحويل طريقة الدفع من {old_payment_method} إلى {new_payment_method}",
+            "old_method": old_payment_method,
+            "new_method": new_payment_method,
+            "amount_transferred": invoice_amount
+        }
+        
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Cancel Invoice API
+@api_router.delete("/invoices/{invoice_id}/cancel")
+async def cancel_invoice(invoice_id: str, username: str = None):
+    """Cancel invoice and restore materials to inventory"""
+    try:
+        # Find the invoice
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="الفاتورة غير موجودة")
+        
+        # Restore materials to inventory for each item
+        for item in invoice.get("items", []):
+            if item.get("product_type") == "manufactured":
+                # Handle multi-material restoration
+                if item.get("selected_materials"):
+                    for material_info in item.get("selected_materials", []):
+                        raw_material = await db.raw_materials.find_one({
+                            "unit_code": material_info.get("unit_code"),
+                            "inner_diameter": material_info.get("inner_diameter"),
+                            "outer_diameter": material_info.get("outer_diameter")
+                        })
+                        
+                        if raw_material:
+                            seals_to_restore = material_info.get("seals_count", 0)
+                            material_to_restore = seals_to_restore * (item.get("height", 0) + 2)
+                            
+                            # Add material back
+                            await db.raw_materials.update_one(
+                                {"id": raw_material["id"]},
+                                {"$inc": {"height": material_to_restore}}
+                            )
+                            
+                            print(f"✅ تم استرداد {material_to_restore} مم للخامة {raw_material.get('unit_code')}")
+                
+                # Handle single material restoration
+                elif item.get("material_details"):
+                    material_details = item.get("material_details")
+                    raw_material = await db.raw_materials.find_one({
+                        "unit_code": material_details.get("unit_code"),
+                        "inner_diameter": material_details.get("inner_diameter"),
+                        "outer_diameter": material_details.get("outer_diameter")
+                    })
+                    
+                    if raw_material:
+                        material_to_restore = item.get("quantity", 0) * (item.get("height", 0) + 2)
+                        
+                        # Add material back
+                        await db.raw_materials.update_one(
+                            {"id": raw_material["id"]},
+                            {"$inc": {"height": material_to_restore}}
+                        )
+                        
+                        print(f"✅ تم استرداد {material_to_restore} مم للخامة {raw_material.get('unit_code')}")
+        
+        # Remove treasury transaction if not deferred
+        if invoice.get("payment_method") != "آجل":
+            payment_method_mapping = {
+                "نقدي": "cash",
+                "فودافون كاش محمد الصاوي": "vodafone_elsawy",
+                "فودافون كاش وائل محمد": "vodafone_wael", 
+                "انستاباي": "instapay",
+                "يد الصاوي": "yad_elsawy"
+            }
+            
+            account_id = payment_method_mapping.get(invoice.get("payment_method"))
+            if account_id:
+                # Create negative transaction to reverse the income
+                reversal_transaction = TreasuryTransaction(
+                    account_id=account_id,
+                    transaction_type="expense",
+                    amount=invoice.get("total_amount", 0),
+                    description=f"إلغاء فاتورة {invoice.get('invoice_number')}",
+                    reference=f"إلغاء-{invoice.get('invoice_number')}",
+                    balance=-invoice.get("total_amount", 0)
+                )
+                await db.treasury_transactions.insert_one(reversal_transaction.dict())
+        
+        # Remove invoice from database
+        await db.invoices.delete_one({"id": invoice_id})
+        
+        # Remove from work orders
+        await db.work_orders.update_many(
+            {"invoices.id": invoice_id},
+            {"$pull": {"invoices": {"id": invoice_id}}}
+        )
+        
+        return {
+            "message": f"تم إلغاء الفاتورة {invoice.get('invoice_number')} واسترداد المواد",
+            "invoice_number": invoice.get("invoice_number"),
+            "materials_restored": True,
+            "treasury_reversed": invoice.get("payment_method") != "آجل"
+        }
+        
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Business logic function for inventory transactions
 async def create_inventory_transaction(transaction: InventoryTransactionCreate):
     """Create inventory transaction (in/out) - Business logic"""
