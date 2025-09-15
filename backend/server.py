@@ -473,7 +473,7 @@ async def login(username: str, password: str):
             }
         }
     
-    raise HTTPException(status_code=401, detail="خطأ في اسم المستخدم أو كلمة المرور")
+    raise HTTPException(status_code=401, detail="بيانات تسجيل الدخول غير صحيحة")
 
 # User management endpoints
 @api_router.post("/users", response_model=User)
