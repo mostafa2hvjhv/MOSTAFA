@@ -5360,29 +5360,47 @@ const Invoices = () => {
                     </span>
                   </td>
                   <td className="border border-gray-300 p-2">
-                    <div className="flex space-x-2 space-x-reverse">
+                    <div className="flex flex-wrap gap-1">
                       <button
                         onClick={() => printInvoice(invoice)}
-                        className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                        className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+                        title="طباعة الفاتورة"
                       >
                         طباعة
                       </button>
                       <button
                         onClick={() => startEditInvoice(invoice)}
-                        className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600"
+                        className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                        title="تعديل الفاتورة"
                       >
                         تعديل
                       </button>
                       <button
+                        onClick={() => openPaymentMethodModal(invoice)}
+                        className="bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600"
+                        title="تحويل طريقة الدفع"
+                      >
+                        تحويل دفع
+                      </button>
+                      <button
+                        onClick={() => openCancelModal(invoice)}
+                        className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                        title="إلغاء الفاتورة واسترداد المواد"
+                      >
+                        إلغاء فاتورة
+                      </button>
+                      <button
                         onClick={() => deleteInvoice(invoice.id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                        className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                        title="حذف الفاتورة"
                       >
                         حذف
                       </button>
                       {invoice.status === 'انتظار' && (
                         <button
                           onClick={() => updateInvoiceStatus(invoice.id, 'تم التنفيذ')}
-                          className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600"
+                          className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                          title="تم التنفيذ"
                         >
                           تم التنفيذ
                         </button>
