@@ -3297,7 +3297,13 @@ async def setup_initial_companies():
         # Check if companies already exist
         existing_companies = await db.companies.find().to_list(length=None)
         if existing_companies:
-            return {"message": "الشركات موجودة بالفعل", "companies": existing_companies}
+            # Clean up MongoDB ObjectId for serialization
+            cleaned_companies = []
+            for company in existing_companies:
+                if "_id" in company:
+                    del company["_id"]
+                cleaned_companies.append(company)
+            return {"message": "الشركات موجودة بالفعل", "companies": cleaned_companies}
         
         # Create Master Seal
         master_seal = Company(
