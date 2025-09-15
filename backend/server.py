@@ -122,6 +122,14 @@ class MaterialPricing(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+class Pricing(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_type: str
+    material_type: str
+    price_per_unit: float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class FinishedProduct(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     seal_type: SealType
