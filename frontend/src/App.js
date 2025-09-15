@@ -3876,10 +3876,43 @@ const Stock = () => {
 const Deferred = () => {
   const [unpaidInvoices, setUnpaidInvoices] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('نقدي');
   const [paymentNotes, setPaymentNotes] = useState('');
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // إجماليات لكل عميل
+  const [customerTotals, setCustomerTotals] = useState({});
+
+  useEffect(() => {
+    fetchUnpaidInvoices();
+    fetchCustomers();
+  }, []);
+
+  useEffect(() => {
+    // حساب إجماليات العملاء
+    const totals = {};
+    filteredInvoices.forEach(invoice => {
+      const customerName = invoice.customer_name;
+      if (!totals[customerName]) {
+        totals[customerName] = {
+          totalAmount: 0,
+          invoiceCount: 0
+        };
+      }
+      totals[customerName].totalAmount += invoice.remaining_amount || invoice.total_amount;
+      totals[customerName].invoiceCount += 1;
+    });
+    setCustomerTotals(totals);
+  }, [unpaidInvoices, searchTerm]);
+  
+  // فلترة الفواتير حسب البحث
+  const filteredInvoices = unpaidInvoices.filter(invoice => 
+    invoice.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (invoice.invoice_title && invoice.invoice_title.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   useEffect(() => {
     fetchUnpaidInvoices();
