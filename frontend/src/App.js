@@ -3438,7 +3438,11 @@ const Stock = () => {
 
   const fetchRawMaterials = async () => {
     try {
-      const response = await axios.get(`${API}/raw-materials`);
+      // For now, use Master Seal ID directly until full multi-company is implemented
+      const masterSealId = "fdc83710-034a-410e-b5b7-ee231f36fd31";
+      const response = await axios.get(`${API}/raw-materials`, {
+        params: { company_id: masterSealId }
+      });
       setRawMaterials(response.data);
     } catch (error) {
       console.error('Error fetching raw materials:', error);
