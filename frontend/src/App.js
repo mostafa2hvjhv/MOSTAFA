@@ -3,6 +3,14 @@ import './App.css';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
+// Create Company Context for multi-tenant support
+const CompanyContext = createContext({
+  selectedCompany: null,
+  setSelectedCompany: () => {},
+  userCompanies: [],
+  setUserCompanies: () => {}
+});
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
