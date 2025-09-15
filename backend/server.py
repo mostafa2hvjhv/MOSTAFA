@@ -192,7 +192,7 @@ class InvoiceItem(BaseModel):
 
 class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    company_id: str  # Multi-tenant support
+    company_id: Optional[str] = None  # Multi-tenant support - Optional for migration
     invoice_number: str
     customer_id: Optional[str] = None
     customer_name: str
