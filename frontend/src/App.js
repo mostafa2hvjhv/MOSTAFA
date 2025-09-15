@@ -8020,25 +8020,376 @@ const Pricing = () => {
 
 // Data Management Component
 const DataManagement = () => {
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState('');
+  const [importProgress, setImportProgress] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const dataTypes = [
+    { key: 'inventory', label: 'الجرد', icon: '📦', description: 'بيانات المواد الخام والمخزون' },
+    { key: 'invoices', label: 'الفواتير', icon: '🧾', description: 'جميع الفواتير والمبيعات' },
+    { key: 'treasury', label: 'الخزينة', icon: '🏦', description: 'المعاملات المالية والأرصدة' },
+    { key: 'deferred', label: 'الآجل', icon: '⏳', description: 'العملاء والمبالغ المؤجلة' },
+    { key: 'expenses', label: 'المصروفات', icon: '💸', description: 'جميع المصروفات والنفقات' },
+    { key: 'revenues', label: 'الإيرادات', icon: '💰', description: 'الإيرادات والأرباح' },
+    { key: 'work-orders', label: 'أوامر العمل', icon: '⚙️', description: 'أوامر الشغل والإنتاج' },
+    { key: 'pricing', label: 'التسعير', icon: '💲', description: 'قوائم الأسعار والعروض' }
+  ];
+
+  const exportAllData = async () => {
+    setIsExporting(true);
+    setExportProgress('بدء تصدير البيانات...');
+    
+    try {
+      const exportData = {
+        export_timestamp: new Date().toISOString(),
+        system_version: "Master Seal v1.0",
+        data: {}
+      };
+
+      // Export each data type
+      for (const dataType of dataTypes) {
+        setExportProgress(`جاري تصدير ${dataType.label}...`);
+        
+        try {
+          let endpoint = '';
+          switch (dataType.key) {
+            case 'inventory':
+              endpoint = '/raw-materials';
+              break;
+            case 'invoices':
+              endpoint = '/invoices';
+              break;
+            case 'treasury':
+              endpoint = '/treasury/transactions';
+              break;
+            case 'deferred':
+              endpoint = '/invoices';
+              break;
+            case 'expenses':
+              endpoint = '/expenses';
+              break;
+            case 'revenues':
+              endpoint = '/revenues';
+              break;
+            case 'work-orders':
+              endpoint = '/work-orders';
+              break;
+            case 'pricing':
+              endpoint = '/pricing';
+              break;
+          }
+
+          const response = await axios.get(`${API}${endpoint}`);
+          
+          if (dataType.key === 'deferred') {
+            // Filter for deferred invoices only
+            exportData.data[dataType.key] = response.data.filter(invoice => 
+              invoice.payment_method === 'آجل' && invoice.remaining_amount > 0
+            );
+          } else {
+            exportData.data[dataType.key] = response.data;
+          }
+          
+        } catch (error) {
+          console.error(`Error exporting ${dataType.key}:`, error);
+          exportData.data[dataType.key] = [];
+        }
+      }
+
+      setExportProgress('إنشاء ملف Excel...');
+      
+      // Create Excel file using XLSX library
+      const workbook = XLSX.utils.book_new();
+      
+      // Add summary sheet
+      const summaryData = [
+        ['نوع البيانات', 'عدد السجلات', 'تاريخ التصدير'],
+        ...dataTypes.map(dt => [
+          dt.label,
+          exportData.data[dt.key]?.length || 0,
+          new Date().toLocaleDateString('ar-EG')
+        ])
+      ];
+      
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'ملخص البيانات');
+
+      // Add data sheets
+      dataTypes.forEach(dataType => {
+        const data = exportData.data[dataType.key];
+        if (data && data.length > 0) {
+          const sheet = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(workbook, sheet, dataType.label);
+        }
+      });
+
+      // Download file
+      const fileName = `Master_Seal_Data_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      
+      setExportProgress('تم تصدير البيانات بنجاح! ✅');
+      alert('تم تصدير جميع البيانات بنجاح!');
+      
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      setExportProgress('فشل في تصدير البيانات ❌');
+      alert('حدث خطأ في تصدير البيانات: ' + error.message);
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => setExportProgress(''), 3000);
+    }
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file && (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                 file.type === 'application/vnd.ms-excel')) {
+      setSelectedFile(file);
+    } else {
+      alert('يرجى اختيار ملف Excel صحيح (.xlsx أو .xls)');
+      event.target.value = '';
+    }
+  };
+
+  const importData = async () => {
+    if (!selectedFile) {
+      alert('يرجى اختيار ملف للاستيراد');
+      return;
+    }
+
+    setIsImporting(true);
+    setImportProgress('بدء استيراد البيانات...');
+
+    try {
+      const data = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      
+      setImportProgress('قراءة ملف Excel...');
+      
+      // Process each sheet
+      for (const dataType of dataTypes) {
+        const sheetName = dataType.label;
+        if (workbook.SheetNames.includes(sheetName)) {
+          setImportProgress(`استيراد ${dataType.label}...`);
+          
+          const sheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(sheet);
+          
+          if (jsonData.length > 0) {
+            try {
+              // Import data to backend
+              let endpoint = '';
+              switch (dataType.key) {
+                case 'inventory':
+                  endpoint = '/raw-materials/bulk-import';
+                  break;
+                case 'invoices':
+                  endpoint = '/invoices/bulk-import';
+                  break;
+                case 'treasury':
+                  endpoint = '/treasury/transactions/bulk-import';
+                  break;
+                case 'expenses':
+                  endpoint = '/expenses/bulk-import';
+                  break;
+                case 'revenues':
+                  endpoint = '/revenues/bulk-import';
+                  break;
+                case 'work-orders':
+                  endpoint = '/work-orders/bulk-import';
+                  break;
+                case 'pricing':
+                  endpoint = '/pricing/bulk-import';
+                  break;
+              }
+
+              if (endpoint) {
+                await axios.post(`${API}${endpoint}`, { data: jsonData });
+              }
+              
+            } catch (error) {
+              console.error(`Error importing ${dataType.key}:`, error);
+            }
+          }
+        }
+      }
+
+      setImportProgress('تم استيراد البيانات بنجاح! ✅');
+      alert('تم استيراد البيانات بنجاح!');
+      setSelectedFile(null);
+      
+    } catch (error) {
+      console.error('Error importing data:', error);
+      setImportProgress('فشل في استيراد البيانات ❌');
+      alert('حدث خطأ في استيراد البيانات: ' + error.message);
+    } finally {
+      setIsImporting(false);
+      setTimeout(() => setImportProgress(''), 3000);
+    }
+  };
+
+  const exportSingleDataType = async (dataType) => {
+    try {
+      let endpoint = '';
+      switch (dataType.key) {
+        case 'inventory':
+          endpoint = '/raw-materials';
+          break;
+        case 'invoices':
+          endpoint = '/invoices';
+          break;
+        case 'treasury':
+          endpoint = '/treasury/transactions';
+          break;
+        case 'deferred':
+          endpoint = '/invoices';
+          break;
+        case 'expenses':
+          endpoint = '/expenses';
+          break;
+        case 'revenues':
+          endpoint = '/revenues';
+          break;
+        case 'work-orders':
+          endpoint = '/work-orders';
+          break;
+        case 'pricing':
+          endpoint = '/pricing';
+          break;
+      }
+
+      const response = await axios.get(`${API}${endpoint}`);
+      let data = response.data;
+      
+      if (dataType.key === 'deferred') {
+        data = data.filter(invoice => 
+          invoice.payment_method === 'آجل' && invoice.remaining_amount > 0
+        );
+      }
+
+      const workbook = XLSX.utils.book_new();
+      const sheet = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(workbook, sheet, dataType.label);
+
+      const fileName = `${dataType.label}_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      
+      alert(`تم تصدير ${dataType.label} بنجاح!`);
+      
+    } catch (error) {
+      console.error(`Error exporting ${dataType.key}:`, error);
+      alert(`حدث خطأ في تصدير ${dataType.label}: ` + error.message);
+    }
+  };
+
   return (
     <div className="p-6" dir="rtl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">إدارة البيانات</h1>
+        <h1 className="text-3xl font-bold text-gray-800">إدارة البيانات</h1>
+        <div className="text-sm text-gray-600">
+          📊 تصدير واستيراد شامل لجميع بيانات النظام
+        </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Export/Import Cards will be added here */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">تصدير/استيراد شامل</h3>
-          <p className="text-gray-600 mb-4">إدارة جميع بيانات النظام</p>
-          <div className="space-y-2">
-            <button className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-              تصدير جميع البيانات
-            </button>
-            <button className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-              استيراد البيانات
+
+      {/* Bulk Export/Import Section */}
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+        <h2 className="text-2xl font-semibold mb-4 text-blue-600">📋 التصدير والاستيراد الشامل</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Export Section */}
+          <div className="border-2 border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3 text-blue-700">📤 تصدير جميع البيانات</h3>
+            <p className="text-gray-600 mb-4">تصدير كامل لجميع بيانات النظام في ملف Excel واحد</p>
+            
+            {isExporting && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <div className="text-blue-600 font-medium">{exportProgress}</div>
+                <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
+                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+                </div>
+              </div>
+            )}
+            
+            <button
+              onClick={exportAllData}
+              disabled={isExporting}
+              className={`w-full px-4 py-3 rounded-lg font-medium ${
+                isExporting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-500 hover:bg-blue-600'
+              } text-white transition-colors`}
+            >
+              {isExporting ? '⏳ جاري التصدير...' : '📤 تصدير جميع البيانات'}
             </button>
           </div>
+
+          {/* Import Section */}
+          <div className="border-2 border-green-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3 text-green-700">📥 استيراد البيانات</h3>
+            <p className="text-gray-600 mb-4">استيراد البيانات من ملف Excel</p>
+            
+            <div className="mb-4">
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileSelect}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              {selectedFile && (
+                <div className="mt-2 text-sm text-green-600">
+                  ✅ تم اختيار الملف: {selectedFile.name}
+                </div>
+              )}
+            </div>
+            
+            {isImporting && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                <div className="text-green-600 font-medium">{importProgress}</div>
+                <div className="w-full bg-green-200 rounded-full h-2 mt-2">
+                  <div className="bg-green-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+                </div>
+              </div>
+            )}
+            
+            <button
+              onClick={importData}
+              disabled={isImporting || !selectedFile}
+              className={`w-full px-4 py-3 rounded-lg font-medium ${
+                isImporting || !selectedFile
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white transition-colors`}
+            >
+              {isImporting ? '⏳ جاري الاستيراد...' : '📥 استيراد البيانات'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Individual Data Types Export */}
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-orange-600">📊 تصدير البيانات المنفردة</h2>
+        <p className="text-gray-600 mb-6">تصدير نوع واحد من البيانات بشكل منفصل</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dataTypes.map((dataType) => (
+            <div key={dataType.key} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="text-center mb-3">
+                <div className="text-3xl mb-2">{dataType.icon}</div>
+                <h3 className="font-semibold text-gray-800">{dataType.label}</h3>
+                <p className="text-xs text-gray-600 mt-1">{dataType.description}</p>
+              </div>
+              
+              <button
+                onClick={() => exportSingleDataType(dataType)}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+              >
+                تصدير {dataType.label}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
