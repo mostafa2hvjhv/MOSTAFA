@@ -2328,31 +2328,62 @@ async def change_invoice_payment_method(
             raise HTTPException(status_code=400, detail="طريقة الدفع غير مدعومة")
         
         invoice_amount = invoice.get("total_amount", 0)
-        
-        # Create treasury transactions for the transfer
         transfer_reference = f"تحويل دفع فاتورة {invoice.get('invoice_number')} من {old_payment_method} إلى {new_payment_method}"
         
-        # Remove from old account (negative transaction)
-        old_transaction = TreasuryTransaction(
-            account_id=old_account_id,
-            transaction_type="expense",
-            amount=invoice_amount,
-            description=f"خصم لتحويل طريقة الدفع - {transfer_reference}",
-            reference=f"تحويل-{invoice.get('invoice_number')}",
-            balance=-invoice_amount
-        )
-        await db.treasury_transactions.insert_one(old_transaction.dict())
+        # Handle treasury transactions based on payment method types
+        transactions_created = []
         
-        # Add to new account (positive transaction) 
-        new_transaction = TreasuryTransaction(
-            account_id=new_account_id,
-            transaction_type="income",
-            amount=invoice_amount,
-            description=f"إضافة من تحويل طريقة الدفع - {transfer_reference}",
-            reference=f"تحويل-{invoice.get('invoice_number')}",
-            balance=invoice_amount
-        )
-        await db.treasury_transactions.insert_one(new_transaction.dict())
+        # Case 1: Converting FROM deferred TO immediate payment method
+        if old_payment_method == "آجل" and new_payment_method != "آجل":
+            # Create income transaction for the new payment method
+            new_transaction = TreasuryTransaction(
+                account_id=new_account_id,
+                transaction_type="income",
+                amount=invoice_amount,
+                description=f"تحويل من آجل إلى {new_payment_method} - {transfer_reference}",
+                reference=f"تحويل-{invoice.get('invoice_number')}"
+            )
+            await db.treasury_transactions.insert_one(new_transaction.dict())
+            transactions_created.append("income")
+            
+        # Case 2: Converting FROM immediate payment method TO deferred
+        elif old_payment_method != "آجل" and new_payment_method == "آجل":
+            # Create expense transaction to remove from old payment method
+            old_transaction = TreasuryTransaction(
+                account_id=old_account_id,
+                transaction_type="expense",
+                amount=invoice_amount,
+                description=f"تحويل من {old_payment_method} إلى آجل - {transfer_reference}",
+                reference=f"تحويل-{invoice.get('invoice_number')}"
+            )
+            await db.treasury_transactions.insert_one(old_transaction.dict())
+            transactions_created.append("expense")
+            
+        # Case 3: Converting between immediate payment methods (not deferred)
+        elif old_payment_method != "آجل" and new_payment_method != "آجل":
+            # Remove from old account
+            old_transaction = TreasuryTransaction(
+                account_id=old_account_id,
+                transaction_type="expense",
+                amount=invoice_amount,
+                description=f"خصم لتحويل طريقة الدفع - {transfer_reference}",
+                reference=f"تحويل-{invoice.get('invoice_number')}"
+            )
+            await db.treasury_transactions.insert_one(old_transaction.dict())
+            
+            # Add to new account
+            new_transaction = TreasuryTransaction(
+                account_id=new_account_id,
+                transaction_type="income",
+                amount=invoice_amount,
+                description=f"إضافة من تحويل طريقة الدفع - {transfer_reference}",
+                reference=f"تحويل-{invoice.get('invoice_number')}"
+            )
+            await db.treasury_transactions.insert_one(new_transaction.dict())
+            transactions_created.extend(["expense", "income"])
+            
+        # Case 4: Converting from deferred to deferred (should not happen, but handle gracefully)
+        # No treasury transactions needed
         
         # Update invoice payment method
         await db.invoices.update_one(
