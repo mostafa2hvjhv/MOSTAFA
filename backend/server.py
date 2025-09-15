@@ -2405,7 +2405,9 @@ async def change_invoice_payment_method(
             "message": f"تم تحويل طريقة الدفع من {old_payment_method} إلى {new_payment_method}",
             "old_method": old_payment_method,
             "new_method": new_payment_method,
-            "amount_transferred": invoice_amount
+            "amount_transferred": invoice_amount,
+            "treasury_transactions_created": transactions_created,
+            "remaining_amount_updated": update_data.get("remaining_amount", invoice.get("remaining_amount", 0))
         }
         
     except Exception as e:
