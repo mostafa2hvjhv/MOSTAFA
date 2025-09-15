@@ -747,22 +747,25 @@ async def check_compatibility(check: CompatibilityCheck):
         if check.material_type and material.get("material_type") != check.material_type:
             continue
             
-        # Enhanced material compatibility logic with tolerances:
-        # - Inner diameter: material should be <= required + tolerance (can be slightly larger)
-        # - Outer diameter: material should be >= required - tolerance (can be slightly smaller)
-        # - Height: material should be >= required height + minimum safety margin
-        
-        # CRITICAL: Filter out materials with height <= 15mm as per user requirement
+        # CRITICAL: Filter materials based on usability after consumption
+        # Don't show materials if using them would leave < 15mm (unusable waste)
         if material.get("height", 0) <= 15:
             continue
             
-        # Calculate required material height (seal height + 2mm waste) for this quantity
-        required_height = check.height + 2
+        # Calculate required material height for one seal
+        required_height_per_seal = check.height + 2
+        
+        # Check if material can produce at least 1 seal AND remain >= 15mm or become 0
+        material_height = material.get("height", 0)
+        remaining_after_one_seal = material_height - required_height_per_seal
+        
+        # Skip material if it would leave unusable waste (1-14mm range)
+        if remaining_after_one_seal > 0 and remaining_after_one_seal < 15:
+            continue
         
         inner_compatible = material["inner_diameter"] <= (check.inner_diameter + inner_tolerance)
         outer_compatible = material["outer_diameter"] >= (check.outer_diameter - outer_tolerance)
-        # Material must have enough height for at least 1 seal + waste AND remain above 15mm
-        height_compatible = material["height"] >= required_height and (material["height"] - required_height >= 15 or material["height"] - required_height == 0)
+        height_compatible = material_height >= required_height_per_seal
         
         if inner_compatible and outer_compatible and height_compatible:
             
