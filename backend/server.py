@@ -9,7 +9,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, date
+from datetime import datetime
 from enum import Enum
 import pandas as pd
 import io
