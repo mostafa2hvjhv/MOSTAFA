@@ -8492,16 +8492,93 @@ const DataManagement = () => {
 
 // Main App Component
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('sales'); // Default to sales instead of dashboard
-  const { user } = useAuth();
-
-  if (!user) return <Login />;
+  const [currentPage, setCurrentPage] = useState('sales');
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [userCompanies, setUserCompanies] = useState([]);
+  const [appState, setAppState] = useState('loading'); // loading, company-selection, login, authenticated
+  
+  // Initialize companies and check authentication
+  useEffect(() => {
+    const initializeApp = async () => {
+      // Check if user is already logged in
+      const savedUser = localStorage.getItem('user');
+      const savedCompany = localStorage.getItem('selectedCompany');
+      
+      if (savedUser && savedCompany) {
+        setSelectedCompany(JSON.parse(savedCompany));
+        setAppState('authenticated');
+      } else if (savedUser) {
+        // User is logged in but no company selected
+        const user = JSON.parse(savedUser);
+        await loadUserCompanies(user.username);
+      } else {
+        setAppState('login');
+      }
+    };
+    
+    initializeApp();
+  }, []);
+  
+  const loadUserCompanies = async (username) => {
+    try {
+      const response = await axios.get(`${API}/user-companies/${username}`);
+      setUserCompanies(response.data);
+      
+      if (response.data.length === 0) {
+        alert('لا توجد شركات مخصصة لهذا المستخدم');
+        setAppState('login');
+      } else if (response.data.length === 1) {
+        // Only one company, auto-select it
+        handleCompanySelect(response.data[0]);
+      } else {
+        setAppState('company-selection');
+      }
+    } catch (error) {
+      console.error('Error loading user companies:', error);
+      setAppState('login');
+    }
+  };
+  
+  const handleLogin = async (username) => {
+    await loadUserCompanies(username);
+  };
+  
+  const handleCompanySelect = (company) => {
+    setSelectedCompany(company);
+    localStorage.setItem('selectedCompany', JSON.stringify(company));
+    setAppState('authenticated');
+  };
+  
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('selectedCompany');
+    setSelectedCompany(null);
+    setUserCompanies([]);
+    setAppState('login');
+  };
+  
+  if (appState === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">جاری التحميل...</div>
+      </div>
+    );
+  }
+  
+  if (appState === 'company-selection') {
+    return (
+      <CompanySelection 
+        onCompanySelect={handleCompanySelect}
+        userCompanies={userCompanies}
+      />
+    );
+  }
 
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': 
         // Only Elsawy can access dashboard
-        return user?.username === 'Elsawy' ? <Dashboard /> : <Sales />;
+        return selectedCompany?.user?.username === 'Elsawy' ? <Dashboard /> : <Sales />;
       case 'sales': return <Sales />;
       case 'inventory': return <Inventory />;
       case 'stock': return <Stock />;
@@ -8520,14 +8597,26 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50" dir="rtl">
-      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="p-6">
-          {renderPage()}
-        </div>
-      </main>
-    </div>
+    <CompanyContext.Provider value={{
+      selectedCompany,
+      setSelectedCompany,
+      userCompanies,
+      setUserCompanies
+    }}>
+      <div className="flex h-screen bg-gray-50" dir="rtl">
+        <Navigation 
+          currentPage={currentPage} 
+          onPageChange={setCurrentPage}
+          selectedCompany={selectedCompany}
+          onLogout={handleLogout}
+        />
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
+          <div className="p-6">
+            {renderPage()}
+          </div>
+        </main>
+      </div>
+    </CompanyContext.Provider>
   );
 };
 
