@@ -3205,7 +3205,13 @@ async def get_companies():
     """Get all active companies"""
     try:
         companies = await db.companies.find({"is_active": True}).to_list(length=None)
-        return companies
+        # Clean up MongoDB ObjectId for serialization
+        cleaned_companies = []
+        for company in companies:
+            if "_id" in company:
+                del company["_id"]
+            cleaned_companies.append(company)
+        return cleaned_companies
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في استرجاع الشركات: {str(e)}")
 
