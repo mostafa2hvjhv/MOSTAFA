@@ -2869,7 +2869,7 @@ async def export_raw_materials_excel():
 
 # Bulk Import APIs for Data Management
 @api_router.post("/raw-materials/bulk-import")
-async def bulk_import_raw_materials(data: dict, background_tasks: BackgroundTasks):
+async def bulk_import_raw_materials(data: dict):
     """Bulk import raw materials from uploaded data"""
     try:
         imported_count = 0
@@ -2883,9 +2883,14 @@ async def bulk_import_raw_materials(data: dict, background_tasks: BackgroundTask
                     skipped_count += 1
                     continue
                 
-                # Create new raw material
-                raw_material = RawMaterial(**item)
-                await db.raw_materials.insert_one(raw_material.dict())
+                # Create new raw material directly without inventory checks for bulk import
+                raw_material_dict = item.copy()
+                if "id" not in raw_material_dict:
+                    raw_material_dict["id"] = str(uuid.uuid4())
+                if "created_at" not in raw_material_dict:
+                    raw_material_dict["created_at"] = datetime.utcnow()
+                
+                await db.raw_materials.insert_one(raw_material_dict)
                 imported_count += 1
                 
             except Exception as e:
