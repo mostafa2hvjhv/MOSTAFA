@@ -209,6 +209,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
     { key: 'invoices', label: 'الفواتير', icon: '🧾' },
     { key: 'work-orders', label: 'أمر شغل', icon: '⚙️' },
     { key: 'pricing', label: 'التسعير', icon: '💲' }
+    { key: 'data-management', label: 'إدارة البيانات', icon: '📋' },
   ];
   
   // Only Elsawy gets dashboard access
