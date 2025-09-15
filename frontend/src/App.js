@@ -265,8 +265,8 @@ const Login = ({ onLogin }) => {
 };
 
 // Navigation Component
-const Navigation = ({ currentPage, onPageChange }) => {
-  const { user, logout } = useAuth();
+const Navigation = ({ currentPage, onPageChange, selectedCompany, onLogout }) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   
   // Dashboard is only for Elsawy
   const elsawyPages = [
@@ -318,7 +318,7 @@ const Navigation = ({ currentPage, onPageChange }) => {
   
   // Only Elsawy gets dashboard access
   const pages = user?.username === 'Elsawy' ? elsawyPages : 
-               user?.role === 'admin' ? adminPages : userPages;
+               selectedCompany?.access_level === 'admin' ? adminPages : userPages;
 
   return (
     <div className="w-80 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl">
