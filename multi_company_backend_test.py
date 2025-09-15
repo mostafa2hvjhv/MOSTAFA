@@ -58,9 +58,21 @@ class MultiCompanyTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Extract company IDs
-                self.master_seal_id = data.get("master_seal_id")
-                self.faster_seal_id = data.get("faster_seal_id")
+                # Extract company IDs - handle both new creation and existing companies
+                if "master_seal_id" in data and "faster_seal_id" in data:
+                    # New companies created
+                    self.master_seal_id = data.get("master_seal_id")
+                    self.faster_seal_id = data.get("faster_seal_id")
+                else:
+                    # Companies already exist, extract IDs from companies list
+                    companies = data.get("companies", [])
+                    master_seal = next((c for c in companies if c["name"] == "Master Seal"), None)
+                    faster_seal = next((c for c in companies if c["name"] == "Faster Seal"), None)
+                    
+                    if master_seal:
+                        self.master_seal_id = master_seal["id"]
+                    if faster_seal:
+                        self.faster_seal_id = faster_seal["id"]
                 
                 # Verify Master Seal colors
                 companies = data.get("companies", [])
