@@ -159,18 +159,28 @@ const AuthProvider = ({ children }) => {
 };
 
 // Login Component
-const Login = ({ selectedCompany }) => {
+const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    const success = await login(username, password);
-    if (!success) {
+    try {
+      const response = await axios.post(`${API}/auth/login`, null, {
+        params: { username, password }
+      });
+      
+      if (response.data.success) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        onLogin(username);
+      } else {
+        setError('خطأ في اسم المستخدم أو كلمة المرور');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       setError('خطأ في اسم المستخدم أو كلمة المرور');
     }
   };
