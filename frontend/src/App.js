@@ -4183,7 +4183,7 @@ const Deferred = () => {
             </tbody>
           </table>
           
-          {unpaidInvoices.length === 0 && (
+          {filteredInvoices.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               لا توجد فواتير غير مسددة
             </div>
