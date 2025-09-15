@@ -2308,6 +2308,7 @@ async def change_invoice_payment_method(
         # Map payment methods to treasury account IDs
         payment_method_mapping = {
             "نقدي": "cash",
+            "آجل": "deferred",
             "فودافون كاش محمد الصاوي": "vodafone_elsawy", 
             "فودافون كاش وائل محمد": "vodafone_wael",
             "انستاباي": "instapay",
@@ -2316,6 +2317,12 @@ async def change_invoice_payment_method(
         
         old_account_id = payment_method_mapping.get(old_payment_method)
         new_account_id = payment_method_mapping.get(new_payment_method)
+        
+        # Special handling for deferred payment method
+        if old_payment_method == "آجل":
+            old_account_id = "deferred"  # Special case for deferred
+        if new_payment_method == "آجل":
+            new_account_id = "deferred"  # Special case for deferred
         
         if not old_account_id or not new_account_id:
             raise HTTPException(status_code=400, detail="طريقة الدفع غير مدعومة")
