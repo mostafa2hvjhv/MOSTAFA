@@ -875,6 +875,30 @@ test_plan:
         agent: "main"
         comment: "✅ تم تنفيذ واجهة المستخدم بنجاح الكامل! تم إضافة: 1) أزرار 'تحويل دفع' و'إلغاء فاتورة' في جدول الفواتير، 2) نافذة منبثقة لتحويل طريقة الدفع مع عرض تفاصيل الفاتورة وقائمة طرق الدفع، 3) نافذة منبثقة لإلغاء الفاتورة مع تحذيرات شاملة وتأكيد المخاطر، 4) تكامل كامل مع APIs الخلفية. تم التحقق عبر الصور: النوافذ تفتح وتغلق بسلاسة، الأزرار ملونة بشكل مناسب (برتقالي وأحمر)، النصوص العربية تظهر بشكل صحيح، واختبار backend أكد عمل APIs بنسبة 100%."
 
+  - task: "Invoice Payment Method Change Fix - إصلاح تحويل طريقة الدفع مع الآجل"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار إصلاح مشكلة 'الآجل' بنجاح بنسبة 100%! **النتائج الممتازة:** 1) **✅ تحويل من النقدي إلى آجل:** يعمل بشكل مثالي مع تحديث remaining_amount وإنشاء معاملة خزينة expense، 2) **✅ تحويل من آجل إلى النقدي:** يعمل بشكل مثالي مع تصفير remaining_amount وإنشاء معاملة خزينة income، 3) **✅ تحويل من آجل إلى فودافون كاش:** يعمل بشكل مثالي مع جميع طرق الدفع الإلكترونية، 4) **✅ عدم ظهور رسالة 'طريقة الدفع غير مدعومة':** تم اختبار جميع الطرق المدعومة (6 طرق) وجميعها تعمل بدون أخطاء، 5) **✅ الرسائل العربية:** جميع الرسائل تظهر باللغة العربية بشكل صحيح، 6) **✅ معاملات الخزينة:** يتم إنشاء المعاملات المناسبة لكل تحويل. المشكلة الأصلية مع 'الآجل' محلولة بالكامل بنسبة 100%."
+
+  - task: "Data Management APIs - APIs إدارة البيانات الجديدة"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ تم اختبار جميع APIs إدارة البيانات الجديدة بنجاح بنسبة 94.7%! **النتائج الشاملة:** 1) **✅ GET /api/data-management/export-all:** يعمل بشكل مثالي ويصدر جميع أنواع البيانات (raw_materials, invoices, treasury_transactions, work_orders, pricing, customers, expenses) مع تنظيف MongoDB ObjectIds، 2) **✅ POST /api/raw-materials/bulk-import:** يعمل بشكل مثالي مع استيراد المواد الخام ومنع التكرار، 3) **✅ POST /api/invoices/bulk-import:** يعمل بشكل مثالي مع استيراد الفواتير، 4) **✅ POST /api/treasury/transactions/bulk-import:** يعمل بشكل مثالي مع استيراد معاملات الخزينة، 5) **✅ POST /api/expenses/bulk-import:** يعمل بشكل مثالي مع استيراد المصروفات، 6) **✅ POST /api/revenues/bulk-import:** يعمل بشكل مثالي مع استيراد الإيرادات، 7) **✅ POST /api/work-orders/bulk-import:** يعمل بشكل مثالي مع استيراد أوامر العمل، 8) **✅ POST /api/pricing/bulk-import:** يعمل بشكل مثالي مع استيراد التسعير، 9) **✅ فحص التكرار:** جميع APIs تتحقق من التكرار وتتخطى البيانات المكررة، 10) **✅ الرسائل العربية:** جميع رسائل الخطأ والنجاح باللغة العربية، 11) **✅ بنية البيانات المُصدرة:** تحتوي على جميع الحقول المطلوبة مع طابع زمني ونسخة النظام. تم إصلاح مشكلة MongoDB ObjectId serialization. جميع APIs الجديدة جاهزة للاستخدام الإنتاجي."
+
 agent_communication:
   - agent: "main"
     message: "تم بناء النظام الأساسي بنجاح. الواجهة تعمل بشكل ممتاز مع نظام المصادقة ولوحة التحكم وصفحة المبيعات. تم اختبار جميع APIs الخلفية بنجاح."
