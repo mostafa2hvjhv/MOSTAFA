@@ -3370,7 +3370,8 @@ async def setup_initial_companies():
         raise HTTPException(status_code=500, detail=f"خطأ في إعداد الشركات: {str(e)}")
 
 # Include the router in the main app (must be after all endpoints are defined)
-app.include_router(api_router)
+# Moved to after all endpoint definitions
+app.include_router(api_router, prefix="/api")
 
 # Data Migration APIs
 @api_router.post("/migrate-data-to-company")
