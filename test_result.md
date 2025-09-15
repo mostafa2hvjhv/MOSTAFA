@@ -875,6 +875,30 @@ test_plan:
         agent: "main"
         comment: "✅ تم تنفيذ واجهة المستخدم بنجاح الكامل! تم إضافة: 1) أزرار 'تحويل دفع' و'إلغاء فاتورة' في جدول الفواتير، 2) نافذة منبثقة لتحويل طريقة الدفع مع عرض تفاصيل الفاتورة وقائمة طرق الدفع، 3) نافذة منبثقة لإلغاء الفاتورة مع تحذيرات شاملة وتأكيد المخاطر، 4) تكامل كامل مع APIs الخلفية. تم التحقق عبر الصور: النوافذ تفتح وتغلق بسلاسة، الأزرار ملونة بشكل مناسب (برتقالي وأحمر)، النصوص العربية تظهر بشكل صحيح، واختبار backend أكد عمل APIs بنسبة 100%."
 
+  - task: "Fix Deferred Payment Method Conversion Bug - إصلاح مشكلة تحويل طريقة الدفع مع الآجل"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ تم إصلاح المشكلة بنسبة 100%! تم إضافة 'آجل' إلى payment_method_mapping في جميع المواضع (4 مواضع). تم تحديث منطق التحويل للتعامل مع السيناريوهات المختلفة: من الآجل لطرق أخرى (إنشاء معاملة income)، من طرق أخرى للآجل (إنشاء معاملة expense)، وبين الطرق المباشرة. تم تحديث remaining_amount تلقائياً. اختبار backend أكد نجاح جميع السيناريوهات والصور أكدت عمل الواجهة مع 'آجل' بدون رسالة 'طريقة الدفع غير مدعومة'."
+
+  - task: "Comprehensive Data Management Page - صفحة إدارة البيانات الشاملة"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ تم إنشاء صفحة إدارة البيانات الشاملة بنجاح! الواجهة الأمامية: صفحة جديدة 'إدارة البيانات' مع تصدير/استيراد شامل وتصدير منفرد ل8 أنواع بيانات (الجرد، الفواتير، الخزينة، الآجل، المصروفات، الإيرادات، أوامر العمل، التسعير). استخدام مكتبة XLSX، واجهة RTL عربية، شريط تقدم للعمليات. الواجهة الخلفية: 7 APIs استيراد شامل مع فحص التكرار، API تصدير شامل مع تنظيف ObjectIds، معالجة أخطاط شاملة. اختبار backend نسبة نجاح 94.7%، والصور أكدت عمل الواجهة بشكل مثالي مع جميع الأزرار والخصائص."
+
   - task: "Invoice Payment Method Change Fix - إصلاح تحويل طريقة الدفع مع الآجل"
     implemented: true
     working: true
