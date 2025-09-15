@@ -3192,6 +3192,13 @@ logger = logging.getLogger(__name__)
 async def shutdown_db_client():
     client.close()
 
+# Helper function to get company ID from request
+def get_company_id_from_request(company_id: str = None):
+    """Get company ID from request parameter"""
+    if not company_id:
+        raise HTTPException(status_code=400, detail="معرف الشركة مطلوب")
+    return company_id
+
 # Company Management APIs
 @api_router.get("/companies")
 async def get_companies():
