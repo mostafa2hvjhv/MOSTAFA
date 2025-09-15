@@ -8015,6 +8015,33 @@ const Pricing = () => {
   );
 };
 
+// Data Management Component
+const DataManagement = () => {
+  return (
+    <div className="p-6" dir="rtl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">إدارة البيانات</h1>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Export/Import Cards will be added here */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">تصدير/استيراد شامل</h3>
+          <p className="text-gray-600 mb-4">إدارة جميع بيانات النظام</p>
+          <div className="space-y-2">
+            <button className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+              تصدير جميع البيانات
+            </button>
+            <button className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+              استيراد البيانات
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   const [currentPage, setCurrentPage] = useState('sales'); // Default to sales instead of dashboard
