@@ -2385,10 +2385,20 @@ async def change_invoice_payment_method(
         # Case 4: Converting from deferred to deferred (should not happen, but handle gracefully)
         # No treasury transactions needed
         
-        # Update invoice payment method
+        # Update invoice payment method and remaining amount
+        update_data = {"payment_method": new_payment_method}
+        
+        # Update remaining_amount based on new payment method
+        if new_payment_method == "آجل":
+            # Converting to deferred - set remaining_amount to total_amount
+            update_data["remaining_amount"] = invoice_amount
+        else:
+            # Converting to immediate payment - set remaining_amount to 0
+            update_data["remaining_amount"] = 0
+            
         await db.invoices.update_one(
             {"id": invoice_id},
-            {"$set": {"payment_method": new_payment_method}}
+            {"$set": update_data}
         )
         
         return {
