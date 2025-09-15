@@ -3369,10 +3369,6 @@ async def setup_initial_companies():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في إعداد الشركات: {str(e)}")
 
-# Include the router in the main app (must be after all endpoints are defined)
-# Moved to after all endpoint definitions
-app.include_router(api_router, prefix="/api")
-
 # Data Migration APIs
 @api_router.post("/migrate-data-to-company")
 async def migrate_existing_data_to_company(company_id: str):
@@ -3424,6 +3420,9 @@ async def migrate_existing_data_to_company(company_id: str):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في ترحيل البيانات: {str(e)}")
+
+# Include the router in the main app (must be after all endpoints are defined)
+app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
     import uvicorn
