@@ -8583,6 +8583,10 @@ const App = () => {
       />
     );
   }
+  
+  if (appState === 'login') {
+    return <Login onLogin={handleLogin} />;
+  }
 
   const renderPage = () => {
     switch (currentPage) {
