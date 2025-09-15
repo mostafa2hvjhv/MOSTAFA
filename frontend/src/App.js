@@ -4207,7 +4207,7 @@ const Deferred = () => {
           <div className="bg-blue-50 p-4 rounded">
             <h4 className="font-semibold text-blue-800">إجمالي المبلغ الأصلي</h4>
             <p className="text-2xl font-bold text-blue-600">
-              ج.م {unpaidInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
+              ج.م {filteredInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
             </p>
           </div>
         </div>
