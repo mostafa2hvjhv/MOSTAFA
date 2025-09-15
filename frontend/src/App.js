@@ -5734,6 +5734,115 @@ const Invoices = () => {
           </div>
         </div>
       )}
+
+      {/* Payment Method Conversion Modal */}
+      {showPaymentMethodModal && selectedInvoiceForPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md" dir="rtl">
+            <h3 className="text-xl font-semibold mb-4 text-orange-600">تحويل طريقة الدفع</h3>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>رقم الفاتورة:</strong> {selectedInvoiceForPayment.invoice_number}
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>العميل:</strong> {selectedInvoiceForPayment.customer_name}
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                <strong>المبلغ:</strong> ج.م {(selectedInvoiceForPayment.total_amount || 0).toFixed(2)}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">الطريقة الحالية:</label>
+              <div className="p-2 bg-gray-100 rounded text-sm">
+                {selectedInvoiceForPayment.payment_method}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">الطريقة الجديدة:</label>
+              <select
+                value={newPaymentMethod}
+                onChange={(e) => setNewPaymentMethod(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                <option value="نقدي">نقدي</option>
+                <option value="آجل">آجل</option>
+                <option value="فودافون كاش محمد الصاوي">فودافون كاش محمد الصاوي</option>
+                <option value="فودافون كاش وائل محمد">فودافون كاش وائل محمد</option>
+                <option value="انستاباي">انستاباي</option>
+                <option value="يد الصاوي">يد الصاوي</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end space-x-4 space-x-reverse">
+              <button
+                onClick={closePaymentMethodModal}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={changePaymentMethod}
+                className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+                disabled={newPaymentMethod === selectedInvoiceForPayment.payment_method}
+              >
+                تحويل طريقة الدفع
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Cancellation Modal */}
+      {showCancelModal && selectedInvoiceForCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md" dir="rtl">
+            <h3 className="text-xl font-semibold mb-4 text-red-600">إلغاء الفاتورة</h3>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>رقم الفاتورة:</strong> {selectedInvoiceForCancel.invoice_number}
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>العميل:</strong> {selectedInvoiceForCancel.customer_name}
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>المبلغ:</strong> ج.م {(selectedInvoiceForCancel.total_amount || 0).toFixed(2)}
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                <strong>طريقة الدفع:</strong> {selectedInvoiceForCancel.payment_method}
+              </p>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-6">
+              <h4 className="font-medium text-yellow-800 mb-2">⚠️ تحذير: عملية إلغاء الفاتورة</h4>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• سيتم حذف الفاتورة نهائياً من النظام</li>
+                <li>• سيتم استرداد جميع المواد المستخدمة إلى المخزون</li>
+                <li>• سيتم عكس المعاملات المالية من الخزينة</li>
+                <li>• هذا الإجراء لا يمكن التراجع عنه</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end space-x-4 space-x-reverse">
+              <button
+                onClick={closeCancelModal}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={cancelInvoice}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                تأكيد إلغاء الفاتورة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
