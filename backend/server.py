@@ -3351,6 +3351,9 @@ async def setup_initial_companies():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في إعداد الشركات: {str(e)}")
 
+# Include the router in the main app (must be after all endpoints are defined)
+app.include_router(api_router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
