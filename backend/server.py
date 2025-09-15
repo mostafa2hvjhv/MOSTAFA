@@ -300,7 +300,7 @@ class PaymentCreate(BaseModel):
 
 class TreasuryTransaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    company_id: str  # Multi-tenant support
+    company_id: Optional[str] = None  # Multi-tenant support - Optional for migration
     account_id: str  # نوع الحساب (cash, vodafone_elsawy, etc.)
     transaction_type: str  # income, expense, transfer_in, transfer_out
     amount: float
