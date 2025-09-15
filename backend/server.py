@@ -1309,6 +1309,7 @@ async def create_payment(payment: PaymentCreate):
     # Add treasury transaction for the payment
     payment_method_mapping = {
         "نقدي": "cash",
+        "آجل": "deferred",
         "فودافون كاش محمد الصاوي": "vodafone_elsawy", 
         "فودافون كاش وائل محمد": "vodafone_wael",
         "انستاباي": "instapay",
